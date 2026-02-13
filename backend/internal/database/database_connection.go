@@ -46,4 +46,13 @@ func ConnectMongo()*mongo.Client{
 
 }
 
+func OpenCollection(name string,client *mongo.Client)*mongo.Collection{
+	dbName := os.Getenv("DATABASE_NAME")
+	if dbName == "" {
+		log.Fatal("DATABASE_NAME not set")
+	}
+
+	return client.Database(dbName).Collection(name)
+}
+
 

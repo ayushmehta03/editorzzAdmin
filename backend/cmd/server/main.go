@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/ayushmehta03/editorzzAdmin/internal/database"
+	"github.com/ayushmehta03/editorzzAdmin/internal/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -42,6 +43,9 @@ func main(){
 		}
 	}()
 
+
+	routes.AuthRoutes(router,client)
+
 		port:=os.Getenv("PORT")
 
 	if port==""{
@@ -53,6 +57,8 @@ func main(){
 	if err:=router.Run(":"+port);err!=nil{
 		fmt.Println("Failed to start server:",err)
 	}
+
+
 
 
 

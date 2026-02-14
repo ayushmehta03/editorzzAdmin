@@ -34,3 +34,27 @@ func GenerateToken(userid,email,role string)(string,error){
 
 	return token.SignedString([]byte(secret))
 	}
+
+	func VerifyToken(tokenStr string)(*JWTClaims,error){
+			secret:=os.Getenv("JWT_SECRET")
+
+			token,err:=jwt.ParseWithClaims(
+				tokenStr,
+				&JWTClaims{},
+				func(token *jwt.Token)(interface{},error){
+					return []byte(secret),nil
+				},
+			)
+
+			if err!=nil{
+				return  nil,err
+			}
+
+			claims,ok:=token.Claims.(*JWTClaims)
+
+			if !ok || !token.Valid{
+				return nil,jwt.ErrTokenInvalidClaims
+			}
+
+			return claims,nil
+	}

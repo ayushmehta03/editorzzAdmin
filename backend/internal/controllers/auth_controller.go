@@ -76,7 +76,7 @@ func RegisterAdmin(client *mongo.Client)gin.HandlerFunc{
 		}
 
 		c.JSON(http.StatusCreated,gin.H{"message":"Account created"})
-		
+
 
 
 	
@@ -90,4 +90,12 @@ func HashPassword(password string)(string,error){
 	}
 
 	return string(bytes),nil
+}
+
+
+func Login(client *mongo.Client)gin.HandlerFunc{
+	return func(c *gin.Context){
+		
+
+	}
 }

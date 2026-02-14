@@ -8,6 +8,6 @@ import (
 func AuthRoutes(router *gin.Engine,client *mongo.Client){
 auth:=	router.Group("/api/auth")
 
-auth.POST("/register",controllers.RegisterAdmin(client))
+auth.POST("/login",controllers.Login(client))
 
 }

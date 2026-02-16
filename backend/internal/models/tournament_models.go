@@ -10,7 +10,6 @@ const (
 	TournamentUpcoming        = "upcoming"
 	TournamentActive          = "active"
 	TournamentJudging         = "judging"
-	TournamentApprovalPending = "approval_pending"
 	TournamentCompleted       = "completed"
 )
 

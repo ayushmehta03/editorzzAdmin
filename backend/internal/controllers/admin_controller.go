@@ -188,4 +188,134 @@ func StartTournamentCron(client *mongo.Client) {
 }
 
 
+// update or change in tournamnt if required 
+
+
+// the required struct we will use pointer to avoid partial update 
+
+type UpdateTournamentRequest struct {
+	Title           *string    `json:"title,omitempty"`
+	Description     *string    `json:"description,omitempty"`
+	BannerURL       *string    `json:"banner_url,omitempty"`
+	StartTime       *time.Time `json:"start_time,omitempty"`
+	EndTime         *time.Time `json:"end_time,omitempty"`
+	MaxParticipants *int       `json:"max_participants,omitempty"`
+	PrizePool       *float64   `json:"prize_pool,omitempty"`
+	AssetsLink      *string    `json:"assets_link,omitempty"`
+	JudgeEmail      *string    `json:"judge_email,omitempty"`
+}
+
+
+func UpdateTournament(client *mongo.Client)gin.HandlerFunc{
+	return func(c*gin.Context){
+
+
+		role,exists:=c.Get("role")
+
+
+		if !exists || role!="admin"{
+			c.JSON(http.StatusUnauthorized,gin.H{"error":"Unauthorized"})
+			return 
+		}
+
+		idParam:=c.Param("id")
+
+		tournamentId,err:=primitive.ObjectIDFromHex(idParam)
+
+		if err!=nil{
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tournament ID"})
+			return
+		}
+		var req UpdateTournamentRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		collection := database.OpenCollection("tournaments", client)
+
+		// Fetch tournament
+		var tournament models.Tournament
+		err = collection.FindOne(ctx, bson.M{"_id": tournamentId}).Decode(&tournament)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+			return
+		}
+
+		// dont aloow between on going tournaments
+
+		if tournament.Status != models.TournamentUpcoming {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error": "Tournament cannot be updated after it starts",
+			})
+			return
+		}
+
+		// fileds that need to be updated 
+
+		updateFields := bson.M{}
+			judgeLink := "https://judge.editorzzzz.com/tournamnet/" + tournament.JudgeSlug
+
+
+		if req.Title != nil {
+			updateFields["title"] = *req.Title
+		}
+		if req.Description != nil {
+			updateFields["description"] = *req.Description
+		}
+		if req.BannerURL != nil {
+			updateFields["banner_url"] = *req.BannerURL
+		}
+		if req.StartTime != nil {
+			updateFields["start_time"] = *req.StartTime
+		}
+		if req.EndTime != nil {
+			updateFields["end_time"] = *req.EndTime
+		}
+		if req.MaxParticipants != nil {
+			updateFields["max_participants"] = *req.MaxParticipants
+		}
+		if req.PrizePool != nil {
+			updateFields["prize_pool"] = *req.PrizePool
+		}
+		if req.AssetsLink != nil {
+			updateFields["assets_link"] = *req.AssetsLink
+		}
+		if req.JudgeEmail != nil {
+			updateFields["judge_email"] = *req.JudgeEmail
+			utils.SendJudgeInvitationEmail(*req.JudgeEmail,*req.Title,judgeLink)
+
+		
+		}
+
+
+
+		updateFields["updated_at"] = time.Now()
+
+		_, err = collection.UpdateOne(
+			ctx,
+			bson.M{"_id": tournamentId},
+			bson.M{"$set": updateFields},
+		)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Tournament updated successfully",
+		})
+	}
+}
+
+
+
+	
+
+
+
 

@@ -51,7 +51,7 @@ func GetActiveTournament(client *mongo.Client)gin.HandlerFunc{
 
 		}
 
-		
+
 
 		
 
@@ -102,3 +102,5 @@ func GetUpcomingTournaments(client*mongo.Client)gin.HandlerFunc{
 
 	}
 }
+
+

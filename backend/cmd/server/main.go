@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ayushmehta03/editorzzAdmin/internal/controllers"
 	"github.com/ayushmehta03/editorzzAdmin/internal/database"
 	"github.com/ayushmehta03/editorzzAdmin/internal/routes"
 	"github.com/gin-gonic/gin"
@@ -43,8 +44,11 @@ func main(){
 		}
 	}()
 
+	controllers.StartTournamentCron(client)
+
 
 	routes.AuthRoutes(router,client)
+	routes.ProtectedRoutes(router,client)
 
 		port:=os.Getenv("PORT")
 
@@ -63,3 +67,5 @@ func main(){
 
 
 }
+
+

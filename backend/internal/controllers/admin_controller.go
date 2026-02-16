@@ -2,14 +2,18 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/ayushmehta03/editorzzAdmin/internal/database"
 	"github.com/ayushmehta03/editorzzAdmin/internal/models"
+	"github.com/ayushmehta03/editorzzAdmin/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/robfig/cron/v3"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -106,11 +110,82 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 
 	}
 
+	judgeLink := "https://judge.editorzzzz.com/tournamnet/" + tournament.JudgeSlug
+
+err = utils.SendJudgeInvitationEmail(
+	tournament.JudgeEmail,
+	tournament.Title,
+	judgeLink,
+)
+if err != nil {
+	fmt.Println("Failed to send judge email:", err)
+}
+
+
+
 	c.JSON(http.StatusCreated, gin.H{
 			"message":    "Tournament created successfully",
 			"tournament": tournament,
 		})
 
 
+
+
+
 	}
 }
+
+
+// update tournaMENT STATUS by checking each minute
+
+
+func UpdateTournamentStatuses(client *mongo.Client) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := database.OpenCollection("tournaments", client)
+	now := time.Now()
+
+	collection.UpdateMany(
+		ctx,
+		bson.M{
+			"status":     models.TournamentUpcoming,
+			"start_time": bson.M{"$lte": now},
+		},
+		bson.M{
+			"$set": bson.M{
+				"status": models.TournamentActive,
+			},
+		},
+	)
+
+	collection.UpdateMany(
+		ctx,
+		bson.M{
+			"status":   models.TournamentActive,
+			"end_time": bson.M{"$lte": now},
+		},
+		bson.M{
+			"$set": bson.M{
+				"status": models.TournamentJudging,
+			},
+		},
+	)
+}
+
+// using cron fw
+
+func StartTournamentCron(client *mongo.Client) {
+	c := cron.New()
+	
+
+	c.AddFunc("@every 1m", func() {
+		UpdateTournamentStatuses(client)
+	})
+
+	c.Start()
+}
+
+
+

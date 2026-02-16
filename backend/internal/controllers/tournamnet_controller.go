@@ -27,20 +27,33 @@ func GetActiveTournament(client *mongo.Client)gin.HandlerFunc{
 		collection:=database.OpenCollection("tournaments",client)
 
 
-		err:=collection.FindOne(ctx,bson.M{
+
+		opts := options.Find().SetSort(bson.D{{"end_time", 1}})
+		cursor,err:=collection.Find(ctx,bson.M{
 			"status":models.TournamentActive,
-		}).Decode(&tournament)
+
+		},opts)
 
 		if err!=nil{
+			c.JSON(http.StatusInternalServerError,gin.H{"error":"Failed to fetch active tournamnets"})
+			return 
+		}
+
+		defer cursor.Close(ctx)
+
+		var tournaments models.Tournament
+
+		if err=cursor.All(ctx,&tournaments);err!=nil{
 			c.JSON(http.StatusNotFound, gin.H{
 				"message": "No active tournament found",
 			})
-
-						return
-
-			
+				return
 
 		}
+
+		
+
+		
 
 		c.JSON(http.StatusOK,gin.H{
 			"tournament":tournament,

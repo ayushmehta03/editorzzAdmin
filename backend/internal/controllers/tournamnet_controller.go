@@ -99,6 +99,7 @@ func GetUpcomingTournaments(client*mongo.Client)gin.HandlerFunc{
 		c.JSON(http.StatusOK, gin.H{
 			"tournaments": tournaments,
 		})
+		
 
 	}
 }

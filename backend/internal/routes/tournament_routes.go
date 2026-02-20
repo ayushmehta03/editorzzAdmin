@@ -12,7 +12,9 @@ func ProtectedRoutes(router *gin.Engine,client *mongo.Client){
 	protected:=router.Group("/api/admin")
 
 	protected.Use(middleware.AuthMiddleWare())
+	protected.Use(middleware.AdminOnly())
 
 
 	protected.POST("/createtournament",controllers.CreateTournament(client))
+	
 }

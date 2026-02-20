@@ -283,3 +283,43 @@ func GetReports(client *mongo.Client)gin.HandlerFunc{
 		})
 	}
 }
+
+func GetSubmissionByID(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		submissionID, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid submission ID"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		defer cancel()
+
+		submissionCol := database.OpenCollection("submissions", client)
+
+		opts := options.FindOne().SetProjection(bson.M{
+			"title":     1,
+			"media_url": 1,
+		})
+
+		var submission struct {
+			Title    string `bson:"title" json:"title"`
+			MediaURL string `bson:"media_url" json:"media_url"`
+		}
+
+		err = submissionCol.
+			FindOne(ctx, bson.M{"_id": submissionID}, opts).
+			Decode(&submission)
+
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Submission not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"title":     submission.Title,
+			"media_url": submission.MediaURL,
+		})
+	}
+}

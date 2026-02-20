@@ -50,6 +50,7 @@ func main(){
 	routes.AuthRoutes(router,client)
 	routes.ProtectedRoutes(router,client)
 	routes.UserRoutes(router,client)
+	routes.JudgeRoutes(router,client)
 
 		port:=os.Getenv("PORT")
 

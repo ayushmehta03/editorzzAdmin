@@ -312,7 +312,100 @@ func UpdateTournament(client *mongo.Client)gin.HandlerFunc{
 	}
 }
 
+func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tournamentID, _ := primitive.ObjectIDFromHex(c.Param("id"))
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		defer cancel()
 
+		submissionCol := database.OpenCollection("submissions", client)
+
+		pipeline := mongo.Pipeline{
+			{{Key: "$match", Value: bson.M{"tournament_id": tournamentID}}},
+			{{Key: "$lookup", Value: bson.M{
+				"from":         "users",
+				"localField":   "user_id",
+				"foreignField": "_id",
+				"as":           "user_details",
+			}}},
+			{{Key: "$unwind", Value: "$user_details"}},
+			{{Key: "$sort", Value: bson.M{"points": -1}}},
+		}
+
+		cursor, err := submissionCol.Aggregate(ctx, pipeline)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch review data"})
+			return
+		}
+
+		var reviewData []bson.M
+		if err = cursor.All(ctx, &reviewData); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding data"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"tournament_id": tournamentID,
+			"submissions":   reviewData,
+		})
+	}
+}
+
+func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tournamentID, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tournament ID"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		defer cancel()
+
+		tournamentCol := database.OpenCollection("tournaments", client)
+		submissionCol := database.OpenCollection("submissions", client)
+
+		countFilter := bson.M{
+			"tournament_id": tournamentID,
+			"is_judged":     false,
+		}
+		unjudgedCount, _ := submissionCol.CountDocuments(ctx, countFilter)
+		
+		if unjudgedCount > 0 {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": "Cannot approve. There are still unjudged submissions.",
+				"remaining": unjudgedCount,
+			})
+			return
+		}
+
+		filter := bson.M{"_id": tournamentID}
+		update := bson.M{
+			"$set": bson.M{
+				"status":              models.TournamentCompleted,
+				"is_leaderboard_live": true,
+				"updated_at":          time.Now(),
+			},
+		}
+
+		result, err := tournamentCol.UpdateOne(ctx, filter, update)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update tournament"})
+			return
+		}
+
+		if result.MatchedCount == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Tournament approved successfully!",
+			"status":  models.TournamentCompleted,
+			"leaderboard_live": true,
+		})
+	}
+}
 
 	
 

@@ -18,4 +18,6 @@ func UserRoutes(router *gin.Engine, client *mongo.Client) {
 
 	admin.PATCH("/users/:id/ban", controllers.UpdateUserBan(client))
 	admin.PATCH("/users/:id/hiring", controllers.UpdateHiringStatus(client))
+
+	admin.GET("/submission/:id",controllers.GetSubmissionByID(client))
 }

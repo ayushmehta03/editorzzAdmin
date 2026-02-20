@@ -72,7 +72,7 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 		defer cancel()
 
 
-		collection:=database.OpenCollection("tournamnets",clinet)
+		collection:=database.OpenCollection("tournaments",clinet)
 
 	adminID, _ := primitive.ObjectIDFromHex(c.GetString("user_id"))
 

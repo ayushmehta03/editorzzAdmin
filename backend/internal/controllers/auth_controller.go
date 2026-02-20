@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -43,6 +44,7 @@ func Login(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		if err := adminCollection.FindOne(ctx, filter).Decode(&admin); err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "No such user found"})
 			return
 		}

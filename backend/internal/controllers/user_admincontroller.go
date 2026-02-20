@@ -252,3 +252,19 @@ func SearchUsersByUsername(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+func GetReports(client *mongo.Client)gin.HandlerFunc{
+	return func(c*gin.Context){
+
+		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
+
+		defer cancel()
+
+		reportCol:=database.OpenCollection("reports",client)
+
+		opts:=options.Find().SetSort(bson.D{{"created_at",-1}})
+
+		cursor,err:=
+
+	}
+}

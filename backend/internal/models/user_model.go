@@ -45,3 +45,13 @@ type User struct {
 	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
 	LastSeen  *time.Time `bson:"last_seen,omitempty" json:"last_seen,omitempty"`
 }
+
+type Report struct{
+	ID primitive.ObjectID `bson:"_id,omitempty"`
+	Reason string `bson:"reason" json:"reason"`
+	TournamentId primitive.ObjectID `bson:"tournament_id"`
+	ReporterId primitive.ObjectID `bson:"reporter_id"`
+	RepotedId primitive.ObjectID  `bson:"repoted_id"`
+	SuspectUname string `bson:"suspect_name"`
+	SubmissionId primitive.ObjectID `bson:"submission_id"`
+}

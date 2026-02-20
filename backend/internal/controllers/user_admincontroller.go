@@ -264,7 +264,22 @@ func GetReports(client *mongo.Client)gin.HandlerFunc{
 
 		opts:=options.Find().SetSort(bson.D{{"created_at",-1}})
 
-		cursor,err:=
+		var reports[]models.Report
 
+		cursor,err:=reportCol.Find(ctx,opts)
+
+		if err!=nil{
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching reports"})
+			return 
+	
+		}
+
+		if err=cursor.All(ctx,&reports);err!=nil{
+			c.JSON(http.StatusInternalServerError,gin.H{"error":"Error decoding reports"})
+			return 
+		}
+		c.JSON(http.StatusOK,gin.H{
+			"reports":reports,
+		})
 	}
 }

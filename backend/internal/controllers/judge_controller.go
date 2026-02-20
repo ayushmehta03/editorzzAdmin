@@ -119,7 +119,6 @@ func SubmitJudgeScores(client *mongo.Client) gin.HandlerFunc {
 
 		submissionCol := database.OpenCollection("submissions", client)
         
-		// In a real app, verify the slug belongs to the tournament these submissions are in.
 		for _, item := range payload {
 			filter := bson.M{"_id": item.SubmissionID}
 			update := bson.M{

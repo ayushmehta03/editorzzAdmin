@@ -20,7 +20,7 @@ type Tournament struct {
 	Title       string `bson:"title" json:"title"`
 	Description string `bson:"description" json:"description"`
 	Banner      string `bson:"banner_url,omitempty" json:"banner_url,omitempty"`
-
+	Number int `bson:"tournamnet_number" json:"Tournament_number"`
 	Slug string `bson:"slug" json:"slug"`
 
 	StartTime time.Time `bson:"start_time" json:"start_time"`

@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GenerateSlug(title string) string {
@@ -39,6 +40,39 @@ type CreateTournamentRequest struct {
 	JudgeEmail      string    `json:"judge_email" binding:"required,email"`
 }
 
+
+func GetNextTournamentNumber(client *mongo.Client) (int64, error) {
+
+	counterCollection := database.OpenCollection("counters", client)
+
+	filter := bson.M{"_id": "tournament_number"}
+
+	update := bson.M{
+		"$inc": bson.M{"seq": 1},
+	}
+
+
+	opts := options.FindOneAndUpdate().
+		SetUpsert(true).
+		SetReturnDocument(options.After)
+
+	var result struct {
+		Seq int64 `bson:"seq"`
+	}
+
+	err := counterCollection.FindOneAndUpdate(
+		context.TODO(),
+		filter,
+		update,
+		opts,
+	).Decode(&result)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return result.Seq, nil
+}
 
 func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 	return func(c *gin.Context ){

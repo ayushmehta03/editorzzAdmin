@@ -108,6 +108,13 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 
 		collection:=database.OpenCollection("tournaments",clinet)
 
+
+		tournamentNumber, err := GetNextTournamentNumber(clinet)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tournament number"})
+			return
+		}
+
 	adminID, _ := primitive.ObjectIDFromHex(c.GetString("user_id"))
 
 
@@ -117,6 +124,7 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 	tournament:=models.Tournament{
 		ID:primitive.NewObjectID(),
 		Title: req.Title,
+		Number: int(tournamentNumber),
 		Description: req.Description,
 		Banner:req.BannerURL,
 		Slug:GenerateSlug(req.Title),
@@ -137,7 +145,7 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 
 	}
 
-	_,err:=collection.InsertOne(ctx,tournament)
+	_,err=collection.InsertOne(ctx,tournament)
 	if err!=nil{
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tournament"})
 			return

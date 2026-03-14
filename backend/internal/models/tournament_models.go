@@ -46,3 +46,28 @@ type Tournament struct {
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
+type VoteTournamnent struct{
+  ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+
+	Title       string `bson:"title" json:"title"`
+	Description string `bson:"description" json:"description"`
+	Banner      string `bson:"banner_url,omitempty" json:"banner_url,omitempty"`
+	Number int `bson:"tournamnet_number" json:"tournament_number"`
+	Slug string `bson:"slug" json:"slug"`
+
+	StartTime time.Time `bson:"start_time" json:"start_time"`
+	EndTime   time.Time `bson:"end_time" json:"end_time"`
+
+	MaxParticipants int `bson:"max_participants" json:"max_participants"`
+	CurrentCount    int `bson:"current_count" json:"current_count"`
+
+	PrizePool  float64 `bson:"prize_pool" json:"prize_pool"`
+	AssetsLink string  `bson:"assets_link" json:"assets_link"`
+
+	VoteStatus bool `bson:"vote_status" json:"vote_status"`
+
+	
+
+
+
+}

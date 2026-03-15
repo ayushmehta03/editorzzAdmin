@@ -33,9 +33,7 @@ export default function AdminLogin() {
 
     try {
       const data = await adminLogin(formData.identifier, formData.password);
-
       localStorage.setItem("admin_token", data.token);
-
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
@@ -47,8 +45,10 @@ export default function AdminLogin() {
   return (
     <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen font-sans text-slate-900 dark:text-white flex flex-col overflow-x-hidden">
       
+      {/* Background Glow */}
       <div className="absolute w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-blue-500/10 rounded-full blur-[80px] md:blur-[120px] -top-20 -left-20 pointer-events-none"></div>
 
+      {/* NAVBAR */}
       <header className="w-full flex items-center justify-between px-4 md:px-6 py-4 bg-white/80 dark:bg-[#101922]/80 backdrop-blur-md sticky top-0 z-50 border-b border-blue-500/10">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="bg-blue-600 p-2 rounded-lg text-white">
@@ -67,6 +67,7 @@ export default function AdminLogin() {
         </Link>
       </header>
 
+      {/* MAIN CONTENT */}
       <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -106,6 +107,7 @@ export default function AdminLogin() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+              {/* Identifier Field */}
               <div className="space-y-1.5 md:space-y-2">
                 <label className="text-xs md:text-sm font-medium px-1 text-slate-600 dark:text-slate-300">
                   Email or Username
@@ -119,7 +121,7 @@ export default function AdminLogin() {
                     required
                     type="text"
                     placeholder="Enter identifier"
-                    className="w-full h-12 md:h-14 pl-11 pr-4 bg-slate-50 dark:bg-[#1c2835] border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-600 transition text-sm text-slate-900 dark:text-white appearance-none"
+                    className="w-full h-12 md:h-14 pl-11 pr-4 bg-[#1c2835] border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-600 transition text-sm text-white placeholder-slate-500 appearance-none"
                     value={formData.identifier}
                     onChange={(e) =>
                       setFormData({ ...formData, identifier: e.target.value })
@@ -128,6 +130,7 @@ export default function AdminLogin() {
                 </div>
               </div>
 
+              {/* Password Field */}
               <div className="space-y-1.5 md:space-y-2">
                 <label className="text-xs md:text-sm font-medium px-1 text-slate-600 dark:text-slate-300">
                   Password
@@ -141,7 +144,7 @@ export default function AdminLogin() {
                     required
                     type="password"
                     placeholder="••••••••"
-                    className="w-full h-12 md:h-14 pl-11 pr-4 bg-slate-50 dark:bg-[#1c2835] border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-600 transition text-sm text-slate-900 dark:text-white appearance-none"
+                    className="w-full h-12 md:h-14 pl-11 pr-4 bg-[#1c2835] border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-600 transition text-sm text-white placeholder-slate-500 appearance-none"
                     value={formData.password}
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
@@ -167,7 +170,10 @@ export default function AdminLogin() {
               </motion.button>
             </form>
           </div>
-         
+          
+          <p className="text-center mt-6 md:mt-8 text-[11px] md:text-sm text-slate-500 px-4">
+            Authorized Personnel Only. Contact system administrator for access issues.
+          </p>
         </motion.div>
       </main>
     </div>

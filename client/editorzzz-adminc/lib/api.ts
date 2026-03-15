@@ -28,3 +28,9 @@ export async function apiRequest(
   return data;
 }
 
+export async function adminLogin(identifier: string, password: string) {
+  return apiRequest("/api/admin/login", {
+    method: "POST",
+    body: JSON.stringify({ identifier, password }),
+  });
+}

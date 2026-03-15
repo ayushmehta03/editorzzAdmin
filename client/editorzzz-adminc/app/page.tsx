@@ -9,10 +9,31 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
+import { apiRequest } from "@/lib/api";
+
 export default function Home() {
 
-  const router=useRouter();
+  const router = useRouter();
+
+  const handleLogin = async () => {
+    try {
+      const token = localStorage.getItem("admin_token");
+
+      if (!token) {
+        router.push("/login-admin");
+        return;
+      }
+
+      await apiRequest(token);
+
+      router.push("/dashboard");
+
+    } catch (err) {
+      router.push("/login-admin");
+    }
+  };
+
   return (
     <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen font-sans text-slate-900 dark:text-white flex flex-col">
       
@@ -25,16 +46,16 @@ export default function Home() {
         </div>
 
         <span className="text-sm text-slate-500 dark:text-slate-400">
-         Phase 1
+          Phase 1
         </span>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 relative overflow-hidden">
-        
+
         <div className="absolute w-[800px] h-[800px] bg-blue-500/10 rounded-full blur-[120px]"></div>
 
         <div className="max-w-2xl text-center space-y-8 py-20 relative z-10">
-          
+
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -70,18 +91,18 @@ export default function Home() {
             transition={{ delay: 0.3 }}
             className="flex justify-center"
           >
-            <button onClick={() => router.push('/login-admin')} className="min-w-[200px] h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center  justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all group">
+            <button
+              onClick={handleLogin}
+              className="min-w-[200px] h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all group"
+            >
               Log In Now
               <ArrowRight className="group-hover:translate-x-1 transition" size={18} />
             </button>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-16">
-            
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center gap-2"
-            >
+
+            <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center gap-2">
               <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600">
                 <Gauge size={22} />
               </div>
@@ -90,10 +111,7 @@ export default function Home() {
               </span>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center gap-2"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center gap-2">
               <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600">
                 <Users size={22} />
               </div>
@@ -102,10 +120,7 @@ export default function Home() {
               </span>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center gap-2"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center gap-2">
               <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600">
                 <BarChart3 size={22} />
               </div>

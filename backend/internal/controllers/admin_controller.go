@@ -124,6 +124,7 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 	tournament:=models.Tournament{
 		ID:primitive.NewObjectID(),
 		Title: req.Title,
+		Type: "judge_based",
 		Number: int(tournamentNumber),
 		Description: req.Description,
 		Banner:req.BannerURL,

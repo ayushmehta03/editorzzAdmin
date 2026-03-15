@@ -117,7 +117,6 @@ export default function AdminLogin() {
                 </div>
               </div>
 
-              {/* Password Input */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-400 ml-1">
                   Password

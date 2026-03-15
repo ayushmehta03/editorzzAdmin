@@ -23,7 +23,7 @@ export default function Home() {
         </div>
 
         <span className="text-sm text-slate-500 dark:text-slate-400">
-          Phase1
+         Phase 1
         </span>
       </header>
 
@@ -43,7 +43,6 @@ export default function Home() {
             Secure Administrator Portal
           </motion.div>
 
-          {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -53,7 +52,6 @@ export default function Home() {
             Welcome, <span className="text-blue-600">Admin</span>
           </motion.h1>
 
-          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -68,8 +66,9 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
+            className="flex justify-center"
           >
-            <button className="min-w-[200px] h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all group">
+            <button className="min-w-[200px] h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center  justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all group">
               Log In Now
               <ArrowRight className="group-hover:translate-x-1 transition" size={18} />
             </button>

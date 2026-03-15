@@ -37,7 +37,7 @@ export default function AdminLogin() {
 
       localStorage.setItem("admin_token", data.token);
 
-      toast.success("Login successful 🚀");
+      toast.success("Login successful !");
 
       setTimeout(() => {
         router.push("/dashboard");

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { adminLogin } from "@/lib/api"; // Ensure this path matches your file structure
 import {
   Edit3,
   Lock,
@@ -25,27 +26,22 @@ export default function AdminLogin() {
     password: "",
   });
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      // Calling your Go Backend via the api utility
+      const data = await adminLogin(formData.identifier, formData.password);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed");
-      }
-
+      // Store the JWT token from utils.GenerateToken
       localStorage.setItem("admin_token", data.token);
+
+      // Redirect to dashboard
       router.push("/dashboard");
     } catch (err: any) {
+      // Displays "No such user found" or "Wrong email or password" from your Go code
       setError(err.message);
     } finally {
       setLoading(false);
@@ -55,8 +51,10 @@ export default function AdminLogin() {
   return (
     <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen font-sans text-slate-900 dark:text-white flex flex-col overflow-x-hidden">
       
+      {/* Background Glow */}
       <div className="absolute w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-blue-500/10 rounded-full blur-[80px] md:blur-[120px] -top-20 -left-20 pointer-events-none"></div>
 
+      {/* NAVBAR */}
       <header className="w-full flex items-center justify-between px-4 md:px-6 py-4 bg-white/80 dark:bg-[#101922]/80 backdrop-blur-md sticky top-0 z-50 border-b border-blue-500/10">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="bg-blue-600 p-2 rounded-lg text-white">
@@ -75,6 +73,7 @@ export default function AdminLogin() {
         </Link>
       </header>
 
+      {/* MAIN */}
       <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

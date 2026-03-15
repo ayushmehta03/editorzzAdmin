@@ -47,6 +47,7 @@ type Tournament struct {
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
+
 type VoteTournamnent struct{
   ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 
@@ -66,6 +67,18 @@ type VoteTournamnent struct{
 	AssetsLink string  `bson:"assets_link" json:"assets_link"`
 
 	VoteStatus bool `bson:"vote_status" json:"vote_status"`
+
+	VoteStartTime time.Time `bson:"vote_start" json:"vote_start"`
+	VoteEndTime time.Time `bson:"vote_end" json:"vote_end"`
+
+  IsResultDeclared time.Time `bson:"is_result_declared" json:"is_result_declared"`
+
+	IsLeaderboardLive bool `bson:"is_leaderboard_live" json:"is_leaderboard_live"`
+
+	CreatedBy primitive.ObjectID `bson:"created_by" json:"created_by"`
+
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 
 	
 

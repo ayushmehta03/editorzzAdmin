@@ -9,8 +9,11 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
+import { useRouter } from "next/router";
 
 export default function Home() {
+
+  const router=useRouter()
   return (
     <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen font-sans text-slate-900 dark:text-white flex flex-col">
       
@@ -68,7 +71,7 @@ export default function Home() {
             transition={{ delay: 0.3 }}
             className="flex justify-center"
           >
-            <button className="min-w-[200px] h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center  justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all group">
+            <button onClick={() => router.push('/login-admin')} className="min-w-[200px] h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center  justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all group">
               Log In Now
               <ArrowRight className="group-hover:translate-x-1 transition" size={18} />
             </button>

@@ -9,11 +9,10 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
-import { useRouter } from "next/router";
-
+import { useRouter } from "next/navigation"; 
 export default function Home() {
 
-  const router=useRouter()
+  const router=useRouter();
   return (
     <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen font-sans text-slate-900 dark:text-white flex flex-col">
       

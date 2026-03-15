@@ -1,13 +1,11 @@
+// api.ts
 const BASE_URL = "http://localhost:1001";
 
 interface RequestOptions extends RequestInit {
   token?: string;
 }
 
-export async function apiRequest(
-  endpoint: string,
-  options: RequestOptions = {}
-) {
+export async function apiRequest(endpoint: string, options: RequestOptions = {}) {
   const { token, headers, ...rest } = options;
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -19,7 +17,7 @@ export async function apiRequest(
     },
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     throw new Error(data.error || "API request failed");
@@ -29,7 +27,7 @@ export async function apiRequest(
 }
 
 export async function adminLogin(identifier: string, password: string) {
-  return apiRequest("/api/admin/login", {
+  return apiRequest("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ identifier, password }),
   });

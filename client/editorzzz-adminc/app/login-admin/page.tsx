@@ -11,7 +11,7 @@ import {
   Loader2,
   AlertCircle,
   ShieldCheck,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -53,52 +53,62 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen font-sans text-slate-900 dark:text-white flex flex-col overflow-hidden">
-      
-      <div className="absolute w-[800px] h-[800px] bg-blue-500/10 rounded-full blur-[120px] -top-40 -left-40"></div>
+    <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen flex flex-col overflow-hidden">
 
-      <header className="w-full flex items-center justify-between px-6 py-4 bg-white/80 dark:bg-[#101922]/80 backdrop-blur-md sticky top-0 z-50 border-b border-blue-500/10">
+      <div className="absolute w-[700px] h-[700px] bg-blue-500/10 rounded-full blur-[120px] -top-40 -left-40"></div>
+
+      <header className="w-full flex items-center justify-between px-4 sm:px-6 py-4 bg-white/80 dark:bg-[#101922]/80 backdrop-blur-md border-b border-blue-500/10">
+
         <Link href="/" className="flex items-center gap-2 group">
           <div className="bg-blue-600 p-2 rounded-lg text-white group-hover:scale-105 transition">
             <Edit3 size={20} />
           </div>
-          <span className="text-xl font-bold tracking-tight">Editorzzz</span>
+          <span className="text-lg sm:text-xl font-bold tracking-tight">
+            Editorzzz
+          </span>
         </Link>
 
         <Link
           href="/"
-          className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 flex items-center gap-2 transition"
+          className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 flex items-center gap-1 sm:gap-2 transition"
         >
           <ArrowLeft size={16} />
-          Back to Home
+          Back
         </Link>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-4 relative z-10">
+      {/* MAIN */}
+      <main className="flex-1 flex items-center justify-center px-4 py-10 relative z-10">
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="w-full max-w-md"
         >
-          <div className="bg-white dark:bg-[#16212c] p-8 rounded-3xl shadow-xl shadow-blue-500/5 border border-blue-500/10">
+
+          <div className="bg-white dark:bg-[#16212c] p-6 sm:p-8 rounded-3xl shadow-xl shadow-blue-500/5 border border-blue-500/10">
+
             <div className="text-center mb-8">
+
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="mx-auto w-14 h-14 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-4"
+                transition={{ duration: 0.5 }}
+                className="mx-auto w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-4"
               >
                 <ShieldCheck size={24} />
               </motion.div>
 
-              <h1 className="text-2xl font-bold flex items-center justify-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold flex items-center justify-center gap-2">
                 Admin Login
                 <Sparkles size={18} className="text-blue-600" />
               </h1>
 
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 px-2">
                 Enter your credentials to access the portal
               </p>
+
             </div>
 
             {error && (
@@ -113,15 +123,19 @@ export default function AdminLogin() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
+
               <div className="space-y-2">
                 <label className="text-sm font-medium px-1 text-slate-600 dark:text-slate-300">
                   Email or Username
                 </label>
+
                 <div className="relative group">
+
                   <User
                     size={18}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition"
                   />
+
                   <input
                     required
                     type="text"
@@ -129,9 +143,13 @@ export default function AdminLogin() {
                     className="w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-[#1c2835] border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-600 transition text-slate-900 dark:text-white"
                     value={formData.identifier}
                     onChange={(e) =>
-                      setFormData({ ...formData, identifier: e.target.value })
+                      setFormData({
+                        ...formData,
+                        identifier: e.target.value,
+                      })
                     }
                   />
+
                 </div>
               </div>
 
@@ -139,11 +157,14 @@ export default function AdminLogin() {
                 <label className="text-sm font-medium px-1 text-slate-600 dark:text-slate-300">
                   Password
                 </label>
+
                 <div className="relative group">
+
                   <Lock
                     size={18}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition"
                   />
+
                   <input
                     required
                     type="password"
@@ -151,18 +172,22 @@ export default function AdminLogin() {
                     className="w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-[#1c2835] border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-600 transition text-slate-900 dark:text-white"
                     value={formData.password}
                     onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
+                      setFormData({
+                        ...formData,
+                        password: e.target.value,
+                      })
                     }
                   />
+
                 </div>
               </div>
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={{ scale: 0.97 }}
                 disabled={loading}
                 type="submit"
-                className="w-full h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all mt-8"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all mt-6"
               >
                 {loading ? (
                   <Loader2 className="animate-spin" size={20} />
@@ -173,10 +198,13 @@ export default function AdminLogin() {
                   </>
                 )}
               </motion.button>
+
             </form>
+
           </div>
-        
+
         </motion.div>
+
       </main>
     </div>
   );

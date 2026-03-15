@@ -22,6 +22,7 @@ type Tournament struct {
 	Banner      string `bson:"banner_url,omitempty" json:"banner_url,omitempty"`
 	Number int `bson:"tournamnet_number" json:"tournament_number"`
 	Slug string `bson:"slug" json:"slug"`
+	Type string `bson:"type" json:"type"`
 
 	StartTime time.Time `bson:"start_time" json:"start_time"`
 	EndTime   time.Time `bson:"end_time" json:"end_time"`

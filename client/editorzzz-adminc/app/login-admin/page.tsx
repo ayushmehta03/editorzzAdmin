@@ -77,7 +77,6 @@ export default function AdminLogin() {
         </Link>
       </header>
 
-      {/* MAIN */}
       <main className="flex-1 flex items-center justify-center px-4 py-10 relative z-10">
 
         <motion.div

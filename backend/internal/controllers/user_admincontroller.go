@@ -65,6 +65,7 @@ func GetAllUsers(client *mongo.Client) gin.HandlerFunc {
 				"name":              u.FullName,
 				"username":          u.UserName,
 				"email":             u.Email,
+				"phone":u.Phone,
 				"role":              u.Role,
 				"ban":               u.Ban,
 				"is_hiring_listed":  u.IsHiringListed,

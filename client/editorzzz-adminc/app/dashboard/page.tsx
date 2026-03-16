@@ -9,7 +9,9 @@ import {
   Flag,
   Trophy,
   BarChart3,
-  ShieldCheck
+  ShieldCheck,
+  ChevronRight,
+  CheckCircle
 } from "lucide-react";
 
 import {
@@ -49,6 +51,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#0f172a] text-white">
 
+      {/* NAVBAR */}
 
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-[#0f172a]/80 backdrop-blur-md border-b border-slate-800">
 
@@ -66,38 +69,41 @@ export default function Dashboard() {
 
       </header>
 
+      {/* MAIN */}
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-10">
 
+        {/* HEADER */}
 
         <div>
           <h2 className="text-3xl font-bold">
-            Dashboard Overview
+            Admin Dashboard
           </h2>
 
-          <p className="text-slate-400 text-sm mt-1">
-            Monitor platform statistics
+          <p className="text-slate-400 text-sm">
+            System monitoring and management
           </p>
         </div>
 
+        {/* STATS */}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
           <motion.div
             whileHover={{ scale: 1.05 }}
             onClick={() => router.push("/manage-users")}
-            className="cursor-pointer bg-slate-800/60 backdrop-blur-xl border border-slate-700 p-6 rounded-xl"
+            className="cursor-pointer bg-slate-800/60 backdrop-blur-lg border border-slate-700 p-6 rounded-xl"
           >
 
             <div className="flex items-center justify-between">
               <span className="text-slate-400 text-sm">
-                Total Users
+                Active Users
               </span>
 
               <Users className="text-blue-400" />
             </div>
 
-            <p className="text-3xl font-bold mt-3">
+            <p className="text-3xl font-bold mt-4">
               {stats.users}
             </p>
 
@@ -106,7 +112,7 @@ export default function Dashboard() {
           <motion.div
             whileHover={{ scale: 1.05 }}
             onClick={() => router.push("/reports")}
-            className="cursor-pointer bg-slate-800/60 backdrop-blur-xl border border-slate-700 p-6 rounded-xl"
+            className="cursor-pointer bg-slate-800/60 backdrop-blur-lg border border-slate-700 p-6 rounded-xl"
           >
 
             <div className="flex items-center justify-between">
@@ -117,7 +123,7 @@ export default function Dashboard() {
               <Flag className="text-red-400" />
             </div>
 
-            <p className="text-3xl font-bold mt-3">
+            <p className="text-3xl font-bold mt-4">
               {stats.reports}
             </p>
 
@@ -125,6 +131,7 @@ export default function Dashboard() {
 
         </div>
 
+        {/* USER GROWTH CHART */}
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -142,7 +149,7 @@ export default function Dashboard() {
 
           </div>
 
-          <div className="w-full h-[350px]">
+          <div className="w-full h-[320px]">
 
             <ResponsiveContainer>
 
@@ -172,48 +179,156 @@ export default function Dashboard() {
 
         </motion.div>
 
+        {/* MANAGEMENT SECTION */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
 
-          <motion.div
-            whileHover={{ y: -6 }}
-            onClick={() => router.push("/tournaments/judge")}
-            className="cursor-pointer bg-slate-800/60 border border-slate-700 p-6 rounded-xl flex items-center gap-4"
-          >
+          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest">
+            Management
+          </h3>
 
-            <Trophy className="text-purple-400" size={30} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            <div>
-              <h3 className="font-semibold">
-                Judge Tournaments
-              </h3>
+            {/* Manage Users */}
 
-              <p className="text-sm text-slate-400">
-                Create expert judged contests
-              </p>
-            </div>
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => router.push("/manage-users")}
+              className="cursor-pointer bg-slate-800/60 border border-slate-700 p-6 rounded-xl flex items-center justify-between"
+            >
 
-          </motion.div>
+              <div className="flex items-center gap-4">
 
-          <motion.div
-            whileHover={{ y: -6 }}
-            onClick={() => router.push("/tournaments/vote")}
-            className="cursor-pointer bg-slate-800/60 border border-slate-700 p-6 rounded-xl flex items-center gap-4"
-          >
+                <Users className="text-blue-400" />
 
-            <BarChart3 className="text-green-400" size={30} />
+                <div>
+                  <h4 className="font-semibold">
+                    Manage Users
+                  </h4>
 
-            <div>
-              <h3 className="font-semibold">
-                Vote Tournaments
-              </h3>
+                  <p className="text-sm text-slate-400">
+                    Verify identities and bans
+                  </p>
+                </div>
 
-              <p className="text-sm text-slate-400">
-                Community voting competitions
-              </p>
-            </div>
+              </div>
 
-          </motion.div>
+              <ChevronRight />
+
+            </motion.div>
+
+            {/* Judge Tournaments */}
+
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => router.push("/tournaments/judge")}
+              className="cursor-pointer bg-slate-800/60 border border-slate-700 p-6 rounded-xl flex items-center justify-between"
+            >
+
+              <div className="flex items-center gap-4">
+
+                <Trophy className="text-purple-400" />
+
+                <div>
+                  <h4 className="font-semibold">
+                    Judge Tournaments
+                  </h4>
+
+                  <p className="text-sm text-slate-400">
+                    Create expert judged events
+                  </p>
+                </div>
+
+              </div>
+
+              <ChevronRight />
+
+            </motion.div>
+
+            {/* Vote Tournaments */}
+
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => router.push("/tournaments/vote")}
+              className="cursor-pointer bg-slate-800/60 border border-slate-700 p-6 rounded-xl flex items-center justify-between"
+            >
+
+              <div className="flex items-center gap-4">
+
+                <BarChart3 className="text-green-400" />
+
+                <div>
+                  <h4 className="font-semibold">
+                    Vote Tournaments
+                  </h4>
+
+                  <p className="text-sm text-slate-400">
+                    Launch voting contests
+                  </p>
+                </div>
+
+              </div>
+
+              <ChevronRight />
+
+            </motion.div>
+
+            {/* Post Reports */}
+
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => router.push("/reports")}
+              className="cursor-pointer bg-slate-800/60 border border-slate-700 p-6 rounded-xl flex items-center justify-between"
+            >
+
+              <div className="flex items-center gap-4">
+
+                <Flag className="text-red-400" />
+
+                <div>
+                  <h4 className="font-semibold">
+                    Post Reports
+                  </h4>
+
+                  <p className="text-sm text-slate-400">
+                    Review flagged posts
+                  </p>
+                </div>
+
+              </div>
+
+              <ChevronRight />
+
+            </motion.div>
+
+
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => router.push("/approve-results")}
+              className="cursor-pointer bg-slate-800/60 border border-slate-700 p-6 rounded-xl flex items-center justify-between"
+            >
+
+              <div className="flex items-center gap-4">
+
+                <CheckCircle className="text-yellow-400" />
+
+                <div>
+                  <h4 className="font-semibold">
+                    Approve Results
+                  </h4>
+
+                  <p className="text-sm text-slate-400">
+                    Finalize tournament results
+                  </p>
+                </div>
+
+              </div>
+
+              <ChevronRight />
+
+            </motion.div>
+
+          </div>
 
         </div>
 

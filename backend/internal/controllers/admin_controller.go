@@ -450,39 +450,65 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-	
-func GetStats(client *mongo.Client)gin.HandlerFunc{
+	func GetStats(client *mongo.Client) gin.HandlerFunc {
 
-return	func(c *gin.Context){
-	editorCol:=database.OpenCollection("editors",client)
-	reportCol:=database.OpenCollection("reports",client)
+	return func(c *gin.Context) {
 
+		editorCol := database.OpenCollection("editors", client)
+		reportCol := database.OpenCollection("reports", client)
 
-	ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 
-	defer cancel();
+		// total users
+		editorsCnt, err1 := editorCol.CountDocuments(ctx, bson.M{})
 
+		// total reports
+		reportsCnt, err2 := reportCol.CountDocuments(ctx, bson.M{})
 
-	editorsCnt,err1:=editorCol.CountDocuments(ctx,bson.M{});
+		if err1 != nil || err2 != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to fetch stats",
+			})
+			return
+		}
 
-	reportsCnt,err2:=reportCol.CountDocuments(ctx,bson.M{});
+		pipeline := mongo.Pipeline{
+			{
+				{"$group", bson.D{
+					{"_id", bson.D{
+						{"month", bson.D{{"$month", "$created_at"}}},
+					}},
+					{"users", bson.D{{"$sum", 1}}},
+				}},
+			},
+			{
+				{"$sort", bson.D{{"_id.month", 1}}},
+			},
+		}
 
-	if err1 != nil || err2 != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch stats"})
-            return
-        }
+		cursor, err := editorCol.Aggregate(ctx, pipeline)
 
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to calculate growth",
+			})
+			return
+		}
 
-	c.JSON(http.StatusOK,gin.H{
-		"users":editorsCnt,
-		"reports":reportsCnt,
-	})
+		var growth []bson.M
+
+		if err = cursor.All(ctx, &growth); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to parse growth data",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"users":   editorsCnt,
+			"reports": reportsCnt,
+			"growth":  growth,
+		})
 	}
-
-	
-
-	
 }
-
-
-

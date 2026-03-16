@@ -12,7 +12,8 @@ import {
   ChevronRight,
   CheckCircle,
   LogOut,
-  Activity
+  Activity,
+  TrophyIcon
 } from "lucide-react";
 
 import {
@@ -168,11 +169,13 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
+              { title: " Contest status", sub: "View all contests history and details", icon: TrophyIcon, color: "text-blue-500", path: "/approve-results" },
               { title: "Manage Users", sub: "Control access & verify", icon: Users, color: "text-blue-400", path: "/manage-users" },
               { title: "Judge Panel", sub: "Review expert results", icon: Trophy, color: "text-purple-400", path: "/tournaments/judge" },
               { title: "Voting Control", sub: "Audit public contests", icon: BarChart3, color: "text-emerald-400", path: "/tournaments/vote" },
               { title: "Moderation", sub: "Flagged content queue", icon: Flag, color: "text-rose-400", path: "/reports" },
               { title: "Approve Results", sub: "Finalize payouts & winners", icon: CheckCircle, color: "text-amber-400", path: "/approve-results" },
+
             ].map((action, i) => (
               <motion.div
                 key={i}

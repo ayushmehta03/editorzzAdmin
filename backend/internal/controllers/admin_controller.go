@@ -463,9 +463,14 @@ return	func(c *gin.Context){
 	defer cancel();
 
 
-	editorsCnt,_:=editorCol.CountDocuments(ctx,client);
+	editorsCnt,err1:=editorCol.CountDocuments(ctx,bson.M{});
 
-	reportsCnt,_:=reportCol.CountDocuments(ctx,client);
+	reportsCnt,err2:=reportCol.CountDocuments(ctx,bson.M{});
+
+	if err1 != nil || err2 != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch stats"})
+            return
+        }
 
 
 	c.JSON(http.StatusOK,gin.H{

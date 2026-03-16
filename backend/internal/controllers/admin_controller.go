@@ -451,7 +451,33 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 }
 
 	
+func GetStats(client *mongo.Client)gin.HandlerFunc{
 
+return	func(c *gin.Context){
+	editorCol:=database.OpenCollection("editors",client)
+	reportCol:=database.OpenCollection("reports",client)
+
+
+	ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
+
+	defer cancel();
+
+
+	editorsCnt,_:=editorCol.CountDocuments(ctx,client);
+
+	reportsCnt,_:=reportCol.CountDocuments(ctx,client);
+
+
+	c.JSON(http.StatusOK,gin.H{
+		"users":editorsCnt,
+		"reports":reportsCnt,
+	})
+	}
+
+	
+
+	
+}
 
 
 

@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import {
+  Search,
+  Ban,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 
 import {
   getAllUsers,
@@ -14,7 +20,6 @@ import {
 interface User {
   id: string;
   name: string;
-  username: string;
   email: string;
   phone: string;
   ban: boolean;
@@ -23,32 +28,56 @@ interface User {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
+  const limit = 10;
+
+  // 🔥 Fetch users
   const fetchUsers = async () => {
     try {
-      const res = await getAllUsers();
+      setLoading(true);
+      const res = await getAllUsers(page, limit);
       setUsers(res.users);
+      setTotal(res.total);
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSearch = async (value: string) => {
-    setSearch(value);
-    try {
-      if (!value) return fetchUsers();
-      const res = await searchUsers(value);
-      setUsers(res.users);
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
+  // 🔥 Debounce search
+  useEffect(() => {
+    const delay = setTimeout(async () => {
+      try {
+        setLoading(true);
+        if (!search) return fetchUsers();
 
+        const res = await searchUsers(search, page);
+        setUsers(res.users);
+        setTotal(res.total);
+      } catch (err: any) {
+        toast.error(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [search, page]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [page]);
+
+  // 🔥 Actions
   const toggleBan = async (user: User) => {
     try {
       await updateUserBan(user.id, !user.ban);
-      toast.success("User updated");
+      toast.success("User status updated");
       fetchUsers();
     } catch (err: any) {
       toast.error(err.message);
@@ -65,76 +94,134 @@ export default function UsersPage() {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
-      
-      <div className="sticky top-0 z-50 backdrop-blur border-b bg-white/70 dark:bg-black/40">
-        <div className="max-w-5xl mx-auto p-4">
-          <h1 className="text-xl font-bold mb-3">Manage Users</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#0f172a] dark:to-[#020617] p-4">
 
+      {/* HEADER */}
+      <div className="max-w-5xl mx-auto mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Users className="text-blue-500" />
+          <h1 className="text-2xl font-bold">Manage Users</h1>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-3 text-gray-400" size={18} />
           <input
             value={search}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
             placeholder="Search users..."
-            className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-800 outline-none"
+            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-gray-900 border outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto p-4 space-y-4">
-        {users.map((user, i) => (
-          <motion.div
-            key={user.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow border"
-          >
-            <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
-              
-              <div className="flex items-center gap-4">
-                <img
-                  src={`https://ui-avatars.com/api/?name=${user.name}`}
-                  className="w-14 h-14 rounded-full"
-                />
+      {/* USERS */}
+      <div className="max-w-5xl mx-auto space-y-4">
 
-                <div>
-                  <h3 className="font-bold">{user.name}</h3>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                  <p className="text-sm text-gray-500">{user.phone}</p>
-                </div>
-              </div>
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="animate-pulse bg-white dark:bg-gray-900 h-24 rounded-xl"
+            />
+          ))
+        ) : (
+          users.map((user, i) => (
+            <motion.div
+              key={user.id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow hover:shadow-lg transition"
+            >
+              <div className="flex flex-col md:flex-row justify-between gap-4">
 
-              <div className="flex gap-6 flex-wrap items-center">
-                
-                <div className="flex flex-col items-center">
-                  <span className="text-xs text-gray-400">Hiring</span>
-                  <input
-                    type="checkbox"
-                    checked={user.is_hiring_listed}
-                    onChange={() => toggleHiring(user)}
-                    className="w-5 h-5"
+                {/* LEFT */}
+                <div className="flex items-center gap-4">
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${user.name}`}
+                    className="w-14 h-14 rounded-full"
                   />
+
+                  <div>
+                    <h3 className="font-semibold">{user.name}</h3>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                    <p className="text-sm text-gray-500">{user.phone}</p>
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => toggleBan(user)}
-                  className={`px-3 py-1 rounded-lg text-sm ${
-                    user.ban
-                      ? "bg-green-500/20 text-green-500"
-                      : "bg-red-500/20 text-red-500"
-                  }`}
-                >
-                  {user.ban ? "Unban" : "Ban"}
-                </button>
+                {/* RIGHT */}
+                <div className="flex items-center gap-6">
+
+                  {/* TOGGLE */}
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-gray-400">Hiring</span>
+
+                    <button
+                      onClick={() => toggleHiring(user)}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
+                        user.is_hiring_listed
+                          ? "bg-blue-500"
+                          : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow transform transition ${
+                          user.is_hiring_listed
+                            ? "translate-x-6"
+                            : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* BAN BUTTON */}
+                  <button
+                    onClick={() => toggleBan(user)}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm ${
+                      user.ban
+                        ? "bg-green-100 text-green-600"
+                        : "bg-red-100 text-red-600"
+                    }`}
+                  >
+                    {user.ban ? (
+                      <>
+                        <ShieldCheck size={16} /> Unban
+                      </>
+                    ) : (
+                      <>
+                        <Ban size={16} /> Ban
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))
+        )}
+
+        {/* PAGINATION */}
+        <div className="flex justify-center gap-2 mt-6 flex-wrap">
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i + 1)}
+              className={`px-3 py-1 rounded-lg ${
+                page === i + 1
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 dark:bg-gray-800"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+
       </div>
     </div>
   );

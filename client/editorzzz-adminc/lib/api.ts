@@ -48,3 +48,25 @@ export async function getDashboardStats() {
     method: "GET",
   });
 }
+
+export async function getAllUsers(page = 1, limit = 10) {
+  return apiRequest(`/api/admin/users?page=${page}&limit=${limit}`);
+}
+
+export async function searchUsers(search: string) {
+  return apiRequest(`/api/admin/users/search?search=${search}`);
+}
+
+export async function updateUserBan(id: string, ban: boolean) {
+  return apiRequest(`/api/admin/users/${id}/ban`, {
+    method: "PATCH",
+    body: JSON.stringify({ ban }),
+  });
+}
+
+export async function updateHiring(id: string, is_hiring_listed: boolean) {
+  return apiRequest(`/api/admin/users/${id}/hiring`, {
+    method: "PATCH",
+    body: JSON.stringify({ is_hiring_listed }),
+  });
+}

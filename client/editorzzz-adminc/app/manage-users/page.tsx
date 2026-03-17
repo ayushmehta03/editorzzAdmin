@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import {
-  Search,
-  Ban,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { Search, Ban, ShieldCheck, Users } from "lucide-react";
 
 import {
   getAllUsers,
@@ -30,18 +25,12 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
 
-  const limit = 10;
-
-  // 🔥 Fetch users
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await getAllUsers(page, limit);
+      const res = await getAllUsers();
       setUsers(res.users);
-      setTotal(res.total);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -49,16 +38,18 @@ export default function UsersPage() {
     }
   };
 
-  // 🔥 Debounce search
+  // 🔥 Debounced search
   useEffect(() => {
     const delay = setTimeout(async () => {
       try {
         setLoading(true);
-        if (!search) return fetchUsers();
 
-        const res = await searchUsers(search, page);
-        setUsers(res.users);
-        setTotal(res.total);
+        if (!search) {
+          await fetchUsers();
+        } else {
+          const res = await searchUsers(search);
+          setUsers(res.users);
+        }
       } catch (err: any) {
         toast.error(err.message);
       } finally {
@@ -67,13 +58,12 @@ export default function UsersPage() {
     }, 400);
 
     return () => clearTimeout(delay);
-  }, [search, page]);
+  }, [search]);
 
   useEffect(() => {
     fetchUsers();
-  }, [page]);
+  }, []);
 
-  // 🔥 Actions
   const toggleBan = async (user: User) => {
     try {
       await updateUserBan(user.id, !user.ban);
@@ -94,12 +84,9 @@ export default function UsersPage() {
     }
   };
 
-  const totalPages = Math.ceil(total / limit);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#0f172a] dark:to-[#020617] p-4">
 
-      {/* HEADER */}
       <div className="max-w-5xl mx-auto mb-6">
         <div className="flex items-center gap-3 mb-4">
           <Users className="text-blue-500" />
@@ -110,10 +97,7 @@ export default function UsersPage() {
           <Search className="absolute left-3 top-3 text-gray-400" size={18} />
           <input
             value={search}
-            onChange={(e) => {
-              setPage(1);
-              setSearch(e.target.value);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search users..."
             className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-gray-900 border outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -141,7 +125,6 @@ export default function UsersPage() {
             >
               <div className="flex flex-col md:flex-row justify-between gap-4">
 
-                {/* LEFT */}
                 <div className="flex items-center gap-4">
                   <img
                     src={`https://ui-avatars.com/api/?name=${user.name}`}
@@ -155,10 +138,8 @@ export default function UsersPage() {
                   </div>
                 </div>
 
-                {/* RIGHT */}
                 <div className="flex items-center gap-6">
 
-                  {/* TOGGLE */}
                   <div className="flex flex-col items-center">
                     <span className="text-xs text-gray-400">Hiring</span>
 
@@ -204,23 +185,6 @@ export default function UsersPage() {
             </motion.div>
           ))
         )}
-
-        {/* PAGINATION */}
-        <div className="flex justify-center gap-2 mt-6 flex-wrap">
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i + 1)}
-              className={`px-3 py-1 rounded-lg ${
-                page === i + 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-800"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
 
       </div>
     </div>

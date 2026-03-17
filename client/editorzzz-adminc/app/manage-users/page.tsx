@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Search, Ban, ShieldCheck, Users, Mail, Phone, Briefcase, UserX } from "lucide-react";
+import { Search, Ban, ShieldCheck, Users, Mail, Phone, Briefcase, UserX, SearchX } from "lucide-react";
 
 import {
   getAllUsers,
@@ -30,9 +30,10 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const res = await getAllUsers();
-      setUsers(res.users);
+      setUsers(res?.users || []);
     } catch (err: any) {
       toast.error(err.message || "Failed to fetch users");
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -42,15 +43,16 @@ export default function UsersPage() {
     const delay = setTimeout(async () => {
       try {
         setLoading(true);
-        if (!search) {
+        if (!search.trim()) {
           const res = await getAllUsers();
-          setUsers(res.users);
+          setUsers(res?.users || []);
         } else {
           const res = await searchUsers(search);
-          setUsers(res.users);
+          setUsers(res?.users || []);
         }
       } catch (err: any) {
-        toast.error(err.message);
+        console.error("Search error:", err);
+        setUsers([]); 
       } finally {
         setLoading(false);
       }
@@ -117,20 +119,20 @@ export default function UsersPage() {
               <div key={i} className="h-28 w-full bg-slate-200 dark:bg-slate-800/50 animate-pulse rounded-2xl" />
             ))
           ) : users.length > 0 ? (
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {users.map((user, i) => (
                 <motion.div
                   key={user.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2, delay: i * 0.05 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.2, delay: i * 0.03 }}
                   className="group bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-500/30 transition-all flex flex-col md:flex-row items-center justify-between gap-6"
                 >
                   <div className="flex items-center gap-5 w-full">
                     <div className="relative">
                       <img
-                        src={`https://ui-avatars.com/api/?name=${user.name}&background=random&bold=true`}
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&bold=true`}
                         alt={user.name}
                         className="w-16 h-16 rounded-2xl object-cover ring-2 ring-slate-100 dark:ring-slate-800 group-hover:ring-blue-500/20 transition-all"
                       />
@@ -156,10 +158,8 @@ export default function UsersPage() {
                     </div>
                   </div>
 
-                  {/* Actions Section */}
                   <div className="flex items-center justify-between md:justify-end gap-8 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 dark:border-slate-800">
                     
-                    {/* Hiring Toggle */}
                     <div className="flex flex-col items-center gap-2">
                       <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1">
                         <Briefcase size={10} /> Hiring
@@ -170,37 +170,48 @@ export default function UsersPage() {
                           user.is_hiring_listed ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-700"
                         }`}
                       >
-                        <motion.div
-                          animate={{ x: user.is_hiring_listed ? 24 : 0 }}
-                          className="bg-white w-4 h-4 rounded-full shadow-sm"
+                        <div
+                          className={`bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ${
+                            user.is_hiring_listed ? "translate-x-6" : "translate-x-0"
+                          }`}
                         />
                       </button>
                     </div>
 
                     <button
                       onClick={() => toggleBan(user)}
-                      className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 min-w-[100px] ${
+                      className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 min-w-[110px] ${
                         user.ban
-                          ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
-                          : "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                          ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400"
+                          : "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400"
                       }`}
                     >
-                      {user.ban ? (
-                        <><ShieldCheck size={18} /> Restore</>
-                      ) : (
-                        <><Ban size={18} /> Ban User</>
-                      )}
+                      {user.ban ? <><ShieldCheck size={18} /> Restore</> : <><Ban size={18} /> Ban</>}
                     </button>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
           ) : (
-            <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
-              <Users className="mx-auto text-slate-300 mb-4" size={48} />
-              <h3 className="text-xl font-medium text-slate-500">No users found</h3>
-              <p className="text-slate-400">Try adjusting your search criteria</p>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-20 px-4 bg-white dark:bg-slate-900/30 border border-dashed border-slate-300 dark:border-slate-800 rounded-3xl"
+            >
+              <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full mb-4">
+                <SearchX size={40} className="text-slate-400" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">No users found</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-center max-w-xs mt-2">
+                We couldn't find any users matching "<span className="font-semibold text-blue-500">{search}</span>".
+              </p>
+              <button 
+                onClick={() => setSearch("")}
+                className="mt-6 text-sm font-medium text-blue-500 hover:underline"
+              >
+                Clear search and view all
+              </button>
+            </motion.div>
           )}
         </div>
       </div>

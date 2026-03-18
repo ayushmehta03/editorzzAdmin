@@ -51,6 +51,7 @@ type Report struct{
 	Reason string `bson:"reason" json:"reason"`
 	TournamentId primitive.ObjectID `bson:"tournament_id"`
 	ReporterId primitive.ObjectID `bson:"reporter_id"`
+	Status string `bson:"status" json:"status"`
 	RepotedId primitive.ObjectID  `bson:"repoted_id"`
 	SuspectUname string `bson:"suspect_name"`
 	SubmissionId primitive.ObjectID `bson:"submission_id"`

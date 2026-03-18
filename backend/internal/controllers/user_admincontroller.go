@@ -327,12 +327,7 @@ func GetSubmissionByID(client *mongo.Client) gin.HandlerFunc {
 
 func DeleteSubmission(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		role := c.GetString("role")
 
-		if role != "admin" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-			return
-		}
 
 		postId := c.Param("id")
 		postObjId, err := primitive.ObjectIDFromHex(postId)

@@ -324,3 +324,41 @@ func GetSubmissionByID(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+func DeleteSubmission(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role := c.GetString("role")
+
+		if role != "admin" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+		postId := c.Param("id")
+		postObjId, err := primitive.ObjectIDFromHex(postId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post id"})
+			return
+		}
+
+		
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		defer cancel()
+
+		submissionCol := database.OpenCollection("submissions", client)
+
+		result, err := submissionCol.DeleteOne(ctx, bson.M{"_id": postObjId})
+		
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete submission"})
+			return
+		}
+
+		if result.DeletedCount == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No submission found with that ID"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Submission deleted successfully"})
+	}
+}

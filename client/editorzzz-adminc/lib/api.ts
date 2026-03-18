@@ -70,3 +70,4 @@ export async function updateHiring(id: string, is_hiring_listed: boolean) {
     body: JSON.stringify({ is_hiring_listed }),
   });
 }
+

@@ -21,6 +21,6 @@ func UserRoutes(router *gin.Engine, client *mongo.Client) {
 
 	admin.GET("/submission/:id",controllers.GetSubmissionByID(client))
 	admin.GET("/dashboard",controllers.GetStats(client))
-
+   admin.GET("/reports",controllers.GetReports(client))
 	admin.DELETE("/submission/:id",controllers.DeleteSubmission(client));
 }

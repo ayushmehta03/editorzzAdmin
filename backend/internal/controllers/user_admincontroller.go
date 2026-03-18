@@ -325,6 +325,7 @@ func GetSubmissionByID(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
+
 func DeleteSubmission(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

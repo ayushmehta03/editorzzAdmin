@@ -371,6 +371,7 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
             SuspectName    string             `bson:"suspect_name"`   
             ReporterEmail  string             `bson:"reporter_email"`
             SubmissionID   primitive.ObjectID `bson:"submission_id"`  
+			RepotedId primitive.ObjectID `bson:"repoted_id"`
         }
 
         err := reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
@@ -406,6 +407,7 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
             "suspect_name":   report.SuspectName,
             "reporter_email": report.ReporterEmail,
             "submission":     submissionData,
+			"reported_id":report.RepotedId,
         })
     }
 }

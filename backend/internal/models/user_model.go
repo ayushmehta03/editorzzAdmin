@@ -55,4 +55,5 @@ type Report struct{
 	RepotedId primitive.ObjectID  `bson:"repoted_id"`
 	SuspectUname string `bson:"suspect_name"`
 	SubmissionId primitive.ObjectID `bson:"submission_id"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 }

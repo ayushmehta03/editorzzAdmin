@@ -16,6 +16,7 @@ import {
   getReportById,
   deleteSubmission,
   resolveReport,
+  updateUserBan, 
 } from "@/lib/api";
 
 interface Report {
@@ -24,6 +25,7 @@ interface Report {
   status: string;
   suspect_name: string;
   reporter_email: string;
+  reported_id: string; // ✅ added
   submission?: {
     title: string;
     media_url: string;
@@ -45,8 +47,9 @@ export default function ReportDetailsPage() {
         id: res.ID,
         reason: res.reason,
         status: res.status,
-        suspect_name: res.SuspectUname,
+        suspect_name: res.suspect_name, // ✅ FIXED
         reporter_email: res.reporter_email,
+        reported_id: res.reported_id, // ✅ IMPORTANT
         submission: res.submission || null,
       });
     } catch (err) {
@@ -90,7 +93,20 @@ export default function ReportDetailsPage() {
   };
 
   const handleBanUser = async () => {
-    toast.success("User banned (add backend)");
+    try {
+      if (!report?.reported_id) {
+        toast.error("User ID missing");
+        return;
+      }
+
+      await updateUserBan(report.reported_id,true);
+
+      toast.success("User banned successfully");
+      router.back();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to ban user");
+    }
   };
 
   if (loading) {
@@ -128,11 +144,7 @@ export default function ReportDetailsPage() {
       </header>
 
       <main className="max-w-3xl mx-auto p-4 space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-        >
+        <motion.div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-slate-800/70 p-4 rounded-xl border border-slate-700">
             <p className="text-xs text-slate-400">Reported User</p>
             <p className="font-semibold">@{report.suspect_name}</p>
@@ -147,11 +159,7 @@ export default function ReportDetailsPage() {
         </motion.div>
 
         {report.submission && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700"
-          >
+          <div className="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700">
             <div className="p-4">
               <h3 className="text-lg font-semibold">
                 {report.submission.title}
@@ -165,7 +173,6 @@ export default function ReportDetailsPage() {
                   autoPlay
                   muted
                   loop
-                  playsInline
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -175,46 +182,33 @@ export default function ReportDetailsPage() {
                 />
               )}
             </div>
-          </motion.div>
+          </div>
         )}
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-red-900/20 border border-red-500/30 p-4 rounded-xl"
-        >
+        <div className="bg-red-900/20 border border-red-500/30 p-4 rounded-xl">
           <div className="flex gap-3">
             <AlertTriangle className="text-red-400" />
             <div>
               <p className="text-red-400 text-xs font-bold">
                 REPORT REASON
               </p>
-              <p className="text-slate-200">{report.reason}</p>
+              <p>{report.reason}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         <div className="space-y-3 pt-2">
-          <button
-            onClick={handleKeepPost}
-            className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl border border-slate-700 transition active:scale-[0.98]"
-          >
+          <button onClick={handleKeepPost} className="btn">
             <CheckCircle className="text-green-400" />
             Keep Post
           </button>
 
-          <button
-            onClick={handleDeletePost}
-            className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 py-3 rounded-xl transition active:scale-[0.98]"
-          >
+          <button onClick={handleDeletePost} className="btn bg-orange-600">
             <Trash2 />
             Remove Post
           </button>
 
-          <button
-            onClick={handleBanUser}
-            className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 py-3 rounded-xl transition active:scale-[0.98]"
-          >
+          <button onClick={handleBanUser} className="btn bg-red-600">
             <Ban />
             Ban User
           </button>

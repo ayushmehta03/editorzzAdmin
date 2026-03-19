@@ -283,16 +283,14 @@ func GetReports(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+
 func GetReportByID(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		reportID, err := primitive.ObjectIDFromHex(c.Param("id"))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid report ID"})
-			return
-		}
+		reportID, _ := primitive.ObjectIDFromHex(c.Param("id"))
 
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
 		reportCol := database.OpenCollection("reports", client)
@@ -305,48 +303,30 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
 			SuspectUname   string             `bson:"SuspectUname"`
 			ReporterEmail  string             `bson:"reporter_email"`
 			SubmissionID   primitive.ObjectID `bson:"SubmissionId"`
-			CreatedAt      time.Time          `bson:"created_at"`
 		}
 
-		err = reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
+		err := reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Report not found"})
 			return
 		}
 
-		if report.SubmissionID == primitive.NilObjectID {
-			c.JSON(http.StatusOK, gin.H{
-				"ID":             report.ID.Hex(),
-				"reason":         report.Reason,
-				"status":         report.Status,
-				"SuspectUname":   report.SuspectUname,
-				"reporter_email": report.ReporterEmail,
-				"submission":     nil,
-			})
-			return
-		}
-
 		var submission struct {
-			Title    string `bson:"title" json:"title"`
-			MediaURL string `bson:"media_url" json:"media_url"`
+			Title    string `bson:"title"`
+			MediaURL string `bson:"media_url"`
 		}
 
-		err = submissionCol.FindOne(
-			ctx,
-			bson.M{"_id": report.SubmissionID},
-		).Decode(&submission)
+		err = submissionCol.FindOne(ctx, bson.M{
+			"_id": report.SubmissionID,
+		}).Decode(&submission)
+var submissionData interface{}
 
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"ID":             report.ID.Hex(),
-				"reason":         report.Reason,
-				"status":         report.Status,
-				"SuspectUname":   report.SuspectUname,
-				"reporter_email": report.ReporterEmail,
-				"submission":     nil,
-			})
-			return
-		}
+if err == nil {
+	submissionData = gin.H{
+		"title":     submission.Title,
+		"media_url": submission.MediaURL,
+	}
+}
 
 		c.JSON(http.StatusOK, gin.H{
 			"ID":             report.ID.Hex(),
@@ -354,11 +334,7 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
 			"status":         report.Status,
 			"SuspectUname":   report.SuspectUname,
 			"reporter_email": report.ReporterEmail,
-			"created_at":     report.CreatedAt,
-			"submission": gin.H{
-				"title":     submission.Title,
-				"media_url": submission.MediaURL,
-			},
+			"submission":     submissionData,
 		})
 	}
 }

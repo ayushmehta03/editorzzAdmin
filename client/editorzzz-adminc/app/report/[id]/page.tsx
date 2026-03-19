@@ -14,7 +14,6 @@ import { toast } from "sonner";
 
 import {
   getReportById,
-  getSubmissionById,
   deleteSubmission,
   resolveReport,
 } from "@/lib/api";
@@ -25,12 +24,10 @@ interface Report {
   status: string;
   suspect_name: string;
   reporter_email: string;
-  submission_id: string;
-}
-
-interface Submission {
-  title: string;
-  media_url: string;
+  submission?: {
+    title: string;
+    media_url: string;
+  } | null;
 }
 
 export default function ReportDetailsPage() {
@@ -38,29 +35,20 @@ export default function ReportDetailsPage() {
   const params = useParams();
 
   const [report, setReport] = useState<Report | null>(null);
-  const [submission, setSubmission] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
-      const reportRes = await getReportById(params.id as string);
+      const res = await getReportById(params.id as string);
 
-      const normalized: Report = {
-        id: reportRes.ID,
-        reason: reportRes.reason,
-        status: reportRes.status,
-        suspect_name: reportRes.SuspectUname,
-        reporter_email: reportRes.reporter_email,
-        submission_id: reportRes.SubmissionId,
-      };
-
-      setReport(normalized);
-
-      const submissionRes = await getSubmissionById(
-        normalized.submission_id
-      );
-
-      setSubmission(submissionRes);
+      setReport({
+        id: res.ID,
+        reason: res.reason,
+        status: res.status,
+        suspect_name: res.SuspectUname,
+        reporter_email: res.reporter_email,
+        submission: res.submission || null,
+      });
     } catch (err) {
       console.error(err);
       toast.error("Failed to load report");
@@ -73,7 +61,6 @@ export default function ReportDetailsPage() {
     fetchData();
   }, []);
 
-  // 🔥 Actions
   const handleKeepPost = async () => {
     try {
       await resolveReport(report!.id);
@@ -86,8 +73,15 @@ export default function ReportDetailsPage() {
 
   const handleDeletePost = async () => {
     try {
-      await deleteSubmission(report!.submission_id);
-      await resolveReport(report!.id);
+      if (!report?.submission) {
+        toast.error("No submission found");
+        return;
+      }
+
+      await deleteSubmission((report as any).submission_id);
+
+      await resolveReport(report.id);
+
       toast.success("Post removed");
       router.back();
     } catch {
@@ -111,7 +105,6 @@ export default function ReportDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white">
-      {/* HEADER */}
       <header className="sticky top-0 z-50 bg-[#0f172a]/80 backdrop-blur border-b border-slate-800 px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <button
@@ -135,7 +128,6 @@ export default function ReportDetailsPage() {
       </header>
 
       <main className="max-w-3xl mx-auto p-4 space-y-6">
-        {/* USERS */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -154,8 +146,7 @@ export default function ReportDetailsPage() {
           </div>
         </motion.div>
 
-        {/* SUBMISSION */}
-        {submission && (
+        {report.submission && (
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -163,24 +154,23 @@ export default function ReportDetailsPage() {
           >
             <div className="p-4">
               <h3 className="text-lg font-semibold">
-                {submission.title}
+                {report.submission.title}
               </h3>
             </div>
 
-            {/* 🎥 Video */}
             <div className="aspect-video bg-black">
-              {submission.media_url.endsWith(".mp4") ? (
+              {report.submission.media_url.endsWith(".mp4") ? (
                 <video
-                  src={submission.media_url}
+                  src={report.submission.media_url}
                   autoPlay
                   muted
                   loop
-                  controls
+                  playsInline
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <img
-                  src={submission.media_url}
+                  src={report.submission.media_url}
                   className="w-full h-full object-cover"
                 />
               )}

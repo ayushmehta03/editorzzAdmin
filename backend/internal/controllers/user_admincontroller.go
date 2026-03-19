@@ -283,50 +283,7 @@ func GetReports(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
-func GetReportByID(client *mongo.Client) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        reportID, _ := primitive.ObjectIDFromHex(c.Param("id"))
 
-        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-        defer cancel()
-
-        reportCol := database.OpenCollection("reports", client)
-        userCol := database.OpenCollection("users", client)
-
-        var report struct {
-            ID           primitive.ObjectID `bson:"_id"`
-            Reason       string             `bson:"reason"`
-            ReportedID   primitive.ObjectID `bson:"repoted_id"` 
-            SuspectUname string             `bson:"suspect_name"`
-            Status       string             `bson:"status"`
-        }
-
-        err := reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
-        if err != nil {
-            c.JSON(http.StatusNotFound, gin.H{"error": "Report not found"})
-            return
-        }
-
-        var reportedUser struct {
-            ID    primitive.ObjectID `bson:"_id"`
-            Name  string             `bson:"name"`
-            IsBanned bool            `bson:"ban"` 
-        }
-
-        err = userCol.FindOne(ctx, bson.M{"_id": report.ReportedID}).Decode(&reportedUser)
-        
-        c.JSON(http.StatusOK, gin.H{
-            "report_id":      report.ID,
-            "reason":         report.Reason,
-            "status":         report.Status,
-            "reported_user": gin.H{
-                "id":        reportedUser.ID, 
-                "name":      reportedUser.Name,
-                "is_banned": reportedUser.IsBanned,
-            },
-        })
-    }
-}
 
 func DeleteSubmission(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -395,4 +352,61 @@ func ResolveReport(client *mongo.Client) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{"message": "Report resolved"})
 	}
+}
+
+
+func GetReportByID(client *mongo.Client) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        reportID, _ := primitive.ObjectIDFromHex(c.Param("id"))
+
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
+
+        reportCol := database.OpenCollection("reports", client)
+        submissionCol := database.OpenCollection("submissions", client)
+
+        var report struct {
+            ID             primitive.ObjectID `bson:"_id"`
+            Reason         string             `bson:"reason"`
+            Status         string             `bson:"status"`
+            SuspectName    string             `bson:"suspect_name"`   
+            ReporterEmail  string             `bson:"reporter_email"`
+            SubmissionID   primitive.ObjectID `bson:"submission_id"`  
+        }
+
+        err := reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
+        if err != nil {
+            c.JSON(http.StatusNotFound, gin.H{"error": "Report not found"})
+            return
+        }
+
+       
+        var submission struct {
+            Title    string `bson:"title"`
+            MediaURL string `bson:"media_url"`
+        }
+
+        err = submissionCol.FindOne(ctx, bson.M{
+            "_id": report.SubmissionID,
+        }).Decode(&submission)
+
+        var submissionData interface{}
+        if err == nil {
+            submissionData = gin.H{
+                "title":     submission.Title,
+                "media_url": submission.MediaURL,
+            }
+        } else {
+            submissionData = nil 
+        }
+
+        c.JSON(http.StatusOK, gin.H{
+            "ID":             report.ID.Hex(),
+            "reason":         report.Reason,
+            "status":         report.Status,
+            "suspect_name":   report.SuspectName,
+            "reporter_email": report.ReporterEmail,
+            "submission":     submissionData,
+        })
+    }
 }

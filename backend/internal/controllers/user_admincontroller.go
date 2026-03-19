@@ -284,59 +284,60 @@ func GetReports(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-
 func GetReportByID(client *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
+    return func(c *gin.Context) {
+        reportID, _ := primitive.ObjectIDFromHex(c.Param("id"))
 
-		reportID, _ := primitive.ObjectIDFromHex(c.Param("id"))
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+        reportCol := database.OpenCollection("reports", client)
+        submissionCol := database.OpenCollection("submissions", client)
 
-		reportCol := database.OpenCollection("reports", client)
-		submissionCol := database.OpenCollection("submissions", client)
+        var report struct {
+            ID             primitive.ObjectID `bson:"_id"`
+            Reason         string             `bson:"reason"`
+            Status         string             `bson:"status"`
+            SuspectName    string             `bson:"suspect_name"`   
+            ReporterEmail  string             `bson:"reporter_email"`
+            SubmissionID   primitive.ObjectID `bson:"submission_id"`  
+        }
 
-		var report struct {
-			ID             primitive.ObjectID `bson:"_id"`
-			Reason         string             `bson:"reason"`
-			Status         string             `bson:"status"`
-			SuspectUname   string             `bson:"SuspectUname"`
-			ReporterEmail  string             `bson:"reporter_email"`
-			SubmissionID   primitive.ObjectID `bson:"SubmissionId"`
-		}
+        err := reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
+        if err != nil {
+            c.JSON(http.StatusNotFound, gin.H{"error": "Report not found"})
+            return
+        }
 
-		err := reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Report not found"})
-			return
-		}
+       
+        var submission struct {
+            Title    string `bson:"title"`
+            MediaURL string `bson:"media_url"`
+        }
 
-		var submission struct {
-			Title    string `bson:"title"`
-			MediaURL string `bson:"media_url"`
-		}
+        err = submissionCol.FindOne(ctx, bson.M{
+            "_id": report.SubmissionID,
+        }).Decode(&submission)
 
-		err = submissionCol.FindOne(ctx, bson.M{
-			"_id": report.SubmissionID,
-		}).Decode(&submission)
-var submissionData interface{}
+        var submissionData interface{}
+        if err == nil {
+            submissionData = gin.H{
+                "title":     submission.Title,
+                "media_url": submission.MediaURL,
+            }
+        } else {
+            submissionData = nil 
+        }
 
-if err == nil {
-	submissionData = gin.H{
-		"title":     submission.Title,
-		"media_url": submission.MediaURL,
-	}
-}
-
-		c.JSON(http.StatusOK, gin.H{
-			"ID":             report.ID.Hex(),
-			"reason":         report.Reason,
-			"status":         report.Status,
-			"SuspectUname":   report.SuspectUname,
-			"reporter_email": report.ReporterEmail,
-			"submission":     submissionData,
-		})
-	}
+        c.JSON(http.StatusOK, gin.H{
+            "ID":             report.ID.Hex(),
+            "reason":         report.Reason,
+            "status":         report.Status,
+            "suspect_name":   report.SuspectName,
+            "reporter_email": report.ReporterEmail,
+            "submission":     submissionData,
+        })
+    }
 }
 
 func DeleteSubmission(client *mongo.Client) gin.HandlerFunc {

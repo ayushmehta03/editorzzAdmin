@@ -354,7 +354,6 @@ func ResolveReport(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-
 func GetReportByID(client *mongo.Client) gin.HandlerFunc {
     return func(c *gin.Context) {
         reportID, _ := primitive.ObjectIDFromHex(c.Param("id"))

@@ -157,7 +157,7 @@ export default function ReportsPage() {
                   transition={{ duration: 0.4, delay: i * 0.05, ease: [0.23, 1, 0.32, 1] }}
                   whileHover={{ y: -4, backgroundColor: "rgba(30, 41, 59, 0.5)" }}
                   whileTap={{ scale: 0.99 }}
-                  onClick={() => router.push(`/admin/reports/${report.id}`)}
+                  onClick={() => router.push(`/report/${report.id}`)}
                   className={`group relative overflow-hidden cursor-pointer bg-[#0f172a]/40 border border-slate-800/80 rounded-2xl transition-all shadow-xl hover:shadow-indigo-500/5 ${
                     report.status === "resolved" ? "opacity-60" : ""
                   }`}
@@ -178,7 +178,6 @@ export default function ReportsPage() {
                       </div>
                     </div>
 
-                    {/* Involved Parties Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800/50">
                         <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
@@ -201,7 +200,6 @@ export default function ReportsPage() {
                       </div>
                     </div>
 
-                    {/* Report Content */}
                     <div className="relative group/reason">
                       <p className="text-[10px] text-slate-500 uppercase font-extrabold mb-1.5 tracking-tight flex items-center gap-1.5">
                         <span className="w-1 h-3 bg-indigo-500 rounded-full" /> Case Description
@@ -211,7 +209,6 @@ export default function ReportsPage() {
                       </p>
                     </div>
 
-                    {/* Card Action Footer */}
                     <div className="pt-2 flex justify-end items-center border-t border-slate-800/50">
                       <div className="flex items-center gap-1 text-xs font-bold text-slate-400 group-hover:text-indigo-400 transition-colors uppercase tracking-wider">
                         View Details <ArrowUpRight size={14} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />

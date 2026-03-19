@@ -82,11 +82,6 @@ export async function getReportById(id: string) {
   });
 }
 
-export async function getSubmissionById(id: string) {
-  return apiRequest(`/api/admin/submission/${id}`, {
-    method: "GET",
-  });
-}
 
 export async function resolveReport(id: string) {
   return apiRequest(`/api/admin/reports/${id}/resolve`, {

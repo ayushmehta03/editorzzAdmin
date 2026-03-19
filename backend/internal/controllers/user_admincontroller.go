@@ -283,7 +283,6 @@ func GetReports(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
-
 func GetReportByID(client *mongo.Client) gin.HandlerFunc {
     return func(c *gin.Context) {
         reportID, _ := primitive.ObjectIDFromHex(c.Param("id"))
@@ -292,15 +291,14 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
         defer cancel()
 
         reportCol := database.OpenCollection("reports", client)
-        submissionCol := database.OpenCollection("submissions", client)
+        userCol := database.OpenCollection("users", client)
 
         var report struct {
-            ID             primitive.ObjectID `bson:"_id"`
-            Reason         string             `bson:"reason"`
-            Status         string             `bson:"status"`
-            SuspectName    string             `bson:"suspect_name"`   
-            ReporterEmail  string             `bson:"reporter_email"`
-            SubmissionID   primitive.ObjectID `bson:"submission_id"`  
+            ID           primitive.ObjectID `bson:"_id"`
+            Reason       string             `bson:"reason"`
+            ReportedID   primitive.ObjectID `bson:"repoted_id"` 
+            SuspectUname string             `bson:"suspect_name"`
+            Status       string             `bson:"status"`
         }
 
         err := reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
@@ -309,33 +307,23 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
             return
         }
 
-       
-        var submission struct {
-            Title    string `bson:"title"`
-            MediaURL string `bson:"media_url"`
+        var reportedUser struct {
+            ID    primitive.ObjectID `bson:"_id"`
+            Name  string             `bson:"name"`
+            IsBanned bool            `bson:"ban"` 
         }
 
-        err = submissionCol.FindOne(ctx, bson.M{
-            "_id": report.SubmissionID,
-        }).Decode(&submission)
-
-        var submissionData interface{}
-        if err == nil {
-            submissionData = gin.H{
-                "title":     submission.Title,
-                "media_url": submission.MediaURL,
-            }
-        } else {
-            submissionData = nil 
-        }
-
+        err = userCol.FindOne(ctx, bson.M{"_id": report.ReportedID}).Decode(&reportedUser)
+        
         c.JSON(http.StatusOK, gin.H{
-            "ID":             report.ID.Hex(),
+            "report_id":      report.ID,
             "reason":         report.Reason,
             "status":         report.Status,
-            "suspect_name":   report.SuspectName,
-            "reporter_email": report.ReporterEmail,
-            "submission":     submissionData,
+            "reported_user": gin.H{
+                "id":        reportedUser.ID, 
+                "name":      reportedUser.Name,
+                "is_banned": reportedUser.IsBanned,
+            },
         })
     }
 }

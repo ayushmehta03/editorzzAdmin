@@ -76,5 +76,27 @@ export async function getReports() {
   });
 }
 
+export async function getReportById(id: string) {
+  return apiRequest(`/api/admin/reports/${id}`, {
+    method: "GET",
+  });
+}
 
+export async function getSubmissionById(id: string) {
+  return apiRequest(`/api/admin/submission/${id}`, {
+    method: "GET",
+  });
+}
+
+export async function resolveReport(id: string) {
+  return apiRequest(`/api/admin/reports/${id}/resolve`, {
+    method: "PATCH",
+  });
+}
+
+export async function deleteSubmission(id: string) {
+  return apiRequest(`/api/admin/submission/${id}`, {
+    method: "DELETE",
+  });
+}
 

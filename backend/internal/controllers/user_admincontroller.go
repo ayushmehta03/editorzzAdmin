@@ -357,3 +357,39 @@ func DeleteSubmission(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Submission deleted successfully"})
 	}
 }
+
+func ResolveReport(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		reportID, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid report ID"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		defer cancel()
+
+		reportCol := database.OpenCollection("reports", client)
+
+		update := bson.M{
+			"$set": bson.M{
+				"status": "resolved",
+			},
+		}
+
+		result, err := reportCol.UpdateOne(ctx, bson.M{"_id": reportID}, update)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update"})
+			return
+		}
+
+		if result.MatchedCount == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Report not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Report resolved"})
+	}
+}

@@ -17,7 +17,7 @@ interface Report {
   reason: string;
   status: "pending" | "resolved";
   suspect_name: string;
-  reporter_name: string;
+  reporter_email: string;
   created_at: string;
 }
 
@@ -47,7 +47,6 @@ export default function ReportsPage() {
 
       const res = await getReports();
 
-      // ✅ Normalize backend → frontend
       const normalized = (res?.reports || []).map((r: any) => ({
         id: r.ID,
         reason: r.reason,
@@ -147,24 +146,21 @@ export default function ReportsPage() {
                   </span>
                 </div>
 
-                {/* USERS */}
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Reporter */}
                   <div>
                     <p className="text-[10px] text-slate-500 uppercase font-bold">
-                      Reporter
+                      Reporter Details
                     </p>
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center">
                         <User size={14} />
                       </div>
                       <span className="text-sm">
-                        @{report.reporter_name}
+                        @{report.reporter_email}
                       </span>
                     </div>
                   </div>
 
-                  {/* Suspect */}
                   <div>
                     <p className="text-[10px] text-slate-500 uppercase font-bold">
                       Suspect

@@ -54,6 +54,7 @@ type Report struct{
 	Status string `bson:"status" json:"status"`
 	RepotedId primitive.ObjectID  `bson:"repoted_id"`
 	SuspectUname string `bson:"suspect_name"`
+	ReporterEmail string `bson:"reporter_email" json:"reporter_email"`
 	SubmissionId primitive.ObjectID `bson:"submission_id"`
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 }

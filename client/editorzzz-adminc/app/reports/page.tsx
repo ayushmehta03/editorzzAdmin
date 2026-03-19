@@ -74,13 +74,11 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-indigo-500/30 font-sans">
-      {/* Dynamic Background Accents */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-indigo-500/5 blur-[120px]" />
         <div className="absolute top-[20%] -right-[10%] w-[30%] h-[30%] rounded-full bg-red-500/5 blur-[120px]" />
       </div>
 
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-slate-800/60 bg-[#020617]/70 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -110,7 +108,6 @@ export default function ReportsPage() {
       </header>
 
       <main className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
-        {/* Statistics & Filter Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex gap-4 items-center">
             {["all", "pending", "resolved"].map((f) => (
@@ -130,7 +127,6 @@ export default function ReportsPage() {
           </p>
         </div>
 
-        {/* Content Area */}
         <section className="space-y-4">
           {loading ? (
             <SkeletonLoader />
@@ -163,7 +159,6 @@ export default function ReportsPage() {
                   }`}
                 >
                   <div className="p-5 sm:p-6 space-y-5">
-                    {/* Card Top Header */}
                     <div className="flex justify-between items-start">
                       <div className={`px-2.5 py-1 text-[10px] rounded-md font-black uppercase tracking-[0.1em] border shadow-sm ${
                         report.status === "pending"

@@ -372,6 +372,7 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
             ReporterEmail  string             `bson:"reporter_email"`
             SubmissionID   primitive.ObjectID `bson:"submission_id"`  
 			RepotedId primitive.ObjectID `bson:"repoted_id"`
+			Info string `bson:"info"`
         }
 
         err := reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
@@ -393,6 +394,7 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
         var submissionData interface{}
         if err == nil {
             submissionData = gin.H{
+				"id":report.SubmissionID,
                 "title":     submission.Title,
                 "media_url": submission.MediaURL,
             }
@@ -408,6 +410,7 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
             "reporter_email": report.ReporterEmail,
             "submission":     submissionData,
 			"reported_id":report.RepotedId,
+			"info":report.Info,
         })
     }
 }

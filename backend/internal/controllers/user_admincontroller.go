@@ -393,3 +393,46 @@ func ResolveReport(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Report resolved"})
 	}
 }
+
+func GetReportByID(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		reportID, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid report ID"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		defer cancel()
+
+		reportCol := database.OpenCollection("reports", client)
+
+		var report struct {
+			ID             primitive.ObjectID `bson:"_id"`
+			Reason         string             `bson:"reason"`
+			Status         string             `bson:"status"`
+			SuspectUname   string             `bson:"SuspectUname"`
+			ReporterEmail  string             `bson:"reporter_email"`
+			SubmissionID   primitive.ObjectID `bson:"SubmissionId"`
+			CreatedAt      time.Time          `bson:"created_at"`
+		}
+
+		err = reportCol.FindOne(ctx, bson.M{"_id": reportID}).Decode(&report)
+
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Report not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"ID":             report.ID.Hex(),
+			"reason":         report.Reason,
+			"status":         report.Status,
+			"SuspectUname":   report.SuspectUname,
+			"reporter_email": report.ReporterEmail,
+			"SubmissionId":   report.SubmissionID.Hex(),
+			"created_at":     report.CreatedAt,
+		})
+	}
+}

@@ -253,34 +253,33 @@ func SearchUsersByUsername(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+func GetReports(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-func GetReports(client *mongo.Client)gin.HandlerFunc{
-	return func(c*gin.Context){
-
-		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
-
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		reportCol:=database.OpenCollection("reports",client)
+		reportCol := database.OpenCollection("reports", client)
 
-		opts:=options.Find().SetSort(bson.D{{"created_at",-1}})
+		opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-		var reports[]models.Report
+		var reports []models.Report
 
-		cursor,err:=reportCol.Find(ctx,opts)
-
-		if err!=nil{
+		cursor, err := reportCol.Find(ctx, bson.M{}, opts)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching reports"})
-			return 
-	
+			return
 		}
 
-		if err=cursor.All(ctx,&reports);err!=nil{
-			c.JSON(http.StatusInternalServerError,gin.H{"error":"Error decoding reports"})
-			return 
+		defer cursor.Close(ctx)
+
+		if err = cursor.All(ctx, &reports); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding reports"})
+			return
 		}
-		c.JSON(http.StatusOK,gin.H{
-			"reports":reports,
+
+		c.JSON(http.StatusOK, gin.H{
+			"reports": reports,
 		})
 	}
 }

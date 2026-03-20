@@ -449,8 +449,7 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
-
-	func GetStats(client *mongo.Client) gin.HandlerFunc {
+func GetStats(client *mongo.Client) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
@@ -463,8 +462,10 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		// total users
 		editorsCnt, err1 := editorCol.CountDocuments(ctx, bson.M{})
 
-		// total reports
-		reportsCnt, err2 := reportCol.CountDocuments(ctx, bson.M{})
+		// total reports (ONLY pending)
+		reportsCnt, err2 := reportCol.CountDocuments(ctx, bson.M{
+			"status": "pending",
+		})
 
 		if err1 != nil || err2 != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

@@ -116,7 +116,6 @@ export default function ReportDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-100">
-      {/* HEADER */}
       <header className="sticky top-0 z-50 border-b border-slate-800 bg-[#020617]/90 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -141,9 +140,7 @@ export default function ReportDetailsPage() {
         </div>
       </header>
 
-      {/* MAIN */}
       <main className="max-w-2xl mx-auto p-4 pb-40 space-y-6">
-        {/* USER INFO */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
             {
@@ -170,19 +167,16 @@ export default function ReportDetailsPage() {
           ))}
         </div>
 
-        {/* REASON */}
         <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-xl">
           <p className="text-red-400 text-xs uppercase">Reason</p>
           <p>{report.reason}</p>
         </div>
 
-        {/* INFO */}
         <div className="bg-blue-500/5 border border-blue-500/20 p-4 rounded-xl">
           <p className="text-blue-400 text-xs uppercase">Info</p>
           <p>{report.info}</p>
         </div>
 
-        {/* MEDIA */}
         <div className="bg-slate-900 rounded-xl overflow-hidden">
           {report.submission ? (
             report.submission.media_url.match(/\.(mp4|webm)$/) ? (
@@ -205,7 +199,6 @@ export default function ReportDetailsPage() {
         </div>
       </main>
 
-      {/* ACTION BUTTONS */}
       <div className="fixed bottom-0 left-0 right-0 p-3 bg-[#020617]/95 backdrop-blur-xl">
         <div className="max-w-2xl mx-auto grid grid-cols-2 gap-3">
           <ActionButton
@@ -253,7 +246,6 @@ export default function ReportDetailsPage() {
         </div>
       </div>
 
-      {/* CONFIRM MODAL */}
       <AnimatePresence>
         {confirmAction && (
           <motion.div

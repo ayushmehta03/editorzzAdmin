@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
+  Gavel,
+  Vote,
   Flag,
   Trophy,
   BarChart3,
@@ -55,7 +57,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-50 selection:bg-blue-500/30">
-      {/* NAVBAR */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-[#020617]/70 backdrop-blur-xl border-b border-slate-800/60">
         <div className="flex items-center gap-3">
           <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-2 rounded-xl shadow-lg shadow-blue-500/20">
@@ -76,7 +77,6 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-10 space-y-12">
-        {/* WELCOME SECTION */}
         <section>
           <motion.div 
             initial={{ opacity: 0, y: 10 }} 
@@ -93,7 +93,6 @@ export default function Dashboard() {
           </motion.div>
         </section>
 
-        {/* KEY STATS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
           {[
             { label: "Total Users", val: stats.users, icon: Users, color: "text-blue-400", bg: "bg-blue-400/10", path: "/manage-users" },
@@ -117,7 +116,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* CHART SECTION */}
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -160,7 +158,6 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* QUICK ACTIONS */}
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Management Hub</h3>
@@ -168,13 +165,29 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
             {[
+               {
+  title: "Create Judge Tournament",
+  sub: "Setup expert-based contest",
+  icon: Gavel,
+  color: "text-indigo-400",
+  path: "/tournaments/create/judge"
+},
+{
+  title: "Create Vote Tournament",
+  sub: "Launch public voting contest",
+  icon: Vote,
+  color: "text-pink-400",
+  path: "/tournaments/create/vote"
+},
               { title: " Contest status", sub: "View all contests history and details", icon: TrophyIcon, color: "text-blue-500", path: "/approve-results" },
               { title: "Manage Users", sub: "Control access & verify", icon: Users, color: "text-blue-400", path: "/manage-users" },
               { title: "Judge Panel", sub: "Review expert results", icon: Trophy, color: "text-purple-400", path: "/tournaments/judge" },
               { title: "Voting Control", sub: "Audit public contests", icon: BarChart3, color: "text-emerald-400", path: "/tournaments/vote" },
               { title: "Moderation", sub: "Flagged content queue", icon: Flag, color: "text-rose-400", path: "/reports" },
               { title: "Approve Results", sub: "Finalize payouts & winners", icon: CheckCircle, color: "text-amber-400", path: "/approve-results" },
+             
 
             ].map((action, i) => (
               <motion.div

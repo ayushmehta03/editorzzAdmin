@@ -394,7 +394,6 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
         var submissionData interface{}
         if err == nil {
             submissionData = gin.H{
-				"id":report.SubmissionID,
                 "title":     submission.Title,
                 "media_url": submission.MediaURL,
             }
@@ -408,6 +407,7 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
             "status":         report.Status,
             "suspect_name":   report.SuspectName,
             "reporter_email": report.ReporterEmail,
+			"submission_id":report.SubmissionID,
             "submission":     submissionData,
 			"reported_id":report.RepotedId,
 			"info":report.Info,

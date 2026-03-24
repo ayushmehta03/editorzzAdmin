@@ -41,6 +41,11 @@ type CreateTournamentRequest struct {
 }
 
 
+type CreateVoteContest struct{
+	Title string `json:"title" binding:"required"`
+	Description string `json:"description" binding:"required"`
+}
+
 func GetNextTournamentNumber(client *mongo.Client) (int64, error) {
 
 	counterCollection := database.OpenCollection("counters", client)
@@ -511,5 +516,26 @@ func GetStats(client *mongo.Client) gin.HandlerFunc {
 			"reports": reportsCnt,
 			"growth":  growth,
 		})
+	}
+}
+
+
+// create tournament for contest type 2
+
+func CreateContest(client *mongo.Client)gin.HandlerFunc{
+	return func(c *gin.Context){
+		role,exists:=c.Get("role")
+
+		if !exists || role==""{
+			c.JSON(http.StatusUnauthorized,gin.H{"error":"Unauthorized"})
+			return 
+		}
+
+		voteContest=database.OpenCollection("vote_contest",client)
+
+
+
+
+	
 	}
 }

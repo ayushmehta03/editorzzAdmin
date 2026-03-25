@@ -172,7 +172,7 @@ export default function Dashboard() {
   sub: "Setup expert-based contest",
   icon: Gavel,
   color: "text-indigo-400",
-  path: "/tournaments/create/judge"
+  path: "/contest-judge"
 },
 {
   title: "Create Vote Tournament",

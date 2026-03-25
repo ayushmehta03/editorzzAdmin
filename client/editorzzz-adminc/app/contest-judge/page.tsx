@@ -111,7 +111,6 @@ export default function CreateTournamentPage() {
             required
           />
 
-          {/* Banner Upload */}
           <div>
             <input type="file" onChange={handleBanner} />
             {bannerPreview && (
@@ -122,7 +121,6 @@ export default function CreateTournamentPage() {
             )}
           </div>
 
-          {/* Time */}
           <div className="grid md:grid-cols-2 gap-4">
             <input
               type="datetime-local"

@@ -531,7 +531,7 @@ func CreateContest(client *mongo.Client)gin.HandlerFunc{
 			return 
 		}
 
-		voteContest=database.OpenCollection("vote_contest",client)
+	//	voteContest=database.OpenCollection("vote_contest",client)
 
 
 

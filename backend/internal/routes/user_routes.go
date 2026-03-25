@@ -25,4 +25,5 @@ func UserRoutes(router *gin.Engine, client *mongo.Client) {
 	admin.PATCH("/reports/:id/resolve", controllers.ResolveReport(client)) 
 
 	admin.DELETE("/submission/:id", controllers.DeleteSubmission(client))
+	
 }

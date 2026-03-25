@@ -95,3 +95,9 @@ export async function deleteSubmission(id: string) {
   });
 }
 
+export async function createTournament(data: any) {
+  return apiRequest(`/createtournament`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}

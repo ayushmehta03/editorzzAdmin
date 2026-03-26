@@ -24,12 +24,12 @@ export default function CreateTournamentPage() {
     judge_email: "",
   });
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleBannerUpload = async (e: any) => {
-    const file = e.target.files[0];
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     try {
@@ -41,7 +41,7 @@ export default function CreateTournamentPage() {
       const url = await uploadProfileImage(file);
 
       toast.dismiss(toastId);
-      toast.success("Banner uploaded ");
+      toast.success("Banner uploaded ✅");
 
       setForm((prev) => ({
         ...prev,
@@ -54,28 +54,35 @@ export default function CreateTournamentPage() {
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!form.banner_url) {
       return toast.error("Please upload banner image");
     }
 
+    if (new Date(form.end_time) <= new Date(form.start_time)) {
+      return toast.error("End time must be after start time");
+    }
+
     try {
       setLoading(true);
+
       await createTournament({
-        Title: form.title,
-        Description: form.description,
-        BannerURL: form.banner_url,
-        StartTime: new Date(form.start_time),
-        EndTime: new Date(form.end_time),
-        MaxParticipants: Number(form.max_participants),
-        PrizePool: Number(form.prize_pool),
-        AssetsLink: form.assets_link,
-        JudgeEmail: form.judge_email,
+        title: form.title,
+        description: form.description,
+        banner_url: form.banner_url,
+        start_time: new Date(form.start_time).toISOString(),
+        end_time: new Date(form.end_time).toISOString(),
+        max_participants: Number(form.max_participants),
+        prize_pool: Number(form.prize_pool),
+        assets_link: form.assets_link,
+        judge_email: form.judge_email,
       });
 
       toast.success("Tournament created successfully!");
 
+      // Reset Form
       setForm({
         title: "",
         description: "",
@@ -89,7 +96,7 @@ export default function CreateTournamentPage() {
       });
       setBannerPreview(null);
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Failed to create tournament");
     } finally {
       setLoading(false);
     }
@@ -116,7 +123,7 @@ export default function CreateTournamentPage() {
           >
             New Tournament
           </motion.h1>
-          <p className="text-gray-500 mt-2 text-sm md:text-base">Enter the details below to launch your event</p>
+          <p className="text-gray-500 mt-2 text-sm md:text-base">Configure your tournament details below</p>
         </header>
 
         <motion.form
@@ -132,7 +139,7 @@ export default function CreateTournamentPage() {
                 name="title"
                 value={form.title}
                 onChange={handleChange}
-                placeholder="Ex: Global Valorant Open"
+                placeholder="Ex: Global Esports Open"
                 className={inputStyles}
                 required
               />
@@ -144,7 +151,7 @@ export default function CreateTournamentPage() {
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                placeholder="Describe the format, rules, and requirements..."
+                placeholder="Rules, format, and participation guidelines..."
                 className={`${inputStyles} min-h-[140px] resize-none`}
                 required
               />
@@ -157,8 +164,8 @@ export default function CreateTournamentPage() {
               {bannerPreview ? (
                 <div className="relative h-56 w-full">
                   <img src={bannerPreview} className="w-full h-full object-cover" alt="Banner" />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-sm font-bold bg-white text-black px-4 py-2 rounded-full">Change Image</p>
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-sm font-bold bg-white text-black px-4 py-2 rounded-full pointer-events-none">Change Image</p>
                   </div>
                 </div>
               ) : (
@@ -167,8 +174,8 @@ export default function CreateTournamentPage() {
                     <ImageIcon size={28} />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-bold text-gray-300">{uploading ? "Uploading..." : "Click or drag banner image"}</p>
-                    <p className="text-xs text-gray-600 mt-1">Recommended: 1200x675px</p>
+                    <p className="text-sm font-bold text-gray-300">{uploading ? "Uploading to Cloud..." : "Upload Tournament Banner"}</p>
+                    <p className="text-xs text-gray-600 mt-1">Recommended 16:9 ratio</p>
                   </div>
                 </div>
               )}
@@ -176,6 +183,7 @@ export default function CreateTournamentPage() {
                 type="file"
                 accept="image/*"
                 onChange={handleBannerUpload}
+                disabled={uploading}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
               />
             </div>
@@ -184,47 +192,47 @@ export default function CreateTournamentPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className={labelStyles}><Calendar className="inline mr-2 mb-0.5" size={14} /> Start Time</label>
-              <input type="datetime-local" name="start_time" onChange={handleChange} className={inputStyles} required />
+              <input type="datetime-local" name="start_time" value={form.start_time} onChange={handleChange} className={inputStyles} required />
             </div>
             <div>
               <label className={labelStyles}><Calendar className="inline mr-2 mb-0.5" size={14} /> End Time</label>
-              <input type="datetime-local" name="end_time" onChange={handleChange} className={inputStyles} required />
+              <input type="datetime-local" name="end_time" value={form.end_time} onChange={handleChange} className={inputStyles} required />
             </div>
             <div>
-              <label className={labelStyles}><Users className="inline mr-2 mb-0.5" size={14} /> Max Slots</label>
-              <input name="max_participants" type="number" placeholder="0" onChange={handleChange} className={inputStyles} />
+              <label className={labelStyles}><Users className="inline mr-2 mb-0.5" size={14} /> Max Participants</label>
+              <input name="max_participants" type="number" value={form.max_participants} placeholder="0" onChange={handleChange} className={inputStyles} required />
             </div>
             <div>
               <label className={labelStyles}><Trophy className="inline mr-2 mb-0.5" size={14} /> Prize Pool ($)</label>
-              <input name="prize_pool" type="number" placeholder="0.00" onChange={handleChange} className={inputStyles} />
+              <input name="prize_pool" type="number" value={form.prize_pool} placeholder="0.00" onChange={handleChange} className={inputStyles} required />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-gray-800/50">
             <div>
-              <label className={labelStyles}><LinkIcon className="inline mr-2 mb-0.5" size={14} /> Resource Link</label>
-              <input name="assets_link" placeholder="Drive or Notion link" onChange={handleChange} className={inputStyles} />
+              <label className={labelStyles}><LinkIcon className="inline mr-2 mb-0.5" size={14} /> Resource Assets</label>
+              <input name="assets_link" value={form.assets_link} placeholder="Link to assets" onChange={handleChange} className={inputStyles} required />
             </div>
             <div>
-              <label className={labelStyles}><Mail className="inline mr-2 mb-0.5" size={14} /> Lead Judge</label>
-              <input name="judge_email" type="email" placeholder="contact@domain.com" onChange={handleChange} className={inputStyles} />
+              <label className={labelStyles}><Mail className="inline mr-2 mb-0.5" size={14} /> Judge Email</label>
+              <input name="judge_email" type="email" value={form.judge_email} placeholder="judge@example.com" onChange={handleChange} className={inputStyles} required />
             </div>
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.01, translateY: -2 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={!(loading || uploading) ? { scale: 1.01, translateY: -2 } : {}}
+            whileTap={!(loading || uploading) ? { scale: 0.98 } : {}}
             disabled={loading || uploading}
             className={`w-full py-4 rounded-2xl font-black text-base md:text-lg uppercase tracking-widest shadow-2xl transition-all duration-300 flex items-center justify-center gap-3 ${
               loading || uploading 
               ? "bg-gray-800 text-gray-500 cursor-not-allowed" 
-              : "bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-blue-500/25"
+              : "bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-blue-500/25 active:from-blue-700 active:to-blue-600"
             }`}
           >
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                <span>Launching...</span>
+                <span>Creating...</span>
               </>
             ) : (
               <>
@@ -236,7 +244,7 @@ export default function CreateTournamentPage() {
         </motion.form>
 
         <footer className="mt-8 text-center">
-          <p className="text-xs text-gray-600 uppercase tracking-tighter">Secure Tournament Dashboard © 2026</p>
+          <p className="text-xs text-gray-600 uppercase tracking-tighter">Admin Panel • Tournament Creation Suite</p>
         </footer>
       </div>
     </div>

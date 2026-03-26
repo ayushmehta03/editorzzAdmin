@@ -4,9 +4,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { createTournament } from "@/lib/api";
+import { uploadProfileImage } from "@/lib/claudinary";
 
 export default function CreateTournamentPage() {
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -25,18 +27,42 @@ export default function CreateTournamentPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleBanner = (e: any) => {
+  const handleBannerUpload = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const url = URL.createObjectURL(file);
-    setBannerPreview(url);
+    try {
+      setUploading(true);
 
-    setForm({ ...form, banner_url: url });
+      // instant preview
+      const preview = URL.createObjectURL(file);
+      setBannerPreview(preview);
+
+      const toastId = toast.loading("Uploading banner...");
+
+      const url = await uploadProfileImage(file);
+
+      toast.dismiss(toastId);
+      toast.success("Banner uploaded ✅");
+
+      setForm((prev) => ({
+        ...prev,
+        banner_url: url,
+      }));
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
+  // ✅ SUBMIT
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+
+    if (!form.banner_url) {
+      return toast.error("Please upload banner image");
+    }
 
     try {
       setLoading(true);
@@ -53,7 +79,7 @@ export default function CreateTournamentPage() {
         JudgeEmail: form.judge_email,
       });
 
-      toast.success("Tournament created 🚀");
+      toast.success("Contest created ");
 
       setForm({
         title: "",
@@ -91,7 +117,6 @@ export default function CreateTournamentPage() {
         animate={{ opacity: 1 }}
         className="grid lg:grid-cols-12 gap-8"
       >
-        {/* LEFT */}
         <div className="lg:col-span-8 space-y-6 bg-[#131b2e] p-6 rounded-xl">
           <input
             name="title"
@@ -111,12 +136,29 @@ export default function CreateTournamentPage() {
             required
           />
 
-          <div>
-            <input type="file" onChange={handleBanner} />
+          <div className="space-y-3">
+            <label className="text-sm opacity-70">Banner Image</label>
+
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 transition">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleBannerUpload}
+                className="hidden"
+                id="bannerUpload"
+              />
+
+              <label htmlFor="bannerUpload" className="cursor-pointer">
+                <p className="text-sm">
+                  {uploading ? "Uploading..." : "Click to upload banner"}
+                </p>
+              </label>
+            </div>
+
             {bannerPreview && (
               <img
                 src={bannerPreview}
-                className="mt-3 rounded-lg w-full h-48 object-cover"
+                className="w-full h-48 object-cover rounded-lg"
               />
             )}
           </div>
@@ -176,7 +218,7 @@ export default function CreateTournamentPage() {
           </motion.button>
         </div>
 
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-4">
           <div className="bg-[#131b2e] p-6 rounded-xl">
             <p className="text-sm opacity-70 mb-4">Preview</p>
 

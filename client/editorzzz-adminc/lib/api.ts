@@ -96,7 +96,7 @@ export async function deleteSubmission(id: string) {
 }
 
 export async function createTournament(data: any) {
-  return apiRequest(`/createtournament`, {
+  return apiRequest(`/api/admin/createtournament`, {
     method: "POST",
     body: JSON.stringify(data),
   });

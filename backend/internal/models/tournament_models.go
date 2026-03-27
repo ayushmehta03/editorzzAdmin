@@ -16,7 +16,7 @@ const (
 type Tournament struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty"`
 	Title             string             `bson:"title"`
-	Type              string             `bson:"type"` // 🔥 "judge_based" | "vote_based"
+	Type              string             `bson:"type"` 
 	Number            int                `bson:"number"`
 	Description       string             `bson:"description"`
 	Banner            string             `bson:"banner"`
@@ -37,6 +37,10 @@ type Tournament struct {
 
 	Status            string             `bson:"status"`
 	IsLeaderboardLive bool               `bson:"is_leaderboard_live"`
+
+
+	VotingStartTime time.Time `json:"voting_start_time" binding:"required"` 
+	VotingEndTime   time.Time `json:"voting_end_time" binding:"required"`  
 
 	CreatedBy         primitive.ObjectID `bson:"created_by"`
 	CreatedAt         time.Time          `bson:"created_at"`

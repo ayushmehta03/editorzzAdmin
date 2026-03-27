@@ -334,8 +334,6 @@ func UpdateTournament(client *mongo.Client)gin.HandlerFunc{
 		})
 	}
 }
-
-
 func UpdateTournamentStatuses(client *mongo.Client) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -353,6 +351,7 @@ func UpdateTournamentStatuses(client *mongo.Client) {
 		bson.M{"$set": bson.M{"status": models.TournamentActive}},
 	)
 
+	// Judge → Judging
 	collection.UpdateMany(
 		ctx,
 		bson.M{
@@ -366,9 +365,10 @@ func UpdateTournamentStatuses(client *mongo.Client) {
 	collection.UpdateMany(
 		ctx,
 		bson.M{
-			"type":     "vote_based",
-			"status":   models.TournamentActive,
-			"end_time": bson.M{"$lte": now},
+			"type":              "vote_based",
+			"status":            models.TournamentActive,
+			"end_time":          bson.M{"$lte": now},          // contest finished
+			"voting_start_time": bson.M{"$lte": now},          // voting allowed
 		},
 		bson.M{"$set": bson.M{"status": models.TournamentVoting}},
 	)

@@ -44,6 +44,13 @@ type CreateTournamentRequest struct {
 type CreateVoteContest struct{
 	Title string `json:"title" binding:"required"`
 	Description string `json:"description" binding:"required"`
+	BannerURL       string    `json:"banner_url"`
+	StartTime       time.Time `json:"start_time" binding:"required"`
+	EndTime         time.Time `json:"end_time" binding:"required"`
+	MaxParticipants int       `json:"max_participants" binding:"required"`
+	PrizePool       float64   `json:"prize_pool" binding:"required"`
+	AssetsLink      string    `json:"assets_link" binding:"required"`
+
 }
 
 func GetNextTournamentNumber(client *mongo.Client) (int64, error) {

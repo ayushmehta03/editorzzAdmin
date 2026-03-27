@@ -196,40 +196,6 @@ if err != nil {
 // update tournaMENT STATUS by checking each minute
 
 
-func UpdateTournamentStatuses(client *mongo.Client) {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	collection := database.OpenCollection("tournaments", client)
-	now := time.Now()
-
-	collection.UpdateMany(
-		ctx,
-		bson.M{
-			"status":     models.TournamentUpcoming,
-			"start_time": bson.M{"$lte": now},
-		},
-		bson.M{
-			"$set": bson.M{
-				"status": models.TournamentActive,
-			},
-		},
-	)
-
-	collection.UpdateMany(
-		ctx,
-		bson.M{
-			"status":   models.TournamentActive,
-			"end_time": bson.M{"$lte": now},
-		},
-		bson.M{
-			"$set": bson.M{
-				"status": models.TournamentJudging,
-			},
-		},
-	)
-}
 
 // using cron fw
 
@@ -367,6 +333,62 @@ func UpdateTournament(client *mongo.Client)gin.HandlerFunc{
 			"message": "Tournament updated successfully",
 		})
 	}
+}
+
+
+func UpdateTournamentStatuses(client *mongo.Client) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := database.OpenCollection("tournaments", client)
+	now := time.Now()
+
+	// 🔹 Upcoming → Active
+	collection.UpdateMany(
+		ctx,
+		bson.M{
+			"status":     models.TournamentUpcoming,
+			"start_time": bson.M{"$lte": now},
+		},
+		bson.M{"$set": bson.M{"status": models.TournamentActive}},
+	)
+
+	// 🧑‍⚖️ Judge contests → Judging
+	collection.UpdateMany(
+		ctx,
+		bson.M{
+			"type":     "judge_based",
+			"status":   models.TournamentActive,
+			"end_time": bson.M{"$lte": now},
+		},
+		bson.M{"$set": bson.M{"status": models.TournamentJudging}},
+	)
+
+	collection.UpdateMany(
+		ctx,
+		bson.M{
+			"type":     "vote_based",
+			"status":   models.TournamentActive,
+			"end_time": bson.M{"$lte": now},
+		},
+		bson.M{"$set": bson.M{"status": models.TournamentVoting}},
+	)
+
+	collection.UpdateMany(
+		ctx,
+		bson.M{
+			"type":            "vote_based",
+			"status":          models.TournamentVoting,
+			"voting_end_time": bson.M{"$lte": now},
+		},
+		bson.M{
+			"$set": bson.M{
+				"status":              models.TournamentCompleted,
+				"is_leaderboard_live": true,
+			},
+		},
+	)
 }
 
 func GetAdminReview(client *mongo.Client) gin.HandlerFunc {

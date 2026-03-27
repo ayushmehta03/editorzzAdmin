@@ -344,7 +344,6 @@ func UpdateTournamentStatuses(client *mongo.Client) {
 	collection := database.OpenCollection("tournaments", client)
 	now := time.Now()
 
-	// 🔹 Upcoming → Active
 	collection.UpdateMany(
 		ctx,
 		bson.M{
@@ -354,7 +353,6 @@ func UpdateTournamentStatuses(client *mongo.Client) {
 		bson.M{"$set": bson.M{"status": models.TournamentActive}},
 	)
 
-	// 🧑‍⚖️ Judge contests → Judging
 	collection.UpdateMany(
 		ctx,
 		bson.M{

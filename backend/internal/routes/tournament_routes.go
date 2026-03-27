@@ -21,4 +21,5 @@ func ProtectedRoutes(router *gin.Engine,client *mongo.Client){
 	protected.PUT("approve/:id",controllers.AdminApproveTournament(client))
 	protected.GET("active-tournaments",controllers.GetActiveTournament(client))
 	protected.GET("upcoming-tournaments",controllers.GetUpcomingTournaments(client))
+	protected.POST("/create-vote-contest", controllers.CreateVoteContestHandler(client))
 }

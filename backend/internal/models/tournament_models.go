@@ -11,6 +11,8 @@ const (
 	TournamentActive          = "active"
 	TournamentJudging         = "judging"
 	TournamentCompleted       = "completed"
+	TournamentVoting    = "voting"  
+
 )
 
 type Tournament struct {

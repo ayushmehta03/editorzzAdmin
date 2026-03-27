@@ -13,75 +13,32 @@ const (
 	TournamentCompleted       = "completed"
 )
 
-
 type Tournament struct {
-	ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	ID                primitive.ObjectID `bson:"_id,omitempty"`
+	Title             string             `bson:"title"`
+	Type              string             `bson:"type"` // 🔥 "judge_based" | "vote_based"
+	Number            int                `bson:"number"`
+	Description       string             `bson:"description"`
+	Banner            string             `bson:"banner"`
+	Slug              string             `bson:"slug"`
 
-	Title       string `bson:"title" json:"title"`
-	Description string `bson:"description" json:"description"`
-	Banner      string `bson:"banner_url,omitempty" json:"banner_url,omitempty"`
-	Number int `bson:"tournamnet_number" json:"tournament_number"`
-	Slug string `bson:"slug" json:"slug"`
-	Type string `bson:"type" json:"type"`
+	StartTime         time.Time          `bson:"start_time"`
+	EndTime           time.Time          `bson:"end_time"`
 
-	StartTime time.Time `bson:"start_time" json:"start_time"`
-	EndTime   time.Time `bson:"end_time" json:"end_time"`
+	MaxParticipants   int                `bson:"max_participants"`
+	CurrentCount      int                `bson:"current_count"`
 
-	MaxParticipants int `bson:"max_participants" json:"max_participants"`
-	CurrentCount    int `bson:"current_count" json:"current_count"`
+	PrizePool         float64            `bson:"prize_pool"`
+	AssetsLink        string             `bson:"assets_link"`
 
-	PrizePool  float64 `bson:"prize_pool" json:"prize_pool"`
-	AssetsLink string  `bson:"assets_link" json:"assets_link"`
+	JudgeEmail        string             `bson:"judge_email,omitempty"`
+	JudgeSlug         string             `bson:"judge_slug,omitempty"`
+	JudgeSlugExpiry   time.Time          `bson:"judge_slug_expiry,omitempty"`
 
-	JudgeEmail      string    `bson:"judge_email" json:"judge_email"`
-	JudgeSlug       string    `bson:"judge_slug" json:"judge_slug"`
-	JudgeSlugExpiry time.Time `bson:"judge_slug_expiry" json:"judge_slug_expiry"`
+	Status            string             `bson:"status"`
+	IsLeaderboardLive bool               `bson:"is_leaderboard_live"`
 
-	Status string `bson:"status" json:"status"`
-
-	IsLeaderboardLive bool `bson:"is_leaderboard_live" json:"is_leaderboard_live"`
-
-	CreatedBy primitive.ObjectID `bson:"created_by" json:"created_by"`
-
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
-}
-
-
-type VoteTournamnent struct{
-  ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-
-	Title       string `bson:"title" json:"title"`
-	Description string `bson:"description" json:"description"`
-	Banner      string `bson:"banner_url,omitempty" json:"banner_url,omitempty"`
-	Number int `bson:"tournamnet_number" json:"tournament_number"`
-	Slug string `bson:"slug" json:"slug"`
-
-	StartTime time.Time `bson:"start_time" json:"start_time"`
-	EndTime   time.Time `bson:"end_time" json:"end_time"`
-
-	MaxParticipants int `bson:"max_participants" json:"max_participants"`
-	CurrentCount    int `bson:"current_count" json:"current_count"`
-
-	PrizePool  float64 `bson:"prize_pool" json:"prize_pool"`
-	AssetsLink string  `bson:"assets_link" json:"assets_link"`
-
-	VoteStatus bool `bson:"vote_status" json:"vote_status"`
-
-	VoteStartTime time.Time `bson:"vote_start" json:"vote_start"`
-	VoteEndTime time.Time `bson:"vote_end" json:"vote_end"`
-
-  IsResultDeclared time.Time `bson:"is_result_declared" json:"is_result_declared"`
-
-	IsLeaderboardLive bool `bson:"is_leaderboard_live" json:"is_leaderboard_live"`
-
-	CreatedBy primitive.ObjectID `bson:"created_by" json:"created_by"`
-
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
-
-	
-
-
-
+	CreatedBy         primitive.ObjectID `bson:"created_by"`
+	CreatedAt         time.Time          `bson:"created_at"`
+	UpdatedAt         time.Time          `bson:"updated_at"`
 }

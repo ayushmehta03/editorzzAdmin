@@ -538,8 +538,20 @@ func CreateContest(client *mongo.Client)gin.HandlerFunc{
 			return 
 		}
 
-	//	voteContest=database.OpenCollection("vote_contest",client)
+		var req CreateVoteContest
 
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+			return
+		}
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+			return
+		}
+
+
+		ctx,cancel:=database.OpenCollection()
 
 
 

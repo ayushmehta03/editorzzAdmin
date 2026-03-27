@@ -530,14 +530,14 @@ func GetStats(client *mongo.Client) gin.HandlerFunc {
 
 
 // create tournament for contest type 2
+func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-func CreateContest(client *mongo.Client)gin.HandlerFunc{
-	return func(c *gin.Context){
-		role,exists:=c.Get("role")
-
-		if !exists || role==""{
-			c.JSON(http.StatusUnauthorized,gin.H{"error":"Unauthorized"})
-			return 
+		// 🔐 Admin check
+		role, exists := c.Get("role")
+		if !exists || role != "admin" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
 		}
 
 		var req CreateVoteContest
@@ -547,16 +547,76 @@ func CreateContest(client *mongo.Client)gin.HandlerFunc{
 			return
 		}
 
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		if req.EndTime.Before(req.StartTime) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "End time must be after start time"})
 			return
 		}
 
+		if req.VotingStartTime.Before(req.EndTime) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Voting must start after contest ends",
+			})
+			return
+		}
 
-		ctx,cancel:=database.OpenCollection()
+		if req.VotingEndTime.Before(req.VotingStartTime) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Voting end must be after voting start",
+			})
+			return
+		}
 
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 
+		collection := database.OpenCollection("tournaments", client)
 
-	
+		tournamentNumber, err := GetNextTournamentNumber(client)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate number"})
+			return
+		}
+
+		adminID, _ := primitive.ObjectIDFromHex(c.GetString("user_id"))
+		now := time.Now()
+
+		tournament := models.Tournament{
+			ID:                primitive.NewObjectID(),
+			Title:             req.Title,
+			Type:              "vote_based",
+			Number:            int(tournamentNumber),
+			Description:       req.Description,
+			Banner:            req.BannerURL,
+			Slug:              GenerateSlug(req.Title),
+
+			StartTime:         req.StartTime,
+			EndTime:           req.EndTime,
+			VotingStartTime:   req.VotingStartTime, 
+			VotingEndTime:     req.VotingEndTime,   
+
+			MaxParticipants:   req.MaxParticipants,
+			CurrentCount:      0,
+
+			PrizePool:         req.PrizePool,
+			AssetsLink:        req.AssetsLink,
+
+			Status:            models.TournamentUpcoming,
+			IsLeaderboardLive: false, 
+
+			CreatedBy:         adminID,
+			CreatedAt:         now,
+			UpdatedAt:         now,
+		}
+
+		_, err = collection.InsertOne(ctx, tournament)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create contest"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"message":    "Vote contest created successfully",
+			"tournament": tournament,
+		})
 	}
 }

@@ -430,6 +430,7 @@ func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
 
 func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		tournamentID, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tournament ID"})
@@ -442,19 +443,31 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		tournamentCol := database.OpenCollection("tournaments", client)
 		submissionCol := database.OpenCollection("submissions", client)
 
-		countFilter := bson.M{
-			"tournament_id": tournamentID,
-			"is_judged":     false,
-		}
-		unjudgedCount, _ := submissionCol.CountDocuments(ctx, countFilter)
-		
-		if unjudgedCount > 0 {
-			c.JSON(http.StatusConflict, gin.H{
-				"error": "Cannot approve. There are still unjudged submissions.",
-				"remaining": unjudgedCount,
-			})
+		var tournament models.Tournament
+		err = tournamentCol.FindOne(ctx, bson.M{"_id": tournamentID}).Decode(&tournament)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
 			return
 		}
+
+		if tournament.Type == "judge_based" {
+
+			countFilter := bson.M{
+				"tournament_id": tournamentID,
+				"is_judged":     false,
+			}
+
+			unjudgedCount, _ := submissionCol.CountDocuments(ctx, countFilter)
+
+			if unjudgedCount > 0 {
+				c.JSON(http.StatusConflict, gin.H{
+					"error":     "Cannot approve. There are still unjudged submissions.",
+					"remaining": unjudgedCount,
+				})
+				return
+			}
+		}
+
 
 		filter := bson.M{"_id": tournamentID}
 		update := bson.M{
@@ -477,8 +490,8 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Tournament approved successfully!",
-			"status":  models.TournamentCompleted,
+			"message":          "Tournament approved successfully!",
+			"status":           models.TournamentCompleted,
 			"leaderboard_live": true,
 		})
 	}

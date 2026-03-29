@@ -179,7 +179,7 @@ export default function Dashboard() {
   sub: "Launch public voting contest",
   icon: Vote,
   color: "text-pink-400",
-  path: "/tournaments/create/vote"
+  path: "/contest-vote"
 },
               { title: " Contest status", sub: "View all contests history and details", icon: TrophyIcon, color: "text-blue-500", path: "/approve-results" },
               { title: "Manage Users", sub: "Control access & verify", icon: Users, color: "text-blue-400", path: "/manage-users" },

@@ -109,7 +109,6 @@ export default function CreateTournamentPage() {
 
   return (
     <div className="min-h-screen bg-[#05080f] text-slate-200 selection:bg-blue-500/30 font-sans">
-      {/* Dynamic Background Mesh */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
         <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
@@ -144,10 +143,8 @@ export default function CreateTournamentPage() {
           onSubmit={handleSubmit}
           className="grid lg:grid-cols-12 gap-10"
         >
-          {/* Main Form Area */}
           <div className="lg:col-span-8 space-y-10">
             
-            {/* Essential Info */}
             <motion.div variants={itemVariants} className="bg-white/[0.02] border border-white/10 p-8 rounded-[2rem] backdrop-blur-xl">
               <div className="space-y-6">
                 <div>
@@ -175,7 +172,6 @@ export default function CreateTournamentPage() {
               </div>
             </motion.div>
 
-            {/* Banner Section */}
             <motion.div variants={itemVariants}>
                <label className={labelStyles}>Brand Visual</label>
                <div className={`relative group border border-dashed rounded-[2rem] transition-all duration-500 overflow-hidden bg-[#0a0f1d] ${bannerPreview ? 'border-blue-500/40' : 'border-white/10 hover:border-blue-500/50'}`}>
@@ -211,7 +207,6 @@ export default function CreateTournamentPage() {
               </div>
             </motion.div>
 
-            {/* Configuration Grid */}
             <motion.div variants={itemVariants} className="bg-white/[0.02] border border-white/10 p-8 rounded-[2rem] backdrop-blur-xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
@@ -234,7 +229,6 @@ export default function CreateTournamentPage() {
             </motion.div>
           </div>
 
-          {/* Sidebar Area */}
           <aside className="lg:col-span-4 space-y-8">
             <motion.div variants={itemVariants} className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 p-6 rounded-3xl sticky top-10">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-blue-400 mb-6 flex items-center gap-2">
@@ -278,7 +272,6 @@ export default function CreateTournamentPage() {
               </div>
             </motion.div>
 
-            {/* Status Helper */}
             <motion.div variants={itemVariants} className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-3xl">
                <h4 className="text-[10px] font-bold text-blue-400 uppercase mb-4 tracking-wider">Publication Note</h4>
                <p className="text-[11px] text-gray-500 leading-relaxed">

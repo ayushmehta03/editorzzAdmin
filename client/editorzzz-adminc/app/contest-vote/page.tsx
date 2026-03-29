@@ -109,14 +109,12 @@ export default function CreateVoteContestPage() {
 
   return (
     <div className="min-h-screen bg-[#050810] text-slate-200 selection:bg-blue-500/30">
-      {/* Subtle Background Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
         <div className="absolute top-[20%] -right-[10%] w-[30%] h-[50%] bg-indigo-600/10 blur-[120px] rounded-full" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 py-12">
-        {/* Header Section */}
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <motion.div 
             initial={{ opacity: 0, x: -20 }} 
@@ -136,10 +134,8 @@ export default function CreateVoteContestPage() {
         </header>
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-12 gap-8">
-          {/* Main Configuration */}
           <div className="lg:col-span-8 space-y-8">
             
-            {/* Basic Info Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

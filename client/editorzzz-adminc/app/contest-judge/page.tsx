@@ -19,7 +19,9 @@ import {
   ChevronRight,
   Clock,
   ShieldCheck,
-  DollarSign
+  DollarSign,
+  Tag,
+  FolderOpen
 } from "lucide-react";
 
 export default function CreateTournamentPage() {
@@ -38,6 +40,8 @@ export default function CreateTournamentPage() {
     prize_pool: "",
     assets_link: "",
     judge_email: "",
+    category: "",
+    label: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -158,6 +162,30 @@ export default function CreateTournamentPage() {
                     required
                   />
                 </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelStyles}><FolderOpen size={14}/> Category (Optional)</label>
+                    <input
+                      name="category"
+                      value={form.category}
+                      onChange={handleChange}
+                      placeholder="e.g. Anime, Gaming"
+                      className={inputStyles}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelStyles}><Tag size={14}/> Label (Optional)</label>
+                    <input
+                      name="label"
+                      value={form.label}
+                      onChange={handleChange}
+                      placeholder="e.g. Beginner, Pro"
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className={labelStyles}>Rules & Briefing</label>
                   <textarea

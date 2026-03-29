@@ -161,9 +161,12 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 			JudgeSlugExpiry:    req.EndTime.Add(48 * time.Hour), // judge can rank 2 days after
 			Status:             models.TournamentUpcoming,
 			IsLeaderboardLive:  false,
+			Label: req.Label,
+			Cateogry: req.Cateogry,
 			CreatedBy:          adminID,
 			CreatedAt:          now,
 			UpdatedAt:          now,
+
 
 	}
 

@@ -40,7 +40,8 @@ type Tournament struct {
 	Status            string             `bson:"status"`
 	IsLeaderboardLive bool               `bson:"is_leaderboard_live"`
 
-
+   Cateogry string `bson:"cateogry,omitempty"`
+   Label string `bson:"label,omitempty"`
 	VotingStartTime time.Time `json:"voting_start_time" binding:"required"` 
 	VotingEndTime   time.Time `json:"voting_end_time" binding:"required"`  
 

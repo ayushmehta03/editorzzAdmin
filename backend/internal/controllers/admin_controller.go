@@ -38,6 +38,10 @@ type CreateTournamentRequest struct {
 	PrizePool       float64   `json:"prize_pool" binding:"required"`
 	AssetsLink      string    `json:"assets_link" binding:"required"`
 	JudgeEmail      string    `json:"judge_email" binding:"required,email"`
+
+   Cateogry string `json:"catreogry" `
+   Label string `json:"label"`
+
 }
 
 type CreateVoteContest struct {
@@ -47,12 +51,15 @@ type CreateVoteContest struct {
 	StartTime       time.Time `json:"start_time" binding:"required"`
 	EndTime         time.Time `json:"end_time" binding:"required"`
 
-	VotingStartTime time.Time `json:"voting_start_time" binding:"required"` // 🔥 NEW
-	VotingEndTime   time.Time `json:"voting_end_time" binding:"required"`   // 🔥 NEW
+	VotingStartTime time.Time `json:"voting_start_time" binding:"required"` 
+	VotingEndTime   time.Time `json:"voting_end_time" binding:"required"`   
 
 	MaxParticipants int       `json:"max_participants" binding:"required"`
 	PrizePool       float64   `json:"prize_pool" binding:"required"`
 	AssetsLink      string    `json:"assets_link" binding:"required"`
+
+   Cateogry string `json:"catreogry"`
+   Label string `json:"label"`
 }
 
 func GetNextTournamentNumber(client *mongo.Client) (int64, error) {
@@ -167,7 +174,7 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 
 	}
 
-	judgeLink := "https://judge.editorzzzz.com/tournamnet/" + tournament.JudgeSlug
+	judgeLink := "https://judge.editorzzzz.com/judge-panel/" + tournament.JudgeSlug
 
 err = utils.SendJudgeInvitationEmail(
 	tournament.JudgeEmail,

@@ -180,7 +180,7 @@ export default function CreateTournamentPage() {
                       name="label"
                       value={form.label}
                       onChange={handleChange}
-                      placeholder="e.g. Beginner, Pro"
+                      placeholder="e.g. MegaWin, Direct Hire"
                       className={inputStyles}
                     />
                   </div>

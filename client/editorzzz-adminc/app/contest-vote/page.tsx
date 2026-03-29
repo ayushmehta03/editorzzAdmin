@@ -105,14 +105,12 @@ export default function CreateVoteContestPage() {
 
   return (
     <div className="min-h-screen bg-[#050810] text-slate-200 selection:bg-blue-500/30">
-      {/* Subtle Background Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
         <div className="absolute top-[20%] -right-[10%] w-[30%] h-[50%] bg-indigo-600/10 blur-[120px] rounded-full" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 py-12">
-        {/* Header Section */}
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <motion.div 
             initial={{ opacity: 0, x: -20 }} 
@@ -132,10 +130,8 @@ export default function CreateVoteContestPage() {
         </header>
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-12 gap-8">
-          {/* Main Configuration */}
           <div className="lg:col-span-8 space-y-8">
             
-            {/* Basic Info Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -153,7 +149,6 @@ export default function CreateVoteContestPage() {
               </div>
             </motion.div>
 
-            {/* Visuals Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -183,7 +178,6 @@ export default function CreateVoteContestPage() {
               </div>
             </motion.div>
 
-            {/* Timeline Orchestrator */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -196,7 +190,6 @@ export default function CreateVoteContestPage() {
               </div>
 
               <div className="grid md:grid-cols-2 gap-12 relative">
-                {/* Connector Line */}
                 <div className="hidden md:block absolute left-1/2 top-10 bottom-10 w-[1px] bg-gradient-to-b from-blue-500/50 via-indigo-500/50 to-transparent" />
 
                 <div className="space-y-6">
@@ -226,7 +219,6 @@ export default function CreateVoteContestPage() {
             </motion.div>
           </div>
 
-          {/* Sidebar - Economics & Actions */}
           <aside className="lg:col-span-4 space-y-6">
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
@@ -287,7 +279,6 @@ export default function CreateVoteContestPage() {
               </div>
             </motion.div>
 
-            {/* Checklist helper */}
             <div className="px-4 py-2 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
                <h4 className="text-[10px] font-bold text-blue-400 uppercase mb-2">Requirement Checklist</h4>
                <ul className="space-y-1 text-[11px] text-gray-500">

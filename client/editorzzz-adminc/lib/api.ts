@@ -101,3 +101,10 @@ export async function createTournament(data: any) {
     body: JSON.stringify(data),
   });
 }
+
+export async function createVoteContest(data:any){
+  return apiRequest(`/api/admin/create-vote-contest`,{
+    method:"POST",
+    body:JSON.stringify(data),
+  })
+}

@@ -18,7 +18,9 @@ import {
   ChevronRight,
   Info,
   DollarSign,
-  Layers
+  Layers,
+  Tag,
+  FolderOpen
 } from "lucide-react";
 
 export default function CreateVoteContestPage() {
@@ -39,6 +41,8 @@ export default function CreateVoteContestPage() {
     max_participants: "",
     prize_pool: "",
     assets_link: "",
+    category: "",
+    label: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -101,16 +105,18 @@ export default function CreateVoteContestPage() {
   };
 
   const inputStyle = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-gray-600 text-sm";
-  const labelStyle = "text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2";
+  const labelStyle = "text-[10px] md:text-xs font-bold text-gray-500 mb-2 uppercase tracking-[0.2em] flex items-center gap-2";
 
   return (
     <div className="min-h-screen bg-[#050810] text-slate-200 selection:bg-blue-500/30">
+      {/* Subtle Background Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
         <div className="absolute top-[20%] -right-[10%] w-[30%] h-[50%] bg-indigo-600/10 blur-[120px] rounded-full" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 py-12">
+        {/* Header Section */}
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <motion.div 
             initial={{ opacity: 0, x: -20 }} 
@@ -130,8 +136,10 @@ export default function CreateVoteContestPage() {
         </header>
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-12 gap-8">
+          {/* Main Configuration */}
           <div className="lg:col-span-8 space-y-8">
             
+            {/* Basic Info Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -140,11 +148,35 @@ export default function CreateVoteContestPage() {
               <div className="grid gap-6">
                 <div>
                   <label className={labelStyle}><Info size={14}/> Contest Title</label>
-                  <input name="title" placeholder="e.g. Cyberpunk Edit Challenge 2024" onChange={handleChange} className={inputStyle} required />
+                  <input name="title" value={form.title} placeholder="e.g. Cyberpunk Edit Challenge 2024" onChange={handleChange} className={inputStyle} required />
                 </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelStyle}><FolderOpen size={14}/> Category (Optional)</label>
+                    <input 
+                      name="category" 
+                      value={form.category}
+                      placeholder="e.g. Fon work" 
+                      onChange={handleChange} 
+                      className={inputStyle} 
+                    />
+                  </div>
+                  <div>
+                    <label className={labelStyle}><Tag size={14}/> Label (Optional)</label>
+                    <input 
+                      name="label" 
+                      value={form.label}
+                      placeholder="e.g. Direct Hire, MegaWin" 
+                      onChange={handleChange} 
+                      className={inputStyle} 
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className={labelStyle}><Layers size={14}/> Extended Description</label>
-                  <textarea name="description" placeholder="Specify rules, themes, and criteria..." onChange={handleChange} className={`${inputStyle} min-h-[160px] resize-none`} required />
+                  <textarea name="description" value={form.description} placeholder="Specify rules, themes, and criteria..." onChange={handleChange} className={`${inputStyle} min-h-[160px] resize-none`} required />
                 </div>
               </div>
             </motion.div>
@@ -174,7 +206,7 @@ export default function CreateVoteContestPage() {
                     <p className="text-gray-500 text-sm mt-1">Recommended: 1920x1080 (PNG/JPG)</p>
                   </div>
                 )}
-                <input type="file" onChange={handleUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                <input type="file" onChange={handleUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
               </div>
             </motion.div>
 
@@ -196,11 +228,11 @@ export default function CreateVoteContestPage() {
                   <div className="flex items-center gap-2 text-blue-400 text-xs font-black uppercase tracking-widest italic">Phase 01: Submissions</div>
                   <div>
                     <label className={labelStyle}>Start Date</label>
-                    <input type="datetime-local" name="start_time" onChange={handleChange} className={inputStyle} required />
+                    <input type="datetime-local" name="start_time" value={form.start_time} onChange={handleChange} className={inputStyle} required />
                   </div>
                   <div>
                     <label className={labelStyle}>End Date</label>
-                    <input type="datetime-local" name="end_time" onChange={handleChange} className={inputStyle} required />
+                    <input type="datetime-local" name="end_time" value={form.end_time} onChange={handleChange} className={inputStyle} required />
                   </div>
                 </div>
 
@@ -208,11 +240,11 @@ export default function CreateVoteContestPage() {
                   <div className="flex items-center gap-2 text-indigo-400 text-xs font-black uppercase tracking-widest italic">Phase 02: Community Vote</div>
                   <div>
                     <label className={labelStyle}>Voting Opens</label>
-                    <input type="datetime-local" name="voting_start_time" onChange={handleChange} className={inputStyle} required />
+                    <input type="datetime-local" name="voting_start_time" value={form.voting_start_time} onChange={handleChange} className={inputStyle} required />
                   </div>
                   <div>
                     <label className={labelStyle}>Voting Closes</label>
-                    <input type="datetime-local" name="voting_end_time" onChange={handleChange} className={inputStyle} required />
+                    <input type="datetime-local" name="voting_end_time" value={form.voting_end_time} onChange={handleChange} className={inputStyle} required />
                   </div>
                 </div>
               </div>
@@ -235,7 +267,7 @@ export default function CreateVoteContestPage() {
                     <label className={labelStyle}>Grand Prize Pool</label>
                     <div className="relative">
                       <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16}/>
-                      <input name="prize_pool" placeholder="0.00" type="number" onChange={handleChange} className={`${inputStyle} pl-10`} />
+                      <input name="prize_pool" value={form.prize_pool} placeholder="0.00" type="number" onChange={handleChange} className={`${inputStyle} pl-10`} />
                     </div>
                   </div>
 
@@ -243,7 +275,7 @@ export default function CreateVoteContestPage() {
                     <label className={labelStyle}>Max Entrants</label>
                     <div className="relative">
                       <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16}/>
-                      <input name="max_participants" placeholder="Unlimited" type="number" onChange={handleChange} className={`${inputStyle} pl-10`} />
+                      <input name="max_participants" value={form.max_participants} placeholder="Unlimited" type="number" onChange={handleChange} className={`${inputStyle} pl-10`} />
                     </div>
                   </div>
 
@@ -251,7 +283,7 @@ export default function CreateVoteContestPage() {
                     <label className={labelStyle}>Resource Assets</label>
                     <div className="relative">
                       <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16}/>
-                      <input name="assets_link" placeholder="Drive / Dropbox URL" onChange={handleChange} className={`${inputStyle} pl-10`} />
+                      <input name="assets_link" value={form.assets_link} placeholder="Drive / Dropbox URL" onChange={handleChange} className={`${inputStyle} pl-10`} />
                     </div>
                   </div>
                 </div>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { createTournament } from "@/lib/api";
-import { uploadProfileImage } from "@/lib/claudinary";
+import { uploadBannerImage } from "@/lib/claudinary";
 import { Calendar, Users, Trophy, Link as LinkIcon, Mail, Image as ImageIcon, PlusCircle, CheckCircle2, Sparkles } from "lucide-react";
 
 export default function CreateTournamentPage() {
@@ -40,7 +40,7 @@ export default function CreateTournamentPage() {
       setBannerPreview(preview);
 
       const toastId = toast.loading("Uploading banner...");
-      const url = await uploadProfileImage(file);
+      const url = await uploadBannerImage(file);
 
       toast.dismiss(toastId);
       toast.success("Banner uploaded ");

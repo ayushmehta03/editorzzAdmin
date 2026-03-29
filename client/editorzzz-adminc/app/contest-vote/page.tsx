@@ -157,7 +157,7 @@ export default function CreateVoteContestPage() {
                     <input 
                       name="category" 
                       value={form.category}
-                      placeholder="e.g. Fon work" 
+                      placeholder="e.g. Font work" 
                       onChange={handleChange} 
                       className={inputStyle} 
                     />

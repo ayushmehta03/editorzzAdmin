@@ -437,75 +437,38 @@ func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
-
 func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		tournamentID, err := primitive.ObjectIDFromHex(c.Param("id"))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tournament ID"})
-			return
-		}
+		tID, _ := primitive.ObjectIDFromHex(c.Param("id"))
 
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		tournamentCol := database.OpenCollection("tournaments", client)
-		submissionCol := database.OpenCollection("submissions", client)
+		tCol := database.OpenCollection("tournaments", client)
 
-		var tournament models.Tournament
-		err = tournamentCol.FindOne(ctx, bson.M{"_id": tournamentID}).Decode(&tournament)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+		var t models.Tournament
+		tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
+
+		if !t.IsJudgingCompleted {
+			c.JSON(http.StatusConflict, gin.H{"error": "Judge not finished"})
 			return
 		}
 
-		if tournament.Type == "judge_based" {
-
-			countFilter := bson.M{
-				"tournament_id": tournamentID,
-				"is_judged":     false,
-			}
-
-			unjudgedCount, _ := submissionCol.CountDocuments(ctx, countFilter)
-
-			if unjudgedCount > 0 {
-				c.JSON(http.StatusConflict, gin.H{
-					"error":     "Cannot approve. There are still unjudged submissions.",
-					"remaining": unjudgedCount,
-				})
-				return
-			}
-		}
-
-
-		filter := bson.M{"_id": tournamentID}
-		update := bson.M{
-			"$set": bson.M{
-				"status":              models.TournamentCompleted,
+		tCol.UpdateOne(ctx,
+			bson.M{"_id": tID},
+			bson.M{"$set": bson.M{
 				"is_leaderboard_live": true,
-				"updated_at":          time.Now(),
-			},
-		}
+				"status":              models.TournamentCompleted,
+			}},
+		)
 
-		result, err := tournamentCol.UpdateOne(ctx, filter, update)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update tournament"})
-			return
-		}
-
-		if result.MatchedCount == 0 {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"message":          "Tournament approved successfully!",
-			"status":           models.TournamentCompleted,
-			"leaderboard_live": true,
-		})
+		c.JSON(http.StatusOK, gin.H{"message": "Leaderboard live"})
 	}
 }
+
+
+
 func GetStats(client *mongo.Client) gin.HandlerFunc {
 
 	return func(c *gin.Context) {

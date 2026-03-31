@@ -626,3 +626,95 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+func GetLeaderboard(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		tID, _ := primitive.ObjectIDFromHex(c.Param("id"))
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		tCol := database.OpenCollection("tournaments", client)
+		pCol := database.OpenCollection("participants", client)
+
+		var t models.Tournament
+		tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
+
+		pipeline := mongo.Pipeline{
+
+			{{Key: "$match", Value: bson.M{"tournament_id": tID}}},
+
+			{{Key: "$lookup", Value: bson.M{
+				"from":         "editors",
+				"localField":   "user_id",
+				"foreignField": "_id",
+				"as":           "user",
+			}}},
+			{{Key: "$unwind", Value: "$user"}},
+
+			{{Key: "$lookup", Value: bson.M{
+				"from": "submissions",
+				"let":  bson.M{"uid": "$user_id", "tid": "$tournament_id"},
+				"pipeline": mongo.Pipeline{
+					{{Key: "$match", Value: bson.M{
+						"$expr": bson.M{
+							"$and": bson.A{
+								bson.M{"$eq": bson.A{"$user_id", "$$uid"}},
+								bson.M{"$eq": bson.A{"$tournament_id", "$$tid"}},
+							},
+						},
+					}}},
+				},
+				"as": "submission",
+			}}},
+
+			{{Key: "$addFields", Value: bson.M{
+				"points": bson.M{
+					"$cond": bson.A{
+						t.IsLeaderboardLive,
+						bson.M{"$ifNull": bson.A{
+							bson.M{"$arrayElemAt": bson.A{"$submission.points", 0}},
+							0,
+						}},
+						0,
+					},
+				},
+			}}},
+
+			{{Key: "$project", Value: bson.M{
+				"username":      "$user.username",
+				"profile_image": "$user.profile_image",
+				"points":        1,
+			}}},
+
+			{{Key: "$sort", Value: bson.M{"points": -1}}},
+		}
+
+		cursor, _ := pCol.Aggregate(ctx, pipeline)
+
+		var res []bson.M
+		cursor.All(ctx, &res)
+
+		// rank logic
+		last := -1.0
+		rank := 0
+
+		for i := range res {
+
+			pts := 0.0
+			if v, ok := res[i]["points"].(float64); ok {
+				pts = v
+			}
+
+			if pts != last {
+				rank = i + 1
+				last = pts
+			}
+
+			res[i]["rank"] = rank
+		}
+
+		c.JSON(http.StatusOK, res)
+	}
+}

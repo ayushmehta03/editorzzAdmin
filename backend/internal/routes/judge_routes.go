@@ -15,6 +15,6 @@ func JudgeRoutes(router *gin.Engine, client *mongo.Client) {
 
 		judgeGroup.GET("/submissions", controllers.GetJudgeSubmissions(client))
 
-		judgeGroup.POST("/submit-scores", controllers.SubmitJudgeScores(client))
+		judgeGroup.POST("/submit-scores", controllers.SaveJudgeScores(client))
 	}
 }

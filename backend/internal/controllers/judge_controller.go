@@ -80,35 +80,48 @@ type ScoreUpdate struct {
 	SubmissionID primitive.ObjectID `json:"submission_id"`
 	Points       float64            `json:"points"`
 }
-
-func SubmitJudgeScores(client *mongo.Client) gin.HandlerFunc {
+func SaveJudgeScores(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var payload []ScoreUpdate
-		if err := c.ShouldBindJSON(&payload); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format"})
+
+		var body struct {
+			JudgeSlug string        `json:"judge_slug"`
+			Scores    []ScoreUpdate `json:"scores"`
+		}
+
+		c.ShouldBindJSON(&body)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+
+		tCol := database.OpenCollection("tournaments", client)
+		sCol := database.OpenCollection("submissions", client)
+
+		var t models.Tournament
+		err := tCol.FindOne(ctx, bson.M{
+			"judge_slug": body.JudgeSlug,
+			"type":       "judge_based",
+		}).Decode(&t)
+
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid"})
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 20*time.Second)
-		defer cancel()
-
-		submissionCol := database.OpenCollection("submissions", client)
-        
-		for _, item := range payload {
-			filter := bson.M{"_id": item.SubmissionID}
-			update := bson.M{
-				"$set": bson.M{
-					"points":    item.Points,
-					"is_judged": true,
-				},
-			}
-			_, err := submissionCol.UpdateOne(ctx, filter, update)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update some scores"})
-				return
-			}
+		if t.IsJudgingCompleted {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Locked"})
+			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Scores submitted successfully for review"})
+		for _, s := range body.Scores {
+			sCol.UpdateOne(ctx,
+				bson.M{"_id": s.SubmissionID},
+				bson.M{"$set": bson.M{
+					"points":    s.Points,
+					"is_judged": true,
+				}},
+			)
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Saved"})
 	}
 }

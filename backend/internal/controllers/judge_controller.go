@@ -125,3 +125,26 @@ func SaveJudgeScores(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Saved"})
 	}
 }
+
+
+
+func SubmitFinalScores(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		slug := c.Param("slug")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		col := database.OpenCollection("tournaments", client)
+
+		col.UpdateOne(ctx,
+			bson.M{"judge_slug": slug},
+			bson.M{"$set": bson.M{
+				"is_judging_completed": true,
+			}},
+		)
+
+		c.JSON(http.StatusOK, gin.H{"message": "Final submitted"})
+	}
+}

@@ -11,7 +11,7 @@ const (
 	TournamentActive          = "active"
 	TournamentJudging         = "judging"
 	TournamentCompleted       = "completed"
-    	TournamentVoting    = "voting"  
+    TournamentVoting    = "voting"  
 
 )
 
@@ -45,7 +45,23 @@ type Tournament struct {
 	VotingStartTime time.Time `json:"voting_start_time" binding:"required"` 
 	VotingEndTime   time.Time `json:"voting_end_time" binding:"required"`  
 
+	IsJudgingCompleted bool `bson:"is_judging_completed,omitempty"`
 	CreatedBy         primitive.ObjectID `bson:"created_by"`
 	CreatedAt         time.Time          `bson:"created_at"`
 	UpdatedAt         time.Time          `bson:"updated_at"`
+}
+
+
+
+type Submission struct {
+	ID           primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
+	TournamentID primitive.ObjectID `bson:"tournament_id"`
+	UserID       primitive.ObjectID `bson:"user_id"`
+	Title        string             `bson:"title"`
+	MediaURL     string             `bson:"media_url"`
+	MediaType    string             `bson:"media_type"`
+	Points       float64            `bson:"points"`
+	IsJudged     bool               `bson:"is_judged"`
+	Votes int `bson:"votes,omitempty"`
+	CreatedAt    time.Time          `bson:"created_at"`
 }

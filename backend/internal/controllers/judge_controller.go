@@ -44,6 +44,7 @@ func JudgeAccess(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"tournament": t})
 	}
 }
+
 func GetJudgeSubmissions(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -73,7 +74,10 @@ func GetJudgeSubmissions(client *mongo.Client) gin.HandlerFunc {
 		var subs []bson.M
 		cursor.All(ctx, &subs)
 
-		c.JSON(http.StatusOK, subs)
+		c.JSON(http.StatusOK, gin.H{
+			"submissions": subs, 
+		})
+
 	}
 }
 type ScoreUpdate struct {

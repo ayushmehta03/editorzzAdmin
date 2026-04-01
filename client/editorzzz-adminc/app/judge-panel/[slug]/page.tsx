@@ -103,7 +103,6 @@ export default function JudgePanel({ params }: { params: { slug: string } }) {
   return (
     <div className="min-h-screen bg-black text-white px-4 md:px-10 py-10 pb-32">
       
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between mb-10 gap-4">
         <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
           Judge Panel
@@ -114,7 +113,6 @@ export default function JudgePanel({ params }: { params: { slug: string } }) {
         </div>
       </div>
 
-      {/* GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {submissions.map((item, i) => (
           <motion.div

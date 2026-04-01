@@ -104,5 +104,36 @@ func GetUpcomingTournaments(client*mongo.Client)gin.HandlerFunc{
 	}
 }
 
+func GetAdminTournamnet(client *mongo.Client)gin.HandlerFunc{
+	return func(c *gin.Context){
+		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
+
+		defer cancel()
+
+		tournamentCol:=database.OpenCollection("tournaments",client);
+
+		cursor,err:=tournamentCol.Find(ctx,bson.M{});
+
+				defer cursor.Close(ctx);
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed"})
+			return
+		}
+
+		var tournaments []bson.M
+		if err := cursor.All(ctx, &tournaments); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Decode error"})
+			return
+		}
+
+		c.JSON(http.StatusOK, tournaments)
+	}
+}
+
+
+
+
+	
 
 

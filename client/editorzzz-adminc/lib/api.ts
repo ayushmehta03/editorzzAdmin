@@ -82,6 +82,11 @@ export async function getReportById(id: string) {
   });
 }
 
+export async function getAdminTournaments() {
+  return apiRequest(`/api/admin/get-approveTournament`, {
+    method: "GET",
+  });
+}
 
 export async function resolveReport(id: string) {
   return apiRequest(`/api/admin/reports/${id}/resolve`, {

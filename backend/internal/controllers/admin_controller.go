@@ -177,7 +177,7 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 
 	}
 
-	judgeLink := "https://judge.editorzzzz.com/judge-panel/" + tournament.JudgeSlug
+	judgeLink := "https://localhost:4000/judge-panel/" + tournament.JudgeSlug
 
 err = utils.SendJudgeInvitationEmail(
 	tournament.JudgeEmail,

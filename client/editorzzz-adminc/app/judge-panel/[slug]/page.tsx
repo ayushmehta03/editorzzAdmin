@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react"; // ✅ added use
 import {
   getJudgeSubmissions,
   saveJudgeScores,
@@ -9,8 +9,12 @@ import {
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
-export default function JudgePanel({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default function JudgePanel({
+  params,
+}: {
+  params: Promise<{ slug: string }>; // ✅ params is Promise now
+}) {
+  const { slug } = use(params); // ✅ FIXED (important)
 
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -19,13 +23,18 @@ export default function JudgePanel({ params }: { params: { slug: string } }) {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
+    if (!slug) return; // ✅ prevent undefined slug issue
     fetchData();
-  }, []);
+  }, [slug]); // ✅ dependency added
 
   const fetchData = async () => {
     try {
       const data = await getJudgeSubmissions(slug);
-      const subs = data.submissions || [];
+
+      // ✅ handles BOTH backend formats
+      const subs = Array.isArray(data)
+        ? data
+        : data.submissions || [];
 
       setSubmissions(subs);
 

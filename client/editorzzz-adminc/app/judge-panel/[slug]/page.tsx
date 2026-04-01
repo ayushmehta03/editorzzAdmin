@@ -12,9 +12,9 @@ import { toast } from "sonner";
 export default function JudgePanel({
   params,
 }: {
-  params: Promise<{ slug: string }>; // ✅ params is Promise now
+  params: Promise<{ slug: string }>; 
 }) {
-  const { slug } = use(params); // ✅ FIXED (important)
+  const { slug } = use(params); 
 
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -23,15 +23,14 @@ export default function JudgePanel({
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    if (!slug) return; // ✅ prevent undefined slug issue
+    if (!slug) return; 
     fetchData();
-  }, [slug]); // ✅ dependency added
+  }, [slug]); 
 
   const fetchData = async () => {
     try {
       const data = await getJudgeSubmissions(slug);
 
-      // ✅ handles BOTH backend formats
       const subs = Array.isArray(data)
         ? data
         : data.submissions || [];

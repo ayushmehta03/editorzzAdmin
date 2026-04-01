@@ -11,7 +11,7 @@ const (
 	TournamentActive          = "active"
 	TournamentJudging         = "judging"
 	TournamentCompleted       = "completed"
-    TournamentVoting    = "voting"  
+    TournamentVoting    =  "voting"  
 
 )
 

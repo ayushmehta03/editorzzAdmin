@@ -32,20 +32,17 @@ export default function JudgePanel({
     try {
       const response = await getJudgeSubmissions(slug);
       
-      // Based on your Gin handler: c.JSON(http.StatusOK, gin.H{"submissions": subs})
       const subs = response.submissions || [];
       setSubmissions(subs);
 
       const initialScores: Record<string, number> = {};
       subs.forEach((s: any) => {
-        // Mapping to your Go Struct "points" field
         if (s.points !== undefined) {
           initialScores[s._id] = s.points;
         }
       });
       setScores(initialScores);
 
-      // Check if tournament is already locked
       if (response.tournament?.is_judging_completed) {
         setSubmitted(true);
       }
@@ -62,7 +59,6 @@ export default function JudgePanel({
 
   const handleSave = async () => {
     try {
-      // ✅ FIXED: Passing 2 arguments to match your export async function saveJudgeScores
       const scoresArray = Object.entries(scores).map(([id, pts]) => ({
         submission_id: id,
         points: pts,
@@ -112,7 +108,6 @@ export default function JudgePanel({
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-100 pb-44">
-      {/* Navigation Bar */}
       <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#050505]/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -158,10 +153,8 @@ export default function JudgePanel({
                   alt={item.title}
                 />
                 
-                {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
 
-                {/* Content Overlay */}
                 <div className="absolute inset-0 p-8 flex flex-col justify-end">
                   <h2 className="text-2xl font-bold text-white mb-2 leading-tight">
                     {item.title || "Untitled Project"}
@@ -194,7 +187,6 @@ export default function JudgePanel({
         </div>
       </main>
 
-      {/* Floating Control Bar */}
       <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 z-50">
         <div className="bg-[#111111]/90 backdrop-blur-2xl border border-white/10 p-2 rounded-[2.5rem] shadow-2xl flex items-center justify-between">
           <button
@@ -224,7 +216,6 @@ export default function JudgePanel({
         </div>
       </div>
 
-      {/* Modal Overlay */}
       <AnimatePresence>
         {showModal && (
           <div className="fixed inset-0 flex items-center justify-center z-[100] px-6">

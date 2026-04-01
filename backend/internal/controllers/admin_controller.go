@@ -148,6 +148,7 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 		Type: "judge_based",
 		Number: int(tournamentNumber),
 		Description: req.Description,
+		IsJudgingCompleted: false,
 		Banner:req.BannerURL,
 		Slug:GenerateSlug(req.Title),
 		StartTime: req.StartTime,

@@ -7,14 +7,15 @@ import (
 )
 
 func JudgeRoutes(router *gin.Engine, client *mongo.Client) {
-	
-	judgeGroup := router.Group("/judge/:judge_slug")
+
+	judge := router.Group("/judge")
 	{
-		
-		judgeGroup.GET("/access", controllers.JudgeAccess(client))
+		judge.GET("/:slug", controllers.JudgeAccess(client))
 
-		judgeGroup.GET("/submissions", controllers.GetJudgeSubmissions(client))
+		judge.GET("/:slug/submissions", controllers.GetJudgeSubmissions(client))
 
-		judgeGroup.POST("/submit-scores", controllers.SaveJudgeScores(client))
+		judge.POST("/save-scores", controllers.SaveJudgeScores(client))
+
+		judge.POST("/:slug/final-submit", controllers.SubmitFinalScores(client))
 	}
 }

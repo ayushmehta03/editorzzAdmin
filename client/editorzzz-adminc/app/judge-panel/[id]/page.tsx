@@ -68,7 +68,6 @@ export default function JudgePanel({ params }: { params: { slug: string } }) {
 
   return (
     <div className="min-h-screen bg-black text-white px-4 md:px-10 py-10">
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between mb-10 gap-4">
         <h1 className="text-2xl md:text-4xl font-bold">
           Judge Panel
@@ -117,7 +116,6 @@ export default function JudgePanel({ params }: { params: { slug: string } }) {
         ))}
       </div>
 
-      {/* ACTION BAR */}
       <div className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur flex justify-between px-6 py-4">
         <button
           onClick={handleSave}

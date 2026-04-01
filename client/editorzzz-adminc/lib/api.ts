@@ -110,3 +110,33 @@ export async function createVoteContest(data:any){
 }
 
 
+export async function getJudgeAccess(slug: string) {
+  return apiRequest(`/judge/${slug}`, {
+    method: "GET",
+  });
+}
+
+export async function getJudgeSubmissions(slug: string) {
+  return apiRequest(`/judge/${slug}/submissions`, {
+    method: "GET",
+  });
+}
+
+export async function saveJudgeScores(
+  judge_slug: string,
+  scores: { submission_id: string; points: number }[]
+) {
+  return apiRequest(`/judge/save-scores`, {
+    method: "POST",
+    body: JSON.stringify({
+      judge_slug,
+      scores,
+    }),
+  });
+}
+
+export async function submitFinalScores(slug: string) {
+  return apiRequest(`/judge/${slug}/final-submit`, {
+    method: "POST",
+  });
+}

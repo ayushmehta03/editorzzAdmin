@@ -153,7 +153,7 @@ export async function getAdminReview(id: string) {
 
 export async function approveTournament(id: string) {
   return apiRequest(`/api/admin/approve/${id}`, {
-    method: "POST",
+    method: "PUT",
   });
 }
 export async function getLeaderboard(id: string) {

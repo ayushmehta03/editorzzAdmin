@@ -56,7 +56,7 @@ export default function AdminReviewEntry() {
       toast.info("This tournament is still in the judging phase.");
       return;
     }
-    router.push(`/admin/review/${id}`);
+    router.push(`/review/${id}`);
   };
 
   if (loading) {

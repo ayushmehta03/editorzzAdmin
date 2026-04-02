@@ -438,6 +438,7 @@ func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
 func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

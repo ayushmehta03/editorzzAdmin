@@ -34,7 +34,6 @@ export default function AdminLeaderboardPage({
     try {
       const res = await getLeaderboard(id);
       const leaderboard = Array.isArray(res) ? res : res.leaderboard || [];
-      // Ensure data is sorted by rank just in case
       setData(leaderboard.sort((a: Player, b: Player) => a.rank - b.rank));
     } catch (err: any) {
       toast.error(err.message || "Failed to load leaderboard");
@@ -51,7 +50,7 @@ export default function AdminLeaderboardPage({
         toast.error(res.error);
         return;
       }
-      toast.success("Leaderboard is LIVE 🚀");
+      toast.success("Leaderboard is LIVE ");
       setApproved(true);
       fetchData();
     } catch {
@@ -78,7 +77,6 @@ export default function AdminLeaderboardPage({
 
   return (
     <div className="min-h-screen bg-[#020202] text-white selection:bg-purple-500/30 font-sans">
-      {/* Visual background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600/10 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
@@ -86,7 +84,6 @@ export default function AdminLeaderboardPage({
       </div>
 
       <div className="relative max-w-6xl mx-auto px-4 md:px-10 py-12 pb-40">
-        {/* Navbar-style Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-8">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <div className="flex items-center gap-3 mb-2">
@@ -104,7 +101,6 @@ export default function AdminLeaderboardPage({
           </div>
         </header>
 
-        {/* Top 3 Podium (Hidden if no data) */}
         {topThree.length > 0 && (
           <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-6 mb-24 mt-10">
             {topThree[1] && <PodiumCard player={topThree[1]} rank={2} color="silver" delay={0.2} />}
@@ -113,7 +109,6 @@ export default function AdminLeaderboardPage({
           </div>
         )}
 
-        {/* Detailed Leaderboard List */}
         <div className="space-y-4 max-w-4xl mx-auto">
           <div className="flex items-center justify-between px-6 py-2 text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em]">
             <span>Rank & Player</span>
@@ -166,7 +161,6 @@ export default function AdminLeaderboardPage({
         </div>
       </div>
 
-      {/* Futuristic Fixed Footer */}
       <footer className="fixed bottom-0 left-0 w-full p-6 z-50">
         <div className="max-w-4xl mx-auto">
           <div className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 p-4 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-4">

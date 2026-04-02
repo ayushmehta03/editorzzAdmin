@@ -628,24 +628,39 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
-
 func GetLeaderboard(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		tID, _ := primitive.ObjectIDFromHex(c.Param("id"))
+		tID, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tournament ID"})
+			return
+		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
 		tCol := database.OpenCollection("tournaments", client)
 		pCol := database.OpenCollection("participants", client)
 
+		// ✅ Get tournament
 		var t models.Tournament
-		tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
+		if err := tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t); err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+			return
+		}
+
+		// ❌ OPTIONAL: block if not live
+		// if !t.IsLeaderboardLive {
+		// 	c.JSON(http.StatusOK, []interface{}{})
+		// 	return
+		// }
 
 		pipeline := mongo.Pipeline{
 
-			{{Key: "$match", Value: bson.M{"tournament_id": tID}}},
+			{{Key: "$match", Value: bson.M{
+				"tournament_id": tID,
+			}}},
 
 			{{Key: "$lookup", Value: bson.M{
 				"from":         "editors",
@@ -657,28 +672,39 @@ func GetLeaderboard(client *mongo.Client) gin.HandlerFunc {
 
 			{{Key: "$lookup", Value: bson.M{
 				"from": "submissions",
-				"let":  bson.M{"uid": "$user_id", "tid": "$tournament_id"},
+				"let": bson.M{
+					"uid": "$user_id",
+					"tid": "$tournament_id",
+				},
 				"pipeline": mongo.Pipeline{
-					{{Key: "$match", Value: bson.M{
-						"$expr": bson.M{
-							"$and": bson.A{
-								bson.M{"$eq": bson.A{"$user_id", "$$uid"}},
-								bson.M{"$eq": bson.A{"$tournament_id", "$$tid"}},
+					{{
+						Key: "$match",
+						Value: bson.M{
+							"$expr": bson.M{
+								"$and": bson.A{
+									bson.M{"$eq": bson.A{"$user_id", "$$uid"}},
+									bson.M{"$eq": bson.A{"$tournament_id", "$$tid"}},
+								},
 							},
 						},
-					}}},
+					}},
+					{{Key: "$sort", Value: bson.M{"created_at": -1}}},
+					{{Key: "$limit", Value: 1}},
 				},
 				"as": "submission",
 			}}},
 
 			{{Key: "$addFields", Value: bson.M{
 				"points": bson.M{
-					"$cond": bson.A{
-						t.IsLeaderboardLive,
-						bson.M{"$ifNull": bson.A{
-							bson.M{"$arrayElemAt": bson.A{"$submission.points", 0}},
-							0,
-						}},
+					"$ifNull": bson.A{
+						bson.M{
+							"$getField": bson.M{
+								"field": "points",
+								"input": bson.M{
+									"$arrayElemAt": bson.A{"$submission", 0},
+								},
+							},
+						},
 						0,
 					},
 				},
@@ -690,23 +716,39 @@ func GetLeaderboard(client *mongo.Client) gin.HandlerFunc {
 				"points":        1,
 			}}},
 
-			{{Key: "$sort", Value: bson.M{"points": -1}}},
+			{{Key: "$sort", Value: bson.M{
+				"points": -1,
+			}}},
 		}
 
-		cursor, _ := pCol.Aggregate(ctx, pipeline)
+		cursor, err := pCol.Aggregate(ctx, pipeline)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Aggregation failed"})
+			return
+		}
 
 		var res []bson.M
-		cursor.All(ctx, &res)
+		if err := cursor.All(ctx, &res); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cursor decode failed"})
+			return
+		}
 
-		// rank logic
 		last := -1.0
 		rank := 0
 
 		for i := range res {
 
-			pts := 0.0
-			if v, ok := res[i]["points"].(float64); ok {
+			var pts float64
+
+			switch v := res[i]["points"].(type) {
+			case int32:
+				pts = float64(v)
+			case int64:
+				pts = float64(v)
+			case float64:
 				pts = v
+			default:
+				pts = 0
 			}
 
 			if pts != last {

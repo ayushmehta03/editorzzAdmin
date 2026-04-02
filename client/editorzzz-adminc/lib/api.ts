@@ -156,3 +156,8 @@ export async function approveTournament(id: string) {
     method: "POST",
   });
 }
+export async function getLeaderboard(id: string) {
+  return apiRequest(`/api/admin/leaderboard/${id}`, {
+    method: "GET",
+  });
+}

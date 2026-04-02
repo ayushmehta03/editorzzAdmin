@@ -145,3 +145,14 @@ export async function submitFinalScores(slug: string) {
     method: "POST",
   });
 }
+export async function getAdminReview(id: string) {
+  return apiRequest(`/api/admin/review/${id}`, {
+    method: "GET",
+  });
+}
+
+export async function approveTournament(id: string) {
+  return apiRequest(`/api/admin/approve/${id}`, {
+    method: "POST",
+  });
+}

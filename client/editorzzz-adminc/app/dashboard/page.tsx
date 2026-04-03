@@ -169,7 +169,6 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Analytics Chart */}
           <motion.div
             variants={itemVariants}
             className="group relative bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-6 md:p-10 backdrop-blur-md overflow-hidden"
@@ -247,10 +246,9 @@ export default function Dashboard() {
                 { title: "Vote Tournament", sub: "Launch public voting contest", icon: Vote, color: "text-pink-400", bg: "group-hover:bg-pink-500/20", path: "/contest-vote" },
                 { title: "Contest status", sub: "History and inspection", icon: TrophyIcon, color: "text-blue-500", bg: "group-hover:bg-blue-500/20", path: "/contest-inspection" },
                 { title: "Manage Users", sub: "Verification & access", icon: Users, color: "text-blue-400", bg: "group-hover:bg-blue-400/20", path: "/manage-users" },
-                { title: "Judge Panel", sub: "Review expert results", icon: Trophy, color: "text-purple-400", bg: "group-hover:bg-purple-500/20", path: "/tournaments/judge" },
                 { title: "Voting Control", sub: "Audit public contests", icon: BarChart3, color: "text-emerald-400", bg: "group-hover:bg-emerald-500/20", path: "/tournaments/vote" },
                 { title: "Moderation", sub: "Flagged content queue", icon: Flag, color: "text-rose-400", bg: "group-hover:bg-rose-500/20", path: "/reports" },
-                { title: "Approve Results", sub: "Finalize payouts", icon: CheckCircle, color: "text-amber-400", bg: "group-hover:bg-amber-500/20", path: "/approve-results" },
+                { title: "Approve Results", sub: "Confirm Judge Action", icon: CheckCircle, color: "text-amber-400", bg: "group-hover:bg-amber-500/20", path: "/approve-results" },
               ].map((action, i) => (
                 <motion.div
                   key={i}

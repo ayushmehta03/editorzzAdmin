@@ -55,7 +55,7 @@ export default function AdminPage() {
           >
             Tournament <span className="text-purple-500">Vault</span>
           </motion.h1>
-          <p className="text-zinc-500 font-mono text-xs mt-2 uppercase tracking-[0.2em]">Management Terminal v1.0.4</p>
+          <p className="text-zinc-500 font-mono text-xs mt-2 uppercase tracking-[0.2em]">Management Terminal phase 1</p>
         </div>
 
         <div className="flex bg-zinc-900/50 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">

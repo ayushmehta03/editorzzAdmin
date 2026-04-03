@@ -186,3 +186,17 @@ export async function getCompletedTournaments() {
   });
 }
 
+export async function updateVoteTime(id:string,data:any){
+  return apiRequest(`/api/admin/update-votetime/${id}`,{
+    method:"PUT",
+    body:JSON.stringify(data)
+  })
+}
+
+
+export async function updateTournament(id:string,data:any){
+  return apiRequest(`/api/admin/update-tournament/${id}`,{
+    method:"PUT",
+    body:JSON.stringify(data)
+  })
+}

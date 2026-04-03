@@ -13,55 +13,38 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func GetActiveTournament(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-func GetActiveTournament(client *mongo.Client)gin.HandlerFunc{
-	return func(c *gin.Context){
-
-		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
-
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		var tournament models.Tournament
+		collection := database.OpenCollection("tournaments", client)
 
+		opts := options.Find().SetSort(bson.D{{Key: "end_time", Value: 1}})
 
-		collection:=database.OpenCollection("tournaments",client)
+		cursor, err := collection.Find(ctx, bson.M{
+			"status": models.TournamentActive,
+		}, opts)
 
-
-
-		opts := options.Find().SetSort(bson.D{{"end_time", 1}})
-		cursor,err:=collection.Find(ctx,bson.M{
-			"status":models.TournamentActive,
-
-		},opts)
-
-		if err!=nil{
-			c.JSON(http.StatusInternalServerError,gin.H{"error":"Failed to fetch active tournamnets"})
-			return 
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch active tournaments"})
+			return
 		}
-
 		defer cursor.Close(ctx)
 
-		var tournaments models.Tournament
+		var tournaments []models.Tournament 
 
-		if err=cursor.All(ctx,&tournaments);err!=nil{
-			c.JSON(http.StatusNotFound, gin.H{
-				"message": "No active tournament found",
-			})
-				return
-
+		if err = cursor.All(ctx, &tournaments); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Decode error"})
+			return
 		}
 
-
-
-		
-
-		c.JSON(http.StatusOK,gin.H{
-			"tournament":tournament,
+		c.JSON(http.StatusOK, gin.H{
+			"tournaments": tournaments, 
 		})
-
 	}
 }
-
 func GetUpcomingTournaments(client*mongo.Client)gin.HandlerFunc{
 	return func(c *gin.Context){
 

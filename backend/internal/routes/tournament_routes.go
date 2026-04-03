@@ -22,7 +22,7 @@ func ProtectedRoutes(router *gin.Engine,client *mongo.Client){
 	protected.GET("active-tournaments",controllers.GetActiveTournament(client))
 	protected.GET("upcoming-tournaments",controllers.GetUpcomingTournaments(client))
 	protected.GET("completed-tournaments",controllers.GetCompletedTournaments(client))
-
+	protected.PATCH("/update-votetime/:id",controllers.UpdateVotingTime(client))
 	protected.POST("/create-vote-contest", controllers.CreateVoteContestHandler(client))
 	protected.GET("/get-approveTournament",controllers.GetAdminTournamnet(client))
 	protected.GET("/leaderboard/:id",controllers.GetLeaderboard(client))

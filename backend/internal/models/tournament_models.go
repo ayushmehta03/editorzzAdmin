@@ -14,44 +14,44 @@ const (
     TournamentVoting    =  "voting"  
 
 )
-
 type Tournament struct {
-	ID                primitive.ObjectID `bson:"_id,omitempty"`
-	Title             string             `bson:"title"`
-	Type              string             `bson:"type"` 
-	Number            int                `bson:"number"`
-	Description       string             `bson:"description"`
-	Banner            string             `bson:"banner"`
-	Slug              string             `bson:"slug"`
+	ID                primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
 
-	StartTime         time.Time          `bson:"start_time"`
-	EndTime           time.Time          `bson:"end_time"`
+	Title             string             `bson:"title" json:"title"`
+	Type              string             `bson:"type" json:"type"`
+	Number            int                `bson:"number" json:"number"`
+	Description       string             `bson:"description" json:"description"`
+	Banner            string             `bson:"banner" json:"banner"`
+	Slug              string             `bson:"slug" json:"slug"`
 
-	MaxParticipants   int                `bson:"max_participants"`
-	CurrentCount      int                `bson:"current_count"`
+	StartTime         time.Time          `bson:"start_time" json:"start_time"`
+	EndTime           time.Time          `bson:"end_time" json:"end_time"`
 
-	PrizePool         float64            `bson:"prize_pool"`
-	AssetsLink        string             `bson:"assets_link"`
+	MaxParticipants   int                `bson:"max_participants" json:"max_participants"`
+	CurrentCount      int                `bson:"current_count" json:"current_count"`
 
-	JudgeEmail        string             `bson:"judge_email,omitempty"`
-	JudgeSlug         string             `bson:"judge_slug,omitempty"`
-	JudgeSlugExpiry   time.Time          `bson:"judge_slug_expiry,omitempty"`
+	PrizePool         float64            `bson:"prize_pool" json:"prize_pool"`
+	AssetsLink        string             `bson:"assets_link" json:"assets_link"`
 
-	Status            string             `bson:"status"`
-	IsLeaderboardLive bool               `bson:"is_leaderboard_live"`
+	JudgeEmail        string             `bson:"judge_email,omitempty" json:"judge_email,omitempty"`
+	JudgeSlug         string             `bson:"judge_slug,omitempty" json:"judge_slug,omitempty"`
+	JudgeSlugExpiry   time.Time          `bson:"judge_slug_expiry,omitempty" json:"judge_slug_expiry,omitempty"`
 
-   Cateogry string `bson:"cateogry,omitempty"`
-   Label string `bson:"label,omitempty"`
-	VotingStartTime time.Time `json:"voting_start_time" binding:"required"` 
-	VotingEndTime   time.Time `json:"voting_end_time" binding:"required"`  
+	Status            string             `bson:"status" json:"status"`
+	IsLeaderboardLive bool               `bson:"is_leaderboard_live" json:"is_leaderboard_live"`
 
-	IsJudgingCompleted bool `bson:"is_judging_completed,omitempty"`
-	CreatedBy         primitive.ObjectID `bson:"created_by"`
-	CreatedAt         time.Time          `bson:"created_at"`
-	UpdatedAt         time.Time          `bson:"updated_at"`
+	Cateogry          string             `bson:"cateogry,omitempty" json:"cateogry,omitempty"`
+	Label             string             `bson:"label,omitempty" json:"label,omitempty"`
+
+	VotingStartTime   time.Time          `bson:"voting_start_time" json:"voting_start_time"`
+	VotingEndTime     time.Time          `bson:"voting_end_time" json:"voting_end_time"`
+
+	IsJudgingCompleted bool              `bson:"is_judging_completed,omitempty" json:"is_judging_completed,omitempty"`
+
+	CreatedBy         primitive.ObjectID `bson:"created_by" json:"created_by"`
+	CreatedAt         time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt         time.Time          `bson:"updated_at" json:"updated_at"`
 }
-
-
 
 type Submission struct {
 	ID           primitive.ObjectID `bson:"_id,omitempty" json:"_id"`

@@ -44,7 +44,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white px-4 md:px-10 py-12 relative overflow-hidden">
-      {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/10 blur-[120px] -z-10" />
       
       <header className="max-w-7xl mx-auto mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">

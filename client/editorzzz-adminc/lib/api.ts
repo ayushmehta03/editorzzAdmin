@@ -186,7 +186,7 @@ export async function getCompletedTournaments() {
   });
 }
 
-export async function updateVoteTime(id:string,data:any){
+export async function updateVotingTime(id:string,data:any){
   return apiRequest(`/api/admin/update-votetime/${id}`,{
     method:"PUT",
     body:JSON.stringify(data)

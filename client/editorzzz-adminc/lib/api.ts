@@ -161,3 +161,28 @@ export async function getLeaderboard(id: string) {
     method: "GET",
   });
 }
+
+
+
+export async function getActiveTournaments() {
+  return apiRequest(`/api/admin/active-tournaments`, {
+    method: "GET",
+  });
+}
+
+
+
+export async function getUpcomingTournaments() {
+  return apiRequest(`/api/admin/upcoming-tournaments`, {
+    method: "GET",
+  });
+}
+
+
+
+export async function getCompletedTournaments() {
+  return apiRequest(`/api/admin/completed-tournaments`, {
+    method: "GET",
+  });
+}
+

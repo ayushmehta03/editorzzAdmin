@@ -762,3 +762,62 @@ func GetLeaderboard(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(http.StatusOK, res)
 	}
 }
+
+type UpdateVotingRequest struct {
+	VotingStartTime *time.Time `json:"voting_start_time"`
+	VotingEndTime   *time.Time `json:"voting_end_time"`
+}
+
+func UpdateVotingTime(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		role, exists := c.Get("role")
+		if !exists || role != "admin" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+		idParam := c.Param("id")
+		tournamentID, err := primitive.ObjectIDFromHex(idParam)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+			return
+		}
+
+		var req UpdateVotingRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid body"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		col := database.OpenCollection("tournaments", client)
+
+		update := bson.M{}
+
+		if req.VotingStartTime != nil {
+			update["voting_start_time"] = *req.VotingStartTime
+		}
+		if req.VotingEndTime != nil {
+			update["voting_end_time"] = *req.VotingEndTime
+		}
+
+		update["updated_at"] = time.Now()
+
+		_, err = col.UpdateOne(ctx,
+			bson.M{"_id": tournamentID},
+			bson.M{"$set": update},
+		)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Voting time updated",
+		})
+	}
+}

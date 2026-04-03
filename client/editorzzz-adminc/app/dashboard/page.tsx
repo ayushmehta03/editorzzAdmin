@@ -181,7 +181,7 @@ export default function Dashboard() {
   color: "text-pink-400",
   path: "/contest-vote"
 },
-              { title: " Contest status", sub: "View all contests history and details", icon: TrophyIcon, color: "text-blue-500", path: "/approve-results" },
+              { title: " Contest status", sub: "View all contests history and details", icon: TrophyIcon, color: "text-blue-500", path: "/contest-inspection" },
               { title: "Manage Users", sub: "Control access & verify", icon: Users, color: "text-blue-400", path: "/manage-users" },
               { title: "Judge Panel", sub: "Review expert results", icon: Trophy, color: "text-purple-400", path: "/tournaments/judge" },
               { title: "Voting Control", sub: "Audit public contests", icon: BarChart3, color: "text-emerald-400", path: "/tournaments/vote" },

@@ -29,6 +29,9 @@ export default function ContestCard({ t, onEdit }: any) {
         <h2 className="text-2xl font-black italic tracking-tighter text-white mb-4 line-clamp-1 uppercase">
           {t.title}
         </h2>
+        <p className="text-[10px] uppercase tracking-widest text-purple-400 mb-2">
+  {t.type}
+</p>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-white/5 p-3 rounded-2xl border border-white/5">

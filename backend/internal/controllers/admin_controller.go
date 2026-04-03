@@ -643,18 +643,12 @@ func GetLeaderboard(client *mongo.Client) gin.HandlerFunc {
 		tCol := database.OpenCollection("tournaments", client)
 		pCol := database.OpenCollection("participants", client)
 
-		// ✅ Get tournament
 		var t models.Tournament
 		if err := tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t); err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
 			return
 		}
 
-		// ❌ OPTIONAL: block if not live
-		// if !t.IsLeaderboardLive {
-		// 	c.JSON(http.StatusOK, []interface{}{})
-		// 	return
-		// }
 
 		pipeline := mongo.Pipeline{
 

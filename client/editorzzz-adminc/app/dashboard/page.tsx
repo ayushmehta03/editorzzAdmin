@@ -8,13 +8,11 @@ import {
   Gavel,
   Vote,
   Flag,
-  Trophy,
   BarChart3,
   ShieldCheck,
   ChevronRight,
   CheckCircle,
   LogOut,
-  Activity,
   TrophyIcon,
   Sparkles,
   Zap
@@ -22,8 +20,6 @@ import {
 
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,

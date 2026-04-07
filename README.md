@@ -1,3 +1,3 @@
 # editorzzAdmin
 frontend -> next js 
-backend->golang
+backend->golang gin framework

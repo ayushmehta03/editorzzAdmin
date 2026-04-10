@@ -200,3 +200,4 @@ export async function updateTournament(id:string,data:any){
     body:JSON.stringify(data)
   })
 }
+

@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/ayushmehta03/editorzzAdmin/internal/controllers"
 	"github.com/ayushmehta03/editorzzAdmin/internal/database"
 	"github.com/ayushmehta03/editorzzAdmin/internal/routes"
 	"github.com/gin-contrib/cors" 
@@ -41,7 +40,6 @@ func main() {
 		}
 	}()
 
-	controllers.StartTournamentCron(client)
 
 	// Routes must come AFTER the CORS middleware
 	routes.AuthRoutes(router, client)

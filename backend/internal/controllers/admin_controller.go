@@ -12,7 +12,6 @@ import (
 	"github.com/ayushmehta03/editorzzAdmin/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -210,16 +209,6 @@ if err != nil {
 
 // using cron fw
 
-func StartTournamentCron(client *mongo.Client) {
-	c := cron.New()
-	
-
-	c.AddFunc("@every 1m", func() {
-		UpdateTournamentStatuses(client)
-	})
-
-	c.Start()
-}
 
 
 // update or change in tournamnt if required 

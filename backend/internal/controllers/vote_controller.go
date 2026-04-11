@@ -143,3 +143,38 @@ func CalculateVoteScores(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		tID, _ := primitive.ObjectIDFromHex(c.Param("id"))
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		tCol := database.OpenCollection("tournaments", client)
+
+		var t models.Tournament
+		tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
+
+		if t.Type != "vote_based" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid contest type"})
+			return
+		}
+
+		if !t.IsScoreCalculated {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Scores not calculated"})
+			return
+		}
+
+		tCol.UpdateOne(ctx,
+			bson.M{"_id": tID},
+			bson.M{"$set": bson.M{
+				"is_leaderboard_live": true,
+				"status":              models.TournamentCompleted,
+			}},
+		)
+
+		c.JSON(http.StatusOK, gin.H{"message": "Leaderboard published"})
+	}
+}

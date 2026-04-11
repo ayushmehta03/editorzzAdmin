@@ -563,6 +563,7 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
 func GetLeaderboard(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -750,3 +751,4 @@ func UpdateVotingTime(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+

@@ -117,6 +117,7 @@ func GetJudgedTournamnet(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
 func GetCompletedTournaments(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

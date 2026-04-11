@@ -178,3 +178,151 @@ func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Leaderboard published"})
 	}
 }
+func GetVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		tID, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tournament ID"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+
+		tCol := database.OpenCollection("tournaments", client)
+		pCol := database.OpenCollection("participants", client)
+
+		var t models.Tournament
+		if err := tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t); err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+			return
+		}
+
+		if t.Type != "vote_based" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Not a vote-based tournament"})
+			return
+		}
+
+		pipeline := mongo.Pipeline{
+
+			{{Key: "$match", Value: bson.M{
+				"tournament_id": tID,
+			}}},
+
+			{{Key: "$lookup", Value: bson.M{
+				"from":         "editors",
+				"localField":   "user_id",
+				"foreignField": "_id",
+				"as":           "user",
+			}}},
+			{{Key: "$unwind", Value: "$user"}},
+
+			{{Key: "$lookup", Value: bson.M{
+				"from": "submissions",
+				"let": bson.M{
+					"uid": "$user_id",
+					"tid": "$tournament_id",
+				},
+				"pipeline": mongo.Pipeline{
+					{{
+						Key: "$match",
+						Value: bson.M{
+							"$expr": bson.M{
+								"$and": bson.A{
+									bson.M{"$eq": bson.A{"$user_id", "$$uid"}},
+									bson.M{"$eq": bson.A{"$tournament_id", "$$tid"}},
+								},
+							},
+						},
+					}},
+					{{Key: "$sort", Value: bson.M{"created_at": -1}}},
+					{{Key: "$limit", Value: 1}},
+				},
+				"as": "submission",
+			}}},
+
+			{{Key: "$addFields", Value: bson.M{
+
+				"points": bson.M{
+					"$ifNull": bson.A{
+						bson.M{
+							"$getField": bson.M{
+								"field": "points",
+								"input": bson.M{
+									"$arrayElemAt": bson.A{"$submission", 0},
+								},
+							},
+						},
+						0,
+					},
+				},
+
+				"votes_count": bson.M{
+					"$ifNull": bson.A{
+						bson.M{
+							"$getField": bson.M{
+								"field": "votes_count",
+								"input": bson.M{
+									"$arrayElemAt": bson.A{"$submission", 0},
+								},
+							},
+						},
+						0,
+					},
+				},
+			}}},
+
+			{{Key: "$project", Value: bson.M{
+				"username":      "$user.username",
+				"profile_image": "$user.profile_image",
+				"points":        1,
+				"votes_count":   1,
+			}}},
+
+			{{Key: "$sort", Value: bson.M{
+				"points": -1,
+			}}},
+		}
+
+		cursor, err := pCol.Aggregate(ctx, pipeline)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Aggregation failed"})
+			return
+		}
+
+		var res []bson.M
+		if err := cursor.All(ctx, &res); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cursor decode failed"})
+			return
+		}
+
+		last := -1.0
+		rank := 0
+
+		for i := range res {
+
+			var pts float64
+
+			switch v := res[i]["points"].(type) {
+			case int32:
+				pts = float64(v)
+			case int64:
+				pts = float64(v)
+			case float64:
+				pts = v
+			default:
+				pts = 0
+			}
+
+			if pts != last {
+				rank = i + 1
+				last = pts
+			}
+
+			res[i]["rank"] = rank
+		}
+
+		c.JSON(http.StatusOK, res)
+	}
+}

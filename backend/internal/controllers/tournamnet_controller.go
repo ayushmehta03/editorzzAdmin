@@ -87,7 +87,7 @@ func GetUpcomingTournaments(client*mongo.Client)gin.HandlerFunc{
 	}
 }
 
-func GetAdminTournamnet(client *mongo.Client)gin.HandlerFunc{
+func GetJudgedTournamnet(client *mongo.Client)gin.HandlerFunc{
 	return func(c *gin.Context){
 		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
 

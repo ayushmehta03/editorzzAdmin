@@ -29,7 +29,6 @@ func CalculateVoteScores(client *mongo.Client) gin.HandlerFunc {
 		vCol := database.OpenCollection("votes", client)
 		sCol := database.OpenCollection("submissions", client)
 
-		// 🔹 Get Tournament
 		var t models.Tournament
 		err = tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
 		if err != nil {

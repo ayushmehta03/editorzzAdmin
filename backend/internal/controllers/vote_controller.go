@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
 func CalculateVoteScores(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

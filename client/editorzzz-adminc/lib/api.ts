@@ -82,7 +82,7 @@ export async function getReportById(id: string) {
   });
 }
 
-export async function getAdminTournaments() {
+export async function getJudgedTournaments() {
   return apiRequest(`/api/admin/get-approveTournament`, {
     method: "GET",
   });

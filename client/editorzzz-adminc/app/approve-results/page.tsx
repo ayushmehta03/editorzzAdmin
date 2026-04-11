@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { getAdminTournaments } from "@/lib/api";
+import { getJudgedTournaments } from "@/lib/api";
 import { 
   ClipboardCheck, 
   Clock, 
@@ -37,7 +37,7 @@ export default function AdminReviewEntry() {
 
   const fetchData = async () => {
     try {
-      const res = await getAdminTournaments();
+      const res = await getJudgedTournaments();
       const tournaments = Array.isArray(res) ? res : res.tournaments || [];
       setData(tournaments);
     } catch (err: any) {

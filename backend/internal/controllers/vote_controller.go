@@ -178,6 +178,8 @@ func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Leaderboard published"})
 	}
 }
+
+
 func GetVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

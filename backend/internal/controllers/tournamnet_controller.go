@@ -86,23 +86,25 @@ func GetUpcomingTournaments(client*mongo.Client)gin.HandlerFunc{
 
 	}
 }
+func GetJudgedTournamnet(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-func GetJudgedTournamnet(client *mongo.Client)gin.HandlerFunc{
-	return func(c *gin.Context){
-		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
-
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		tournamentCol:=database.OpenCollection("tournaments",client);
+		tournamentCol := database.OpenCollection("tournaments", client)
 
-		cursor,err:=tournamentCol.Find(ctx,bson.M{});
+		filter := bson.M{
+			"type":                 "judge_based",
+			"is_judging_completed": true,
+		}
 
-				defer cursor.Close(ctx);
-
+		cursor, err := tournamentCol.Find(ctx, filter)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed"})
 			return
 		}
+		defer cursor.Close(ctx)
 
 		var tournaments []bson.M
 		if err := cursor.All(ctx, &tournaments); err != nil {
@@ -110,10 +112,11 @@ func GetJudgedTournamnet(client *mongo.Client)gin.HandlerFunc{
 			return
 		}
 
-		c.JSON(http.StatusOK, tournaments)
+		c.JSON(http.StatusOK, gin.H{
+			"tournaments": tournaments,
+		})
 	}
 }
-
 func GetCompletedTournaments(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

@@ -14,6 +14,7 @@ const (
     TournamentVoting    =  "voting"  
 
 )
+
 type Tournament struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
 
@@ -47,7 +48,7 @@ type Tournament struct {
 	VotingEndTime     time.Time          `bson:"voting_end_time" json:"voting_end_time"`
 
 	IsJudgingCompleted bool              `bson:"is_judging_completed,omitempty" json:"is_judging_completed,omitempty"`
-
+	IsScoreCalculated bool `bson:"is_score_calculated,omitempty" json:"is_score_calculated,omitempty"`
 	CreatedBy         primitive.ObjectID `bson:"created_by" json:"created_by"`
 	CreatedAt         time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt         time.Time          `bson:"updated_at" json:"updated_at"`

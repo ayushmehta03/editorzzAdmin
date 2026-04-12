@@ -29,7 +29,6 @@ export default function VoteAdminPage() {
 
       setData(tournaments);
 
-      // 🔥 Fetch votes for each tournament
       const votesObj: Record<string, number> = {};
 
       await Promise.all(
@@ -65,7 +64,6 @@ export default function VoteAdminPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white px-4 md:px-10 py-10">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -79,7 +77,6 @@ export default function VoteAdminPage() {
         </p>
       </motion.div>
 
-      {/* Empty State */}
       {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-40">
           <p className="text-zinc-400 text-lg font-semibold">
@@ -110,13 +107,11 @@ export default function VoteAdminPage() {
                   />
                 </div>
 
-                {/* Content */}
                 <div className="p-5">
                   <h2 className="text-lg font-bold mb-3 line-clamp-1">
                     {item.title}
                   </h2>
 
-                  {/* Votes */}
                   <div className="flex justify-between text-sm text-zinc-400 mb-3">
                     <span>Total Votes</span>
                     <span className="text-white font-semibold">
@@ -124,7 +119,6 @@ export default function VoteAdminPage() {
                     </span>
                   </div>
 
-                  {/* Status */}
                   <div className="mb-4">
                     {!item.is_score_calculated && (
                       <span className="text-yellow-400 text-xs font-bold">
@@ -144,7 +138,6 @@ export default function VoteAdminPage() {
                     )}
                   </div>
 
-                  {/* Buttons */}
                   <div className="flex gap-2">
                     {!item.is_score_calculated && (
                       <button className="flex-1 bg-yellow-500 text-black text-xs font-bold py-2 rounded-lg hover:scale-105 transition">

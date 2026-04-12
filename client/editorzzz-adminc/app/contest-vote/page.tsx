@@ -72,37 +72,44 @@ export default function CreateVoteContestPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.banner_url) return toast.error("Please upload a contest banner");
+  e.preventDefault();
+  if (!form.banner_url) return toast.error("Please upload a contest banner");
 
-    const start = new Date(form.start_time);
-    const end = new Date(form.end_time);
-    const vStart = new Date(form.voting_start_time);
-    const vEnd = new Date(form.voting_end_time);
-
-    if (end <= start) return toast.error("Submission end must be after start");
-    if (vStart < end) return toast.error("Voting phase must start after submissions end");
-    if (vEnd <= vStart) return toast.error("Voting end must be after voting start");
-
-    try {
-      setLoading(true);
-      await createVoteContest({
-        ...form,
-        max_participants: Number(form.max_participants),
-        prize_pool: Number(form.prize_pool),
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-        voting_start_time: vStart.toISOString(),
-        voting_end_time: vEnd.toISOString(),
-      });
-
-      toast.success("Contest Live! Redirecting...");
-      setTimeout(() => router.push("/dashboard"), 1500);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to initiate contest");
-      setLoading(false);
-    }
+  // Helper function to format date without the 5:30 shift
+  const formatToISO = (dateString: string) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    // This adjusts the date so toISOString() returns the "local" numbers as UTC
+    const userOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - userOffset).toISOString();
   };
+
+  const start = form.start_time;
+  const end = form.end_time;
+  const vStart = form.voting_start_time;
+  const vEnd = form.voting_end_time;
+
+  if (new Date(end) <= new Date(start)) return toast.error("Submission end must be after start");
+  
+  try {
+    setLoading(true);
+    await createVoteContest({
+      ...form,
+      max_participants: Number(form.max_participants),
+      prize_pool: Number(form.prize_pool),
+      start_time: formatToISO(form.start_time),
+      end_time: formatToISO(form.end_time),
+      voting_start_time: formatToISO(form.voting_start_time),
+      voting_end_time: formatToISO(form.voting_end_time),
+    });
+
+    toast.success("Contest Live!");
+    setTimeout(() => router.push("/dashboard"), 1500);
+  } catch (err: any) {
+    toast.error(err.message || "Failed to initiate contest");
+    setLoading(false);
+  }
+};
 
   const inputStyle = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-gray-600 text-sm";
   const labelStyle = "text-[10px] md:text-xs font-bold text-gray-500 mb-2 uppercase tracking-[0.2em] flex items-center gap-2";

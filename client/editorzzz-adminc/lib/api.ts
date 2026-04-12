@@ -212,3 +212,9 @@ export async function calculateVoteScore(id:string){
     method:"POST",
   })
 }
+
+export async function getVoteLeaderboard(id:string){
+  return apiRequest(`/api/admin/vote/leaderboard/${id}`,{
+    method:"GET",
+  })
+}

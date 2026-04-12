@@ -218,3 +218,9 @@ export async function getVoteLeaderboard(id:string){
     method:"GET",
   })
 }
+
+export async function approveVoteResult(id:string){
+  return apiRequest(`/api/admin/vote/approve/${id}`,{
+    method:"POST",
+  })
+}

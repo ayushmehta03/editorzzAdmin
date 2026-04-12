@@ -224,3 +224,9 @@ export async function approveVoteResult(id:string){
     method:"POST",
   })
 }
+
+export async function getTotalCastedVotes(id:string){
+  return apiRequest(`/api/admin/vote/total-votes/${id}`,{
+    method:"GET",
+  })
+}

@@ -360,3 +360,20 @@ func GetAllVoteTournaments(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+func GetTotalVotes(client *mongo.Client)gin.HandlerFunc{
+	return func(c *gin.Context){
+		id:=c.Param("id")
+
+		tId,err:=primitive.ObjectIDFromHex(id);
+
+		if err!=nil{
+			c.JSON(http.StatusBadRequest,gin.H{"error":"Invalid tournament id"})
+			return 
+		}
+
+		
+
+
+	}
+}

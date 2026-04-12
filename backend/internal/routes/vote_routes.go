@@ -21,5 +21,6 @@ func VoteRoutes(router *gin.Engine, client *mongo.Client) {
 		voteR.GET("/leaderboard/:id", controllers.GetVoteLeaderboard(client))
 
 		voteR.GET("/tournaments", controllers.GetAllVoteTournaments(client))
+		voteR.GET("/total-votes/:id", controllers.GetTotalVotes(client))
 	}
 }

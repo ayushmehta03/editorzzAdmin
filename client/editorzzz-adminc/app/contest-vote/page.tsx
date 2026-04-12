@@ -75,11 +75,9 @@ export default function CreateVoteContestPage() {
   e.preventDefault();
   if (!form.banner_url) return toast.error("Please upload a contest banner");
 
-  // Helper function to format date without the 5:30 shift
   const formatToISO = (dateString: string) => {
     if (!dateString) return null;
     const date = new Date(dateString);
-    // This adjusts the date so toISOString() returns the "local" numbers as UTC
     const userOffset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - userOffset).toISOString();
   };

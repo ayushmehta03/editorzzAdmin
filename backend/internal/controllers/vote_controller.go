@@ -344,6 +344,7 @@ func GetAllVoteTournaments(client *mongo.Client) gin.HandlerFunc {
 
 		cursor, err := tournamentCol.Find(ctx, filter)
 		if err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tournaments"})
 			return
 		}
@@ -351,6 +352,7 @@ func GetAllVoteTournaments(client *mongo.Client) gin.HandlerFunc {
 
 		var tournaments []bson.M
 		if err := cursor.All(ctx, &tournaments); err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Decode error"})
 			return
 		}

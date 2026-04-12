@@ -206,3 +206,9 @@ export async function getVoteTournaments(){
     method:"GET",
   })
 }
+
+export async function calculateVoteScore(id:string){
+  return apiRequest(`/api/admin/vote/calculate/${id}`,{
+    method:"POST",
+  })
+}

@@ -372,7 +372,27 @@ func GetTotalVotes(client *mongo.Client)gin.HandlerFunc{
 			return 
 		}
 
-		
+		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
+
+		defer cancel()
+
+
+		voteCol:=database.OpenCollection("votes",client)
+
+		count,err:=voteCol.CountDocuments(ctx,bson.M{
+			"tournament_id":tId,
+		})
+
+		if err!=nil{
+			c.JSON(http.StatusInternalServerError,gin.H{"error":"Unable to count total votes"})
+			return 
+		}
+
+		c.JSON(http.StatusOK,gin.H{
+			"tournament_id":tId,
+			"total_votes":count,
+		})
+
 
 
 	}

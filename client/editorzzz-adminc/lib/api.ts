@@ -201,3 +201,8 @@ export async function updateTournament(id:string,data:any){
   })
 }
 
+export async function getVoteTournaments(){
+  return apiRequest(`/api/admin/vote/tournaments`,{
+    method:"GET",
+  })
+}

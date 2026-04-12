@@ -46,6 +46,7 @@ func main() {
 	routes.ProtectedRoutes(router, client)
 	routes.UserRoutes(router, client)
 	routes.JudgeRoutes(router, client)
+	routes.VoteRoutes(router,client)
 
 	port := os.Getenv("PORT")
 	if port == "" {

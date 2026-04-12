@@ -96,7 +96,6 @@ export default function VoteAdminPage() {
                 transition={{ delay: i * 0.05 }}
                 className="bg-zinc-900/40 border border-white/5 rounded-2xl overflow-hidden hover:border-purple-500/30 transition-all"
               >
-                {/* Image */}
                 <div className="h-40 overflow-hidden">
                   <img
                     src={

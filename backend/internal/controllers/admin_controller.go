@@ -490,19 +490,32 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		if req.EndTime.Before(req.StartTime) {
+		startTime := req.StartTime.UTC()
+		endTime := req.EndTime.UTC()
+		votingStart := req.VotingStartTime.UTC()
+		votingEnd := req.VotingEndTime.UTC()
+		now := time.Now().UTC()
+
+		if endTime.Before(startTime) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "End time must be after start time"})
 			return
 		}
 
-		if req.VotingStartTime.Before(req.EndTime) {
+		if startTime.Before(now) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Start time cannot be in the past",
+			})
+			return
+		}
+
+		if !votingStart.After(endTime) {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Voting must start after contest ends",
 			})
 			return
 		}
 
-		if req.VotingEndTime.Before(req.VotingStartTime) {
+		if !votingEnd.After(votingStart) {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Voting end must be after voting start",
 			})
@@ -520,8 +533,12 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		adminID, _ := primitive.ObjectIDFromHex(c.GetString("user_id"))
-		now := time.Now()
+		adminIDHex := c.GetString("user_id")
+		adminID, err := primitive.ObjectIDFromHex(adminIDHex)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid admin ID"})
+			return
+		}
 
 		tournament := models.Tournament{
 			ID:                primitive.NewObjectID(),
@@ -532,10 +549,10 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 			Banner:            req.BannerURL,
 			Slug:              GenerateSlug(req.Title),
 
-			StartTime:         req.StartTime,
-			EndTime:           req.EndTime,
-			VotingStartTime:   req.VotingStartTime, 
-			VotingEndTime:     req.VotingEndTime,   
+			StartTime:         startTime,
+			EndTime:           endTime,
+			VotingStartTime:   votingStart,
+			VotingEndTime:     votingEnd,
 
 			MaxParticipants:   req.MaxParticipants,
 			CurrentCount:      0,
@@ -544,7 +561,8 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 			AssetsLink:        req.AssetsLink,
 
 			Status:            models.TournamentUpcoming,
-			IsLeaderboardLive: false, 
+
+			IsLeaderboardLive: false,
 
 			CreatedBy:         adminID,
 			CreatedAt:         now,

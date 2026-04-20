@@ -13,6 +13,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+
+// starting point for the application
 func main() {
 
 	if os.Getenv("ENV") != "production" {

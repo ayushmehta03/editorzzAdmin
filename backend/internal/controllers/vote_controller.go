@@ -116,9 +116,11 @@ func CalculateVoteScores(client *mongo.Client) gin.HandlerFunc {
 
 			_, err := sCol.UpdateOne(ctx,
 				bson.M{"_id": r.ID},
+			
 				bson.M{"$set": bson.M{
 					"votes_count": r.Votes,
 					"points":      score,
+					"is_judged":true,
 				}},
 			)
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getVoteTournaments, getTotalCastedVotes } from "@/lib/api";
+import { getVoteTournaments, getTotalCastedVotes,calculateVoteScore} from "@/lib/api";
 
 type Tournament = {
   _id: string;

@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getVoteTournaments, getTotalCastedVotes,calculateVoteScore} from "@/lib/api";
+import {
+  getVoteTournaments,
+  getTotalCastedVotes,
+  calculateVoteScore,
+} from "@/lib/api";
 
 type Tournament = {
   _id: string;
@@ -17,6 +21,7 @@ export default function VoteAdminPage() {
   const [data, setData] = useState<Tournament[]>([]);
   const [votesMap, setVotesMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [calculatingId, setCalculatingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -27,6 +32,8 @@ export default function VoteAdminPage() {
       const res = await getVoteTournaments();
       const tournaments = res.tournaments || [];
 
+      console.log("Tournaments:", tournaments);
+
       setData(tournaments);
 
       const votesObj: Record<string, number> = {};
@@ -34,9 +41,12 @@ export default function VoteAdminPage() {
       await Promise.all(
         tournaments.map(async (t: Tournament) => {
           try {
-            const v = await getTotalCastedVotes(t._id);
-            votesObj[t._id] = v.total_votes || 0;
-          } catch {
+            const id = t._id;
+
+            const v = await getTotalCastedVotes(id);
+            votesObj[id] = v.total_votes || 0;
+          } catch (err) {
+            console.error("Votes fetch error:", err);
             votesObj[t._id] = 0;
           }
         })
@@ -44,9 +54,30 @@ export default function VoteAdminPage() {
 
       setVotesMap(votesObj);
     } catch (err) {
-      console.error(err);
+      console.error("Tournament fetch error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCalculate = async (id: string) => {
+    try {
+      setCalculatingId(id);
+
+      console.log("Calculating score for:", id);
+
+      const res = await calculateVoteScore(id);
+
+      console.log("Calculation Response:", res);
+
+      alert("Score calculated successfully");
+
+      await fetchData();
+    } catch (err) {
+      console.error("Calculation Error:", err);
+      alert("Failed to calculate score");
+    } finally {
+      setCalculatingId(null);
     }
   };
 
@@ -72,6 +103,7 @@ export default function VoteAdminPage() {
         <h1 className="text-3xl md:text-5xl font-black">
           Vote <span className="text-zinc-500">Contests</span>
         </h1>
+
         <p className="text-zinc-500 mt-2">
           Calculate scores and publish leaderboard
         </p>
@@ -102,6 +134,7 @@ export default function VoteAdminPage() {
                       item.banner ||
                       "https://images.unsplash.com/photo-1614850523296-d8c1af93d400"
                     }
+                    alt={item.title}
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                   />
                 </div>
@@ -124,12 +157,14 @@ export default function VoteAdminPage() {
                         Pending Calculation
                       </span>
                     )}
+
                     {item.is_score_calculated &&
                       !item.is_leaderboard_live && (
                         <span className="text-blue-400 text-xs font-bold">
                           Ready to Publish
                         </span>
                       )}
+
                     {item.is_leaderboard_live && (
                       <span className="text-green-400 text-xs font-bold">
                         Live
@@ -139,8 +174,14 @@ export default function VoteAdminPage() {
 
                   <div className="flex gap-2">
                     {!item.is_score_calculated && (
-                      <button className="flex-1 bg-yellow-500 text-black text-xs font-bold py-2 rounded-lg hover:scale-105 transition">
-                        Calculate
+                      <button
+                        onClick={() => handleCalculate(item._id)}
+                        disabled={calculatingId === item._id}
+                        className="flex-1 bg-yellow-500 text-black text-xs font-bold py-2 rounded-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {calculatingId === item._id
+                          ? "Calculating..."
+                          : "Calculate"}
                       </button>
                     )}
 

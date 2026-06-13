@@ -373,34 +373,103 @@ func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
-
 func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		tID, _ := primitive.ObjectIDFromHex(c.Param("id"))
+		tID, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tournament ID"})
+			return
+		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
 		tCol := database.OpenCollection("tournaments", client)
+		subCol := database.OpenCollection("submissions", client)
+		userCol := database.OpenCollection("editors", client)
 
-		var t models.Tournament
-		tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
+		var tournament models.Tournament
 
-		if !t.IsJudgingCompleted {
+		err = tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&tournament)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+			return
+		}
+
+		if !tournament.IsJudgingCompleted {
 			c.JSON(http.StatusConflict, gin.H{"error": "Judge not finished"})
 			return
 		}
 
-		tCol.UpdateOne(ctx,
+		if tournament.Status == models.TournamentCompleted {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": "Tournament already approved",
+			})
+			return
+		}
+
+		// Fetch all submissions of this tournament
+		cursor, err := subCol.Find(ctx, bson.M{
+			"tournament_id": tID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		defer cursor.Close(ctx)
+
+		var submissions []models.Submission
+
+		if err := cursor.All(ctx, &submissions); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		var writes []mongo.WriteModel
+
+		for _, submission := range submissions {
+
+			model := mongo.NewUpdateOneModel().
+				SetFilter(bson.M{
+					"_id": submission.UserID,
+				}).
+				SetUpdate(bson.M{
+					"$inc": bson.M{
+						"total_score": int(submission.Points),
+					},
+				})
+
+			writes = append(writes, model)
+		}
+
+		if len(writes) > 0 {
+			_, err = userCol.BulkWrite(ctx, writes)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		}
+
+		_, err = tCol.UpdateOne(
+			ctx,
 			bson.M{"_id": tID},
-			bson.M{"$set": bson.M{
-				"is_leaderboard_live": true,
-				"status":              models.TournamentCompleted,
-			}},
+			bson.M{
+				"$set": bson.M{
+					"is_leaderboard_live": true,
+					"status":              models.TournamentCompleted,
+				},
+			},
 		)
 
-		c.JSON(http.StatusOK, gin.H{"message": "Leaderboard live"})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Tournament approved and user scores updated",
+		})
 	}
 }
 

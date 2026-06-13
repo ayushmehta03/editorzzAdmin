@@ -43,6 +43,7 @@ type Tournament struct {
 
 	Cateogry          string             `bson:"cateogry,omitempty" json:"cateogry,omitempty"`
 	Label             string             `bson:"label,omitempty" json:"label,omitempty"`
+	ResultTime time.Time `bson:"result_time" json:"result_time"`
 
 	VotingStartTime   time.Time          `bson:"voting_start_time" json:"voting_start_time"`
 	VotingEndTime     time.Time          `bson:"voting_end_time" json:"voting_end_time"`
@@ -59,6 +60,7 @@ type Submission struct {
 	TournamentID primitive.ObjectID `bson:"tournament_id"`
 	UserID       primitive.ObjectID `bson:"user_id"`
 	VotesCount   int                `bson:"votes_count"` 
+
 	Remark			string `bson:"remark,omitempty" json:"remark,omitempty"`
 	Title        string             `bson:"title"`
 	MediaURL     string             `bson:"media_url"`

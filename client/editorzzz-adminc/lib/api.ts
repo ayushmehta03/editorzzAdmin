@@ -230,3 +230,12 @@ export async function getTotalCastedVotes(id:string){
     method:"GET",
   })
 }
+export async function judgeRejectSubmission(judgeSlug: string, submissionId: string) {
+  return apiRequest(`/judge/submissions/reject`, {
+    method: "POST",
+    body: JSON.stringify({
+      judge_slug: judgeSlug,
+      submission_id: submissionId,
+    }),
+  });
+}

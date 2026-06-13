@@ -17,5 +17,7 @@ func JudgeRoutes(router *gin.Engine, client *mongo.Client) {
 		judge.POST("/save-scores", controllers.SaveJudgeScores(client))
 
 		judge.POST("/:slug/final-submit", controllers.SubmitFinalScores(client))
+
+        judge.POST("/submissions/reject", controllers.JudgeRejectSubmission(client))
 	}
 }

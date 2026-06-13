@@ -7,14 +7,11 @@ import { toast } from "sonner";
 import { createTournament } from "@/lib/api";
 import { uploadBannerImage } from "@/lib/claudinary";
 import { 
-  Calendar, 
   Users, 
   Trophy, 
   Link as LinkIcon, 
   Mail, 
   Image as ImageIcon, 
-  PlusCircle, 
-  CheckCircle2, 
   Sparkles,
   ChevronRight,
   Clock,

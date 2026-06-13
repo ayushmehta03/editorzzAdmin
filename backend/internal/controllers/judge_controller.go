@@ -190,3 +190,59 @@ func SubmitFinalScores(client *mongo.Client) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Final submitted"})
 	}
 }
+
+func JudgeRejectSubmission(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req struct {
+			JudgeSlug    string `json:"judge_slug" binding:"required"`
+			SubmissionID string `json:"submission_id" binding:"required"`
+		}
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request parameters"})
+			return
+		}
+
+		subObjID, err := primitive.ObjectIDFromHex(req.SubmissionID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid submission id"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+		defer cancel()
+
+		tCol := database.OpenCollection("tournaments", client)
+		sCol := database.OpenCollection("submissions", client)
+
+		var tournament models.Tournament
+		err = tCol.FindOne(ctx, bson.M{"judge_slug": req.JudgeSlug}).Decode(&tournament)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized or invalid judge link"})
+			return
+		}
+
+		if tournament.IsJudgingCompleted {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Judging phase has closed and is locked"})
+			return
+		}
+
+		
+		result, err := sCol.DeleteOne(ctx, bson.M{
+			"_id":           subObjID,
+			"tournament_id": tournament.ID, 
+		})
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reject submission"})
+			return
+		}
+
+		if result.DeletedCount == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Submission not found in this tournament scope"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Submission rejected and deleted immediately"})
+	}
+}

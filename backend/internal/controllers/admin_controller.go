@@ -38,6 +38,9 @@ type CreateTournamentRequest struct {
 	AssetsLink      string    `json:"assets_link" binding:"required"`
 	JudgeEmail      string    `json:"judge_email" binding:"required,email"`
 
+	ResultTime time.Time `bson:"result_time" json:"result_time"`
+
+
    Cateogry string `json:"catreogry" `
    Label string `json:"label"`
 
@@ -227,6 +230,7 @@ type UpdateTournamentRequest struct {
 	AssetsLink      *string    `json:"assets_link,omitempty"`
 	JudgeEmail      *string    `json:"judge_email,omitempty"`
 }
+
 
 
 func UpdateTournament(client *mongo.Client)gin.HandlerFunc{

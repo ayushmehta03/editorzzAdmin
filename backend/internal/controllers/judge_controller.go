@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ayushmehta03/editorzzAdmin/internal/database"
@@ -83,62 +84,88 @@ func GetJudgeSubmissions(client *mongo.Client) gin.HandlerFunc {
 }
 
 func SaveJudgeScores(client *mongo.Client) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        var body struct {
-            JudgeSlug string `json:"judge_slug"`
-            Scores    []struct {
-                SubmissionID string  `json:"submission_id"`
-                Points       float64 `json:"points"`
-            } `json:"scores"`
-        }
+	return func(c *gin.Context) {
 
-        if err := c.ShouldBindJSON(&body); err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-            return
-        }
+		var body struct {
+			JudgeSlug string `json:"judge_slug"`
 
-        ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-        defer cancel()
+			Scores []struct {
+				SubmissionID string  `json:"submission_id"`
+				Points       float64 `json:"points"`
+				Remark       string  `json:"remark,omitempty"`
+			} `json:"scores"`
+		}
 
-        tCol := database.OpenCollection("tournaments", client)
-        sCol := database.OpenCollection("submissions", client)
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid request body",
+			})
+			return
+		}
 
-        // Verify Tournament
-        var t models.Tournament
-        err := tCol.FindOne(ctx, bson.M{"judge_slug": body.JudgeSlug}).Decode(&t)
-        if err != nil {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-            return
-        }
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
 
-        if t.IsJudgingCompleted {
-            c.JSON(http.StatusForbidden, gin.H{"error": "Judging is locked"})
-            return
-        }
+		tCol := database.OpenCollection("tournaments", client)
+		sCol := database.OpenCollection("submissions", client)
 
-        // Update Submissions
-        for _, s := range body.Scores {
-            objID, err := primitive.ObjectIDFromHex(s.SubmissionID)
-            if err != nil {
-                continue 
-            }
+		var tournament models.Tournament
 
-            _, updateErr := sCol.UpdateOne(ctx,
-                bson.M{"_id": objID},
-                bson.M{"$set": bson.M{
-                    "points":    s.Points,
-                    "is_judged": true,
-                }},
-            )
-            
-            if updateErr != nil {
-                fmt.Println("Update Error:", updateErr)
-            }
-		
-        }
+		err := tCol.FindOne(
+			ctx,
+			bson.M{"judge_slug": body.JudgeSlug},
+		).Decode(&tournament)
 
-        c.JSON(http.StatusOK, gin.H{"message": "Saved successfully"})
-    }
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized",
+			})
+			return
+		}
+
+		if tournament.IsJudgingCompleted {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error": "Judging is locked",
+			})
+			return
+		}
+
+		for _, score := range body.Scores {
+
+			submissionID, err := primitive.ObjectIDFromHex(score.SubmissionID)
+			if err != nil {
+				continue
+			}
+
+			update := bson.M{
+				"points":     score.Points,
+				"is_judged":  true,
+			}
+
+			// Save remark only if provided
+			if strings.TrimSpace(score.Remark) != "" {
+				update["remark"] = score.Remark
+			}
+
+			_, err = sCol.UpdateOne(
+				ctx,
+				bson.M{
+					"_id": submissionID,
+				},
+				bson.M{
+					"$set": update,
+				},
+			)
+
+			if err != nil {
+				fmt.Println("Update Error:", err)
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Scores and remarks saved successfully",
+		})
+	}
 }
 
 

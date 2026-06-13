@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
 func GetActiveTournament(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -21,27 +20,41 @@ func GetActiveTournament(client *mongo.Client) gin.HandlerFunc {
 
 		collection := database.OpenCollection("tournaments", client)
 
-		opts := options.Find().SetSort(bson.D{{Key: "end_time", Value: 1}})
+		now := time.Now().UTC()
 
-		cursor, err := collection.Find(ctx, bson.M{
-			"status": models.TournamentActive,
-		}, opts)
+		filter := bson.M{
+			"start_time": bson.M{
+				"$lte": now,
+			},
+			"end_time": bson.M{
+				"$gt": now,
+			},
+		}
 
+		opts := options.Find().SetSort(
+			bson.D{{Key: "end_time", Value: 1}},
+		)
+
+		cursor, err := collection.Find(ctx, filter, opts)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch active tournaments"})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to fetch active tournaments",
+			})
 			return
 		}
 		defer cursor.Close(ctx)
 
-		var tournaments []models.Tournament 
+		var tournaments []models.Tournament
 
-		if err = cursor.All(ctx, &tournaments); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Decode error"})
+		if err := cursor.All(ctx, &tournaments); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Decode error",
+			})
 			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"tournaments": tournaments, 
+			"tournaments": tournaments,
 		})
 	}
 }

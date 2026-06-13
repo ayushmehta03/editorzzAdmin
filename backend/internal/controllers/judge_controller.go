@@ -169,10 +169,8 @@ func SaveJudgeScores(client *mongo.Client) gin.HandlerFunc {
 }
 
 
-
 func SubmitFinalScores(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		slug := c.Param("slug")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -180,16 +178,46 @@ func SubmitFinalScores(client *mongo.Client) gin.HandlerFunc {
 
 		col := database.OpenCollection("tournaments", client)
 
-		col.UpdateOne(ctx,
+		var tournament struct {
+			IsJudgingCompleted bool `bson:"is_judging_completed"`
+		}
+
+		err := col.FindOne(ctx, bson.M{"judge_slug": slug}).Decode(&tournament)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found with this slug"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database lookup failed"})
+			return
+		}
+
+		if tournament.IsJudgingCompleted {
+			c.JSON(http.StatusConflict, gin.H{"error": "Judging has already been finalized and locked for this tournament"})
+			return
+		}
+
+		_, err = col.UpdateOne(ctx,
 			bson.M{"judge_slug": slug},
 			bson.M{"$set": bson.M{
 				"is_judging_completed": true,
 			}},
 		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to lock judging scores"})
+			return
+		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Final submitted"})
+		c.JSON(http.StatusOK, gin.H{"message": "Final scores locked successfully"})
 	}
 }
+
+
+
+
+
+
+
 
 func JudgeRejectSubmission(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {

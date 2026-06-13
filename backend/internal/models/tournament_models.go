@@ -59,7 +59,7 @@ type Submission struct {
 	TournamentID primitive.ObjectID `bson:"tournament_id"`
 	UserID       primitive.ObjectID `bson:"user_id"`
 	VotesCount   int                `bson:"votes_count"` 
-
+	Remark			string `bson:"remark,omitempty" json:"remark,omitempty"`
 	Title        string             `bson:"title"`
 	MediaURL     string             `bson:"media_url"`
 	MediaType    string             `bson:"media_type"`

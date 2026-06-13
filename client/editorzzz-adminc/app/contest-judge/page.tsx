@@ -36,6 +36,7 @@ export default function CreateTournamentPage() {
     banner_url: "",
     start_time: "",
     end_time: "",
+    result_time: "", // Added result_time state field
     max_participants: "",
     prize_pool: "",
     assets_link: "",
@@ -75,8 +76,14 @@ export default function CreateTournamentPage() {
     e.preventDefault();
 
     if (!form.banner_url) return toast.error("Please upload a contest banner");
+    
     if (new Date(form.end_time) <= new Date(form.start_time)) {
       return toast.error("Tournament must end after the start time");
+    }
+
+    // Validation Guard: Results must post after submissions close
+    if (new Date(form.result_time) <= new Date(form.end_time)) {
+      return toast.error("Result announcement must be scheduled after the deadline");
     }
 
     try {
@@ -87,6 +94,7 @@ export default function CreateTournamentPage() {
         prize_pool: Number(form.prize_pool),
         start_time: new Date(form.start_time).toISOString(),
         end_time: new Date(form.end_time).toISOString(),
+        result_time: new Date(form.result_time).toISOString(), // Parsed to ISOString for Backend Go bindings
       });
 
       toast.success("Tournament Live! Redirecting to Dashboard...");
@@ -236,7 +244,8 @@ export default function CreateTournamentPage() {
             </motion.div>
 
             <motion.div variants={itemVariants} className="bg-white/[0.02] border border-white/10 p-8 rounded-[2rem] backdrop-blur-xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Changed layout grid to columns of 3 to evenly spread the time fields or wrap cleanly */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <label className={labelStyles}><Clock size={14} /> Starts</label>
                   <input type="datetime-local" name="start_time" value={form.start_time} onChange={handleChange} className={inputStyles} required />
@@ -244,6 +253,11 @@ export default function CreateTournamentPage() {
                 <div className="space-y-2">
                   <label className={labelStyles}><Clock size={14} /> Deadline</label>
                   <input type="datetime-local" name="end_time" value={form.end_time} onChange={handleChange} className={inputStyles} required />
+                </div>
+                {/* Result Time Input Added */}
+                <div className="space-y-2">
+                  <label className={labelStyles}><Trophy size={14} /> Result Reveal</label>
+                  <input type="datetime-local" name="result_time" value={form.result_time} onChange={handleChange} className={inputStyles} required />
                 </div>
                 <div className="space-y-2">
                   <label className={labelStyles}><Users size={14} /> Slots</label>

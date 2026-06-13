@@ -155,17 +155,19 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 		Slug:GenerateSlug(req.Title),
 		StartTime: req.StartTime,
 		EndTime: req.EndTime,
+		ResultTime: req.ResultTime,
 		MaxParticipants: req.MaxParticipants,
 		CurrentCount: 0,
 		PrizePool:          req.PrizePool,
 			AssetsLink:         req.AssetsLink,
 			JudgeEmail:         req.JudgeEmail,
 			JudgeSlug:          uuid.New().String(),
-			JudgeSlugExpiry:    req.EndTime.Add(48 * time.Hour), // judge can rank 2 days after
+			JudgeSlugExpiry:    req.EndTime.Add(24* time.Hour), // judge can rank  within 1 days timeline
 			Status:             models.TournamentUpcoming,
 			IsLeaderboardLive:  false,
 			Label: req.Label,
 			Cateogry: req.Cateogry,
+
 			CreatedBy:          adminID,
 			CreatedAt:          now,
 			UpdatedAt:          now,

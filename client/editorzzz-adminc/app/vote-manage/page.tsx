@@ -2,26 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  getVoteTournaments,
-  getTotalCastedVotes,
-  calculateVoteScore,
-} from "@/lib/api";
+import Link from "next/link";
+import { getVoteTournaments, getTotalCastedVotes } from "@/lib/api";
 
 type Tournament = {
   _id: string;
   title: string;
   banner?: string;
-  voting_end_time?: string;
   is_score_calculated: boolean;
   is_leaderboard_live: boolean;
 };
 
-export default function VoteAdminPage() {
+export default function VoteAdminDashboard() {
   const [data, setData] = useState<Tournament[]>([]);
   const [votesMap, setVotesMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [calculatingId, setCalculatingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -31,53 +26,24 @@ export default function VoteAdminPage() {
     try {
       const res = await getVoteTournaments();
       const tournaments = res.tournaments || [];
-
-      console.log("Tournaments:", tournaments);
-
       setData(tournaments);
 
       const votesObj: Record<string, number> = {};
-
       await Promise.all(
         tournaments.map(async (t: Tournament) => {
           try {
-            const id = t._id;
-
-            const v = await getTotalCastedVotes(id);
-            votesObj[id] = v.total_votes || 0;
+            const v = await getTotalCastedVotes(t._id);
+            votesObj[t._id] = v.total_votes || 0;
           } catch (err) {
-            console.error("Votes fetch error:", err);
             votesObj[t._id] = 0;
           }
         })
       );
-
       setVotesMap(votesObj);
     } catch (err) {
       console.error("Tournament fetch error:", err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCalculate = async (id: string) => {
-    try {
-      setCalculatingId(id);
-
-      console.log("Calculating score for:", id);
-
-      const res = await calculateVoteScore(id);
-
-      console.log("Calculation Response:", res);
-
-      alert("Score calculated successfully");
-
-      await fetchData();
-    } catch (err) {
-      console.error("Calculation Error:", err);
-      alert("Failed to calculate score");
-    } finally {
-      setCalculatingId(null);
     }
   };
 
@@ -95,25 +61,16 @@ export default function VoteAdminPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white px-4 md:px-10 py-10">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10"
-      >
+      <div className="mb-10">
         <h1 className="text-3xl md:text-5xl font-black">
           Vote <span className="text-zinc-500">Contests</span>
         </h1>
-
-        <p className="text-zinc-500 mt-2">
-          Calculate scores and publish leaderboard
-        </p>
-      </motion.div>
+        <p className="text-zinc-500 mt-2">Manage submissions and manually assign scoring variables</p>
+      </div>
 
       {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-40">
-          <p className="text-zinc-400 text-lg font-semibold">
-            No Contests Available
-          </p>
+          <p className="text-zinc-400 text-lg font-semibold">No Contests Available</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -130,74 +87,39 @@ export default function VoteAdminPage() {
               >
                 <div className="h-40 overflow-hidden">
                   <img
-                    src={
-                      item.banner ||
-                      "https://images.unsplash.com/photo-1614850523296-d8c1af93d400"
-                    }
+                    src={item.banner || "https://images.unsplash.com/photo-1614850523296-d8c1af93d400"}
                     alt={item.title}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover"
                   />
                 </div>
 
                 <div className="p-5">
-                  <h2 className="text-lg font-bold mb-3 line-clamp-1">
-                    {item.title}
-                  </h2>
+                  <h2 className="text-lg font-bold mb-3 line-clamp-1">{item.title}</h2>
 
-                  <div className="flex justify-between text-sm text-zinc-400 mb-3">
-                    <span>Total Votes</span>
-                    <span className="text-white font-semibold">
-                      {votes}
-                    </span>
+                  <div className="flex justify-between text-sm text-zinc-400 mb-4">
+                    <span>Total Raw Votes</span>
+                    <span className="text-white font-semibold">{votes}</span>
                   </div>
 
                   <div className="mb-4">
-                    {!item.is_score_calculated && (
-                      <span className="text-yellow-400 text-xs font-bold">
-                        Pending Calculation
+                    {!item.is_score_calculated ? (
+                      <span className="text-amber-400 text-xs font-bold px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                        Pending Admin Grades
                       </span>
-                    )}
-
-                    {item.is_score_calculated &&
-                      !item.is_leaderboard_live && (
-                        <span className="text-blue-400 text-xs font-bold">
-                          Ready to Publish
-                        </span>
-                      )}
-
-                    {item.is_leaderboard_live && (
-                      <span className="text-green-400 text-xs font-bold">
-                        Live
+                    ) : item.is_leaderboard_live ? (
+                      <span className="text-green-400 text-xs font-bold px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
+                        Leaderboard Live
+                      </span>
+                    ) : (
+                      <span className="text-blue-400 text-xs font-bold px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full">
+                        Ready to Publish
                       </span>
                     )}
                   </div>
 
-                  <div className="flex gap-2">
-                    {!item.is_score_calculated && (
-                      <button
-                        onClick={() => handleCalculate(item._id)}
-                        disabled={calculatingId === item._id}
-                        className="flex-1 bg-yellow-500 text-black text-xs font-bold py-2 rounded-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {calculatingId === item._id
-                          ? "Calculating..."
-                          : "Calculate"}
-                      </button>
-                    )}
-
-                    {item.is_score_calculated &&
-                      !item.is_leaderboard_live && (
-                        <button className="flex-1 bg-blue-500 text-white text-xs font-bold py-2 rounded-lg hover:scale-105 transition">
-                          Publish
-                        </button>
-                      )}
-
-                    {item.is_leaderboard_live && (
-                      <button className="flex-1 bg-green-600 text-white text-xs font-bold py-2 rounded-lg hover:scale-105 transition">
-                        View
-                      </button>
-                    )}
-                  </div>
+                  <Link href={`/vote/${item._id}`} className="block w-full text-center bg-zinc-800 text-white text-xs font-bold py-2.5 rounded-lg hover:bg-zinc-700 transition">
+                    Manage Submissions
+                  </Link>
                 </div>
               </motion.div>
             );

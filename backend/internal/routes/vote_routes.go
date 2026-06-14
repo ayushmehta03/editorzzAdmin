@@ -14,7 +14,6 @@ func VoteRoutes(router *gin.Engine, client *mongo.Client) {
 		voteR.Use(middleware.AuthMiddleWare())
 		voteR.Use(middleware.AdminOnly())
 
-		voteR.POST("/calculate/:id", controllers.CalculateVoteScores(client))
 
 		voteR.POST("/publish/:id", controllers.AdminPublishVoteLeaderboard(client))
 

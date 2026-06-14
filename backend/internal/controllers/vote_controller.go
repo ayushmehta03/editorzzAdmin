@@ -125,41 +125,56 @@ func UpdateSubmissionPoints(client *mongo.Client) gin.HandlerFunc {
     }
 }
 
-
 func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
+    return func(c *gin.Context) {
+        tID, err := primitive.ObjectIDFromHex(c.Param("id"))
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tournament ID format"})
+            return
+        }
 
-		tID, _ := primitive.ObjectIDFromHex(c.Param("id"))
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+        tCol := database.OpenCollection("tournaments", client)
 
-		tCol := database.OpenCollection("tournaments", client)
+        var t models.Tournament
+        err = tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
+        if err != nil {
+            if err == mongo.ErrNoDocuments {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+                return
+            }
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Database retrieval error"})
+            return
+        }
 
-		var t models.Tournament
-		tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
+        if t.Type != "vote_based" {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid contest type"})
+            return
+        }
 
-		if t.Type != "vote_based" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid contest type"})
-			return
-		}
+        if !t.IsScoreCalculated {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Scores must be manually set by admin before publishing"})
+            return
+        }
 
-		if !t.IsScoreCalculated {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Scores not calculated"})
-			return
-		}
+        _, err = tCol.UpdateOne(ctx,
+            bson.M{"_id": tID},
+            bson.M{"$set": bson.M{
+                "is_leaderboard_live": true,
+                "status":              models.TournamentCompleted,
+            }},
+        )
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update leaderboard status"})
+            return
+        }
 
-		tCol.UpdateOne(ctx,
-			bson.M{"_id": tID},
-			bson.M{"$set": bson.M{
-				"is_leaderboard_live": true,
-				"status":              models.TournamentCompleted,
-			}},
-		)
-
-		c.JSON(http.StatusOK, gin.H{"message": "Leaderboard published"})
-	}
+        c.JSON(http.StatusOK, gin.H{"message": "Leaderboard successfully published"})
+    }
 }
+
 
 
 func GetVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {

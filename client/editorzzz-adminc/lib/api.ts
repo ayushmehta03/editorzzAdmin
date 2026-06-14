@@ -239,3 +239,26 @@ export async function judgeRejectSubmission(judgeSlug: string, submissionId: str
     }),
   });
 }
+
+export async function getSubmissionsWithVotes(tournamentId: string) {
+  return apiRequest(`/api/admin/vote/submissions/${tournamentId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+
+
+export async function updateSubmissionPoints(submissionId: string, points: number) {
+  return apiRequest(`/api/admin/vote/submissions/score/${submissionId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      points: points,
+    }),
+  });
+}

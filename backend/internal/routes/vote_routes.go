@@ -16,7 +16,9 @@ func VoteRoutes(router *gin.Engine, client *mongo.Client) {
 
 
 		voteR.POST("/publish/:id", controllers.AdminPublishVoteLeaderboard(client))
-
+     voteR.GET("/submissions/:id", controllers.GetSubmissionsWithVotes(client))
+    
+      voteR.POST("/submissions/score/:submission_id", controllers.UpdateSubmissionPoints(client))	
 		voteR.GET("/leaderboard/:id", controllers.GetVoteLeaderboard(client))
 
 		voteR.GET("/tournaments", controllers.GetAllVoteTournaments(client))

@@ -73,6 +73,59 @@ func GetSubmissionsWithVotes(client *mongo.Client) gin.HandlerFunc {
 }
 
 
+
+// Request structure for manual scoring
+type ManualScoreInput struct {
+    Points float64 `json:"points" binding:"required,min=0"`
+}
+
+func UpdateSubmissionPoints(client *mongo.Client) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        sID, err := primitive.ObjectIDFromHex(c.Param("submission_id"))
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid submission id"})
+            return
+        }
+
+        var input ManualScoreInput
+        if err := c.ShouldBindJSON(&input); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+            return
+        }
+
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
+
+        sCol := database.OpenCollection("submissions", client)
+
+        // Update points and set is_judged to true
+        result, err := sCol.UpdateOne(ctx,
+            bson.M{"_id": sID},
+            bson.M{"$set": bson.M{
+                "points":    input.Points,
+                "is_judged": true,
+            }},
+        )
+
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update points"})
+            return
+        }
+
+        if result.MatchedCount == 0 {
+            c.JSON(http.StatusNotFound, gin.H{"error": "Submission not found"})
+            return
+        }
+
+        c.JSON(http.StatusOK, gin.H{
+            "message":       "Points manually assigned successfully",
+            "submission_id": sID.Hex(),
+            "points":        input.Points,
+        })
+    }
+}
+
+
 func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

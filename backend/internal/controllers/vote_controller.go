@@ -27,12 +27,9 @@ func GetSubmissionsWithVotes(client *mongo.Client) gin.HandlerFunc {
 
         sCol := database.OpenCollection("submissions", client)
 
-        // Aggregation pipeline to join submissions with their vote counts
         pipeline := mongo.Pipeline{
-            // 1. Filter submissions matching this tournament
             {{"$match", bson.D{{"tournament_id", tID}}}},
             
-            // 2. Look up votes matching this submission's ID
             {{"$lookup", bson.D{
                 {"from", "votes"},
                 {"localField", "_id"},
@@ -40,7 +37,6 @@ func GetSubmissionsWithVotes(client *mongo.Client) gin.HandlerFunc {
                 {"as", "matched_votes"},
             }}},
             
-            // 3. Project fields and count the size of the matched_votes array
             {{"$project", bson.D{
                 {"_id", 1},
                 {"tournament_id", 1},
@@ -58,7 +54,6 @@ func GetSubmissionsWithVotes(client *mongo.Client) gin.HandlerFunc {
         }
         defer cursor.Close(ctx)
 
-        // Define a structural container matching the projection
         var submissionsWithVotes []bson.M
         if err := cursor.All(ctx, &submissionsWithVotes); err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse submissions"})
@@ -98,7 +93,6 @@ func UpdateSubmissionPoints(client *mongo.Client) gin.HandlerFunc {
 
         sCol := database.OpenCollection("submissions", client)
 
-        // Update points and set is_judged to true
         result, err := sCol.UpdateOne(ctx,
             bson.M{"_id": sID},
             bson.M{"$set": bson.M{

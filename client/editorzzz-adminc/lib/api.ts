@@ -186,12 +186,6 @@ export async function getCompletedTournaments() {
   });
 }
 
-export async function updateVotingTime(id:string,data:any){
-  return apiRequest(`/api/admin/update-votetime/${id}`,{
-    method:"PUT",
-    body:JSON.stringify(data)
-  })
-}
 
 
 export async function updateTournament(id:string,data:any){
@@ -216,7 +210,7 @@ export async function getVoteLeaderboard(id:string){
 
 export async function approveVoteResult(id:string){
   return apiRequest(`/api/admin/vote/approve/${id}`,{
-    method:"POST",
+    method:"PUT",
   })
 }
 

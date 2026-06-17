@@ -149,10 +149,6 @@ func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
             return
         }
 
-        if !t.IsScoreCalculated {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "Scores must be manually set by admin before publishing"})
-            return
-        }
 
 
 

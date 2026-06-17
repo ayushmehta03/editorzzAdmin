@@ -234,113 +234,6 @@ type UpdateTournamentRequest struct {
 }
 
 
-
-func UpdateTournament(client *mongo.Client)gin.HandlerFunc{
-	return func(c*gin.Context){
-
-
-		role,exists:=c.Get("role")
-
-
-		if !exists || role!="admin"{
-			c.JSON(http.StatusUnauthorized,gin.H{"error":"Unauthorized"})
-			return 
-		}
-
-		idParam:=c.Param("id")
-
-		tournamentId,err:=primitive.ObjectIDFromHex(idParam)
-
-		if err!=nil{
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tournament ID"})
-			return
-		}
-		var req UpdateTournamentRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		collection := database.OpenCollection("tournaments", client)
-
-		// Fetch tournament
-		var tournament models.Tournament
-		err = collection.FindOne(ctx, bson.M{"_id": tournamentId}).Decode(&tournament)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
-			return
-		}
-
-		// dont aloow between on going tournaments
-
-		if tournament.Status != models.TournamentUpcoming {
-			c.JSON(http.StatusForbidden, gin.H{
-				"error": "Tournament cannot be updated after it starts",
-			})
-			return
-		}
-
-		// fileds that need to be updated 
-
-		updateFields := bson.M{}
-			judgeLink := "https://judge.editorzzzz.com/tournamnet/" + tournament.JudgeSlug
-
-
-		if req.Title != nil {
-			updateFields["title"] = *req.Title
-		}
-		if req.Description != nil {
-			updateFields["description"] = *req.Description
-		}
-		if req.BannerURL != nil {
-			updateFields["banner_url"] = *req.BannerURL
-		}
-		if req.StartTime != nil {
-			updateFields["start_time"] = *req.StartTime
-		}
-		if req.EndTime != nil {
-			updateFields["end_time"] = *req.EndTime
-		}
-		if req.MaxParticipants != nil {
-			updateFields["max_participants"] = *req.MaxParticipants
-		}
-		if req.PrizePool != nil {
-			updateFields["prize_pool"] = *req.PrizePool
-		}
-		if req.AssetsLink != nil {
-			updateFields["assets_link"] = *req.AssetsLink
-		}
-		if req.JudgeEmail != nil {
-			updateFields["judge_email"] = *req.JudgeEmail
-			utils.SendJudgeInvitationEmail(*req.JudgeEmail,*req.Title,judgeLink)
-
-		
-		}
-
-
-
-		updateFields["updated_at"] = time.Now()
-
-		_, err = collection.UpdateOne(
-			ctx,
-			bson.M{"_id": tournamentId},
-			bson.M{"$set": updateFields},
-		)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Tournament updated successfully",
-		})
-	}
-}
-
 func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tournamentID, _ := primitive.ObjectIDFromHex(c.Param("id"))
@@ -564,37 +457,7 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		startTime := req.StartTime.UTC()
-		endTime := req.EndTime.UTC()
-		votingStart := req.VotingStartTime.UTC()
-		votingEnd := req.VotingEndTime.UTC()
-		now := time.Now().UTC()
-
-		if endTime.Before(startTime) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "End time must be after start time"})
-			return
-		}
-
-		if startTime.Before(now) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Start time cannot be in the past",
-			})
-			return
-		}
-
-		if !votingStart.After(endTime) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Voting must start after contest ends",
-			})
-			return
-		}
-
-		if !votingEnd.After(votingStart) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Voting end must be after voting start",
-			})
-			return
-		}
+		
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -623,10 +486,10 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 			Banner:            req.BannerURL,
 			Slug:              GenerateSlug(req.Title),
 
-			StartTime:         startTime,
-			EndTime:           endTime,
-			VotingStartTime:   votingStart,
-			VotingEndTime:     votingEnd,
+			StartTime:         req.StartTime,
+			EndTime:           req.EndTime,
+			VotingStartTime:   req.VotingStartTime,
+			VotingEndTime:     req.VotingEndTime,
 
 			MaxParticipants:   req.MaxParticipants,
 			CurrentCount:      0,
@@ -639,8 +502,8 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 			IsLeaderboardLive: false,
 
 			CreatedBy:         adminID,
-			CreatedAt:         now,
-			UpdatedAt:         now,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
 		}
 
 		_, err = collection.InsertOne(ctx, tournament)

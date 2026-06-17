@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { updateTournament, updateVotingTime } from "@/lib/api";
+import { updateTournament } from "@/lib/api"; // Notice we no longer need updateVotingTime here!
 import { X, Save } from "lucide-react";
 
 export default function EditModal({ t, onClose, refresh }: any) {
@@ -16,8 +16,13 @@ export default function EditModal({ t, onClose, refresh }: any) {
   };
 
   const [form, setForm] = useState({
-    ...t,
-    banner_url: t.banner,
+    title: t.title || "",
+    description: t.description || "",
+    banner_url: t.banner_url || t.banner || "",
+    prize_pool: t.prize_pool || "",
+    max_participants: t.max_participants || "",
+    assets_link: t.assets_link || "",
+    judge_email: t.judge_email || "",
     start_time: formatDate(t.start_time),
     end_time: formatDate(t.end_time),
     voting_start_time: formatDate(t.voting_start_time),
@@ -31,27 +36,33 @@ export default function EditModal({ t, onClose, refresh }: any) {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await updateTournament(t._id, {
-        ...form,
-        start_time: new Date(form.start_time),
-        end_time: new Date(form.end_time),
-      });
+      // 1. Build a unified payload matching our combined Go backend struct
+      const payload: any = {
+        title: form.title,
+        description: form.description,
+        banner_url: form.banner_url,
+        assets_link: form.assets_link,
+        start_time: form.start_time ? new Date(form.start_time).toISOString() : null,
+        end_time: form.end_time ? new Date(form.end_time).toISOString() : null,
+        prize_pool: form.prize_pool ? parseFloat(form.prize_pool) : 0,
+        max_participants: form.max_participants ? parseInt(form.max_participants, 10) : 0,
+      };
 
+      // 2. Conditionally assign values based on type, matching backend properties
       if (isVoteBased) {
-        await updateVotingTime(t._id, {
-          voting_start_time: new Date(form.voting_start_time),
-          voting_end_time: new Date(form.voting_end_time),
-        });
+        payload.voting_start_time = form.voting_start_time ? new Date(form.voting_start_time).toISOString() : null;
+        payload.voting_end_time = form.voting_end_time ? new Date(form.voting_end_time).toISOString() : null;
       } else {
-        await updateTournament(t._id, {
-          judge_email: form.judge_email,
-        });
+        payload.judge_email = form.judge_email;
       }
+
+      // 3. Fire everything out in a single payload roundtrip
+      await updateTournament(t._id, payload);
 
       refresh();
       onClose();
     } catch (err) {
-      console.error(err);
+      console.error("Failed to update tournament:", err);
     } finally {
       setLoading(false);
     }
@@ -77,19 +88,18 @@ export default function EditModal({ t, onClose, refresh }: any) {
             </p>
           </div>
 
-          <button onClick={onClose} className="p-3 bg-white/5 rounded-full">
+          <button onClick={onClose} className="p-3 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
             <X size={20} />
           </button>
         </div>
 
         <div className="space-y-6">
-
           <div className="grid md:grid-cols-2 gap-6">
             <input name="title" value={form.title} onChange={handleChange} className={inputClass} placeholder="Title" />
             <input name="banner_url" value={form.banner_url} onChange={handleChange} className={inputClass} placeholder="Banner URL" />
           </div>
 
-          <textarea name="description" value={form.description} onChange={handleChange} className={`${inputClass} min-h-[100px]`} />
+          <textarea name="description" value={form.description} onChange={handleChange} className={`${inputClass} min-h-[100px]`} placeholder="Description" />
 
           <div className="grid md:grid-cols-2 gap-4">
             <DateTimeInput label="Start Time" name="start_time" value={form.start_time} onChange={handleChange} />
@@ -112,8 +122,8 @@ export default function EditModal({ t, onClose, refresh }: any) {
           )}
 
           <div className="grid md:grid-cols-2 gap-6">
-            <input name="prize_pool" value={form.prize_pool} onChange={handleChange} className={inputClass} placeholder="Prize Pool" />
-            <input name="max_participants" value={form.max_participants} onChange={handleChange} className={inputClass} placeholder="Max Participants" />
+            <input type="number" name="prize_pool" value={form.prize_pool} onChange={handleChange} className={inputClass} placeholder="Prize Pool" />
+            <input type="number" name="max_participants" value={form.max_participants} onChange={handleChange} className={inputClass} placeholder="Max Participants" />
           </div>
 
           <input name="assets_link" value={form.assets_link} onChange={handleChange} className={inputClass} placeholder="Assets Link" />
@@ -121,7 +131,7 @@ export default function EditModal({ t, onClose, refresh }: any) {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="w-full bg-purple-600 py-5 rounded-2xl font-black uppercase flex justify-center gap-2"
+            className="w-full bg-purple-600 hover:bg-purple-700 transition-colors py-5 rounded-2xl font-black uppercase flex justify-center gap-2 disabled:opacity-50"
           >
             {loading ? "Saving..." : <><Save size={18}/> Save Changes</>}
           </button>

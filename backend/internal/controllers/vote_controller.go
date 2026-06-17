@@ -131,6 +131,7 @@ func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
         defer cancel()
 
         tCol := database.OpenCollection("tournaments", client)
+		userCol:=database.OpenCollection("editors",client)
 
         var t models.Tournament
         err = tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&t)
@@ -152,6 +153,61 @@ func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
             c.JSON(http.StatusBadRequest, gin.H{"error": "Scores must be manually set by admin before publishing"})
             return
         }
+
+
+
+
+		sCol:=database.OpenCollection("submissions",client);
+
+		cursor,err:=sCol.Find(ctx,bson.M{
+			"tournament_id":tID,
+		})
+
+		if err!=nil{
+		c.JSON(http.StatusInternalServerError,gin.H{"error":"unable to fecth submissions"})
+		return 
+
+		}
+
+         defer cursor.Close(ctx)
+
+		var submissions []models.Submission
+
+		if err := cursor.All(ctx, &submissions); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		var writes []mongo.WriteModel
+
+		for _, submission := range submissions {
+
+			model := mongo.NewUpdateOneModel().
+				SetFilter(bson.M{
+					"_id": submission.UserID,
+				}).
+				SetUpdate(bson.M{
+					"$inc": bson.M{
+						"total_score": int(submission.Points),
+					},
+				})
+
+			writes = append(writes, model)
+		}
+
+		if len(writes) > 0 {
+			_, err = userCol.BulkWrite(ctx, writes)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		}
+
+
+
+
+
+
 
         _, err = tCol.UpdateOne(ctx,
             bson.M{"_id": tID},

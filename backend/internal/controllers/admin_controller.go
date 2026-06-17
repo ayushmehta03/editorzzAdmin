@@ -551,7 +551,6 @@ func GetStats(client *mongo.Client) gin.HandlerFunc {
 func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// 🔐 Admin check
 		role, exists := c.Get("role")
 		if !exists || role != "admin" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})

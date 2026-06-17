@@ -221,18 +221,6 @@ if err != nil {
 
 // the required struct we will use pointer to avoid partial update 
 
-type UpdateTournamentRequest struct {
-	Title           *string    `json:"title,omitempty"`
-	Description     *string    `json:"description,omitempty"`
-	BannerURL       *string    `json:"banner_url,omitempty"`
-	StartTime       *time.Time `json:"start_time,omitempty"`
-	EndTime         *time.Time `json:"end_time,omitempty"`
-	MaxParticipants *int       `json:"max_participants,omitempty"`
-	PrizePool       *float64   `json:"prize_pool,omitempty"`
-	AssetsLink      *string    `json:"assets_link,omitempty"`
-	JudgeEmail      *string    `json:"judge_email,omitempty"`
-}
-
 
 func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -648,12 +636,33 @@ func GetLeaderboard(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-type UpdateVotingRequest struct {
-	VotingStartTime *time.Time `json:"voting_start_time"`
-	VotingEndTime   *time.Time `json:"voting_end_time"`
+
+type UpdateTournamentRequest struct {
+	Title           *string    `json:"title,omitempty"`
+	Description     *string    `json:"description,omitempty"`
+	BannerURL       *string    `json:"banner_url,omitempty"`
+	StartTime       *time.Time `json:"start_time,omitempty"`
+	EndTime         *time.Time `json:"end_time,omitempty"`
+	MaxParticipants *int       `json:"max_participants,omitempty"`
+	PrizePool       *float64   `json:"prize_pool,omitempty"`
+	AssetsLink      *string    `json:"assets_link,omitempty"`
+	JudgeEmail      *string    `json:"judge_email,omitempty"`
+	VotingStartTime *time.Time `json:"voting_start_time,omitempty"`
+	VotingEndTime   *time.Time `json:"voting_end_time,omitempty"`
 }
 
-func UpdateVotingTime(client *mongo.Client) gin.HandlerFunc {
+
+
+
+
+
+
+
+
+
+
+
+func UpdateTournament(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		role, exists := c.Get("role")
@@ -663,37 +672,90 @@ func UpdateVotingTime(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		idParam := c.Param("id")
-		tournamentID, err := primitive.ObjectIDFromHex(idParam)
+		tournamentId, err := primitive.ObjectIDFromHex(idParam)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tournament ID"})
 			return
 		}
 
-		var req UpdateVotingRequest
+		var req UpdateTournamentRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid body"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		col := database.OpenCollection("tournaments", client)
+		collection := database.OpenCollection("tournaments", client)
 
-		update := bson.M{}
+		var tournament models.Tournament
+		err = collection.FindOne(ctx, bson.M{"_id": tournamentId}).Decode(&tournament)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+			return
+		}
 
+		if tournament.Status != models.TournamentUpcoming {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error": "Tournament cannot be updated after it starts",
+			})
+			return
+		}
+
+		updateFields := bson.M{}
+
+		if req.Title != nil {
+			updateFields["title"] = *req.Title
+		}
+		if req.Description != nil {
+			updateFields["description"] = *req.Description
+		}
+		if req.BannerURL != nil {
+			updateFields["banner_url"] = *req.BannerURL
+		}
+		if req.StartTime != nil {
+			updateFields["start_time"] = *req.StartTime
+		}
+		if req.EndTime != nil {
+			updateFields["end_time"] = *req.EndTime
+		}
+		if req.MaxParticipants != nil {
+			updateFields["max_participants"] = *req.MaxParticipants
+		}
+		if req.PrizePool != nil {
+			updateFields["prize_pool"] = *req.PrizePool
+		}
+		if req.AssetsLink != nil {
+			updateFields["assets_link"] = *req.AssetsLink
+		}
+		
 		if req.VotingStartTime != nil {
-			update["voting_start_time"] = *req.VotingStartTime
+			updateFields["voting_start_time"] = *req.VotingStartTime
 		}
 		if req.VotingEndTime != nil {
-			update["voting_end_time"] = *req.VotingEndTime
+			updateFields["voting_end_time"] = *req.VotingEndTime
 		}
 
-		update["updated_at"] = time.Now()
+		if req.JudgeEmail != nil {
+			updateFields["judge_email"] = *req.JudgeEmail
+			judgeLink := "https://judge.editorzzzz.com/tournamnet/" + tournament.JudgeSlug
+			
+			emailTitle := tournament.Title
+			if req.Title != nil {
+				emailTitle = *req.Title
+			}
+			
+			utils.SendJudgeInvitationEmail(*req.JudgeEmail, emailTitle, judgeLink)
+		}
 
-		_, err = col.UpdateOne(ctx,
-			bson.M{"_id": tournamentID},
-			bson.M{"$set": update},
+		updateFields["updated_at"] = time.Now()
+
+		// 7. Execute Update
+		_, err = collection.UpdateOne(
+			ctx,
+			bson.M{"_id": tournamentId},
+			bson.M{"$set": updateFields},
 		)
 
 		if err != nil {
@@ -702,8 +764,7 @@ func UpdateVotingTime(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Voting time updated",
+			"message": "Tournament details and voting times updated successfully",
 		})
 	}
 }
-

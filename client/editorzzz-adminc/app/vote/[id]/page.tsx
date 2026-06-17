@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { toast } from "sonner";
 import { getSubmissionsWithVotes, updateSubmissionPoints, approveVoteResult } from "@/lib/api";
 
 type Submission = {
@@ -35,7 +36,6 @@ export default function TournamentSubmissionsPage({ params }: Props) {
       const subList = res.submissions || [];
       setSubmissions(subList);
 
-      // Populate localized state dictionary with point presets
       const pointsMap: Record<string, number> = {};
       subList.forEach((sub: Submission) => {
         pointsMap[sub._id] = sub.points || 0;
@@ -43,6 +43,7 @@ export default function TournamentSubmissionsPage({ params }: Props) {
       setScores(pointsMap);
     } catch (err) {
       console.error("Error loading entries:", err);
+      toast.error("Failed to load submission data.");
     } finally {
       setLoading(false);
     }
@@ -58,34 +59,49 @@ export default function TournamentSubmissionsPage({ params }: Props) {
       setUpdatingId(submissionId);
       const pointsToAssign = scores[submissionId] || 0;
       await updateSubmissionPoints(submissionId, pointsToAssign);
-      alert("Submission points updated!");
+      toast.success("Submission points updated!");
       await loadSubmissions();
     } catch (err) {
-      alert("Failed to update score metrics.");
+      toast.error("Failed to update score metrics.");
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const handleFinalPublish = async () => {
-    const unjudged = submissions.filter((s) => !s.is_judged);
-    if (unjudged.length > 0) {
-      if (!confirm(`Warning: You have ${unjudged.length} un-judged submission(s). Proceeding will freeze their entries at 0 points. Continue?`)) {
-        return;
-      }
-    }
-
+  const executePublish = async () => {
     try {
       setPublishing(true);
-      // Hitting your newly added approval endpoint explicitly
       await approveVoteResult(tournamentId);
-      alert("Leaderboard finalized and approved successfully!");
-      window.location.href = "/admin/vote";
+      toast.success("Leaderboard finalized and approved successfully!");
+      
+      // Delay navigation slightly so they can see the success toast
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1500);
     } catch (err) {
-      alert("Failed to approve and finalize contest.");
+      toast.error("Failed to approve and finalize contest.");
     } finally {
       setPublishing(false);
     }
+  };
+
+  const handleFinalPublish = async () => {
+    const unjudged = submissions.filter((s) => !s.is_judged);
+    
+    if (unjudged.length > 0) {
+      // Utilizing sonner's action feature to replace the native browser confirm window cleanly
+      toast.warning(`You have ${unjudged.length} un-judged submission(s).`, {
+        description: "Proceeding will freeze their entries at 0 points.",
+        action: {
+          label: "Continue Anyway",
+          onClick: () => executePublish(),
+        },
+        duration: 8000,
+      });
+      return;
+    }
+
+    await executePublish();
   };
 
   if (loading) {

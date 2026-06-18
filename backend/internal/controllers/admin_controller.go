@@ -768,3 +768,9 @@ func UpdateTournament(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+
+func CreateFeaturePost(client*mongo.Client){
+
+	
+}

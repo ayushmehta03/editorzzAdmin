@@ -22,6 +22,7 @@ type FeaturePost struct{
 	Id  primitive.ObjectID `bson:"_id" json:"_id"`
 	Banner_Url string       `bson:"banner_url" json:"banner_url"`
 	Title string 			`bson:"title" json:"title"`
+	IsLive bool 			`bson:"is_live" json:"is_live"`
 	Descreption string 			`bson:"descreption" json:"descreption"`
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`

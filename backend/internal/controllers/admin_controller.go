@@ -789,6 +789,7 @@ func CreateFeaturePost(client*mongo.Client)gin.HandlerFunc{
 		fetaurePost:=models.FeaturePost{
 			Id: primitive.NewObjectID(),
 			Title: post.Title,
+			IsLive: true,
 			Banner_Url: post.Banner_Url,
 			Descreption: post.Descreption,
 			CreatedAt: time.Now(),
@@ -813,3 +814,45 @@ func CreateFeaturePost(client*mongo.Client)gin.HandlerFunc{
 }
 
 
+func RemoveFeaturePost(client *mongo.Client) gin.HandlerFunc {
+    featureCol := database.OpenCollection("feature_posts", client)
+
+    return func(c *gin.Context) {
+        role, exists := c.Get("role")
+        if !exists || role != "admin" {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+            return
+        }
+
+        idParam := c.Param("id")
+        objID, err := primitive.ObjectIDFromHex(idParam)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID format"})
+            return
+        }
+
+        ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+        defer cancel()
+
+        filter := bson.M{"_id": objID}
+        update := bson.M{
+            "$set": bson.M{
+                "islive":    false, 
+                "updatedat": time.Now(),
+            },
+        }
+
+        result, err := featureCol.UpdateOne(ctx, filter, update)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove feature post"})
+            return
+        }
+
+        if result.MatchedCount == 0 {
+            c.JSON(http.StatusNotFound, gin.H{"error": "Feature post not found"})
+            return
+        }
+
+        c.JSON(http.StatusOK, gin.H{"message": "Feature post removed (deactivated) successfully"})
+    }
+}

@@ -696,13 +696,6 @@ func UpdateTournament(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		if tournament.Status != models.TournamentUpcoming {
-			c.JSON(http.StatusForbidden, gin.H{
-				"error": "Tournament cannot be updated after it starts",
-			})
-			return
-		}
-
 		updateFields := bson.M{}
 
 		if req.Title != nil {
@@ -770,7 +763,53 @@ func UpdateTournament(client *mongo.Client) gin.HandlerFunc {
 }
 
 
-func CreateFeaturePost(client*mongo.Client){
+func CreateFeaturePost(client*mongo.Client)gin.HandlerFunc{
 
-	
+	return func(c*gin.Context){
+		role, exists := c.Get("role")
+		if !exists || role != "admin" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+		featureCol:=database.OpenCollection("feature_posts",client)
+
+		var post models.FeaturePost
+
+
+		if err:=c.ShouldBindBodyWithJSON(&post);err!=nil{
+			c.JSON(http.StatusBadRequest,gin.H{"error":"Invalid input data"})
+			return
+		}
+
+		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second);
+
+		defer cancel();
+
+		fetaurePost:=models.FeaturePost{
+			Id: primitive.NewObjectID(),
+			Title: post.Title,
+			Banner_Url: post.Banner_Url,
+			Descreption: post.Descreption,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+
+		}
+
+
+		_,err:=featureCol.InsertOne(ctx,fetaurePost);
+
+		if err!=nil{
+			c.JSON(http.StatusInternalServerError,gin.H{"error":"Unable to create a feature post right now!"})
+			return
+		}
+
+		c.JSON(http.StatusOK,gin.H{"message":"Feature post uploaded successfully"});
+
+
+
+
+	}
 }
+
+

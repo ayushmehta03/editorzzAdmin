@@ -762,59 +762,7 @@ func UpdateTournament(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-
-func CreateFeaturePost(client*mongo.Client)gin.HandlerFunc{
-
-	return func(c*gin.Context){
-		role, exists := c.Get("role")
-		if !exists || role != "admin" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-			return
-		}
-
-		featureCol:=database.OpenCollection("feature_posts",client)
-
-		var post models.FeaturePost
-
-
-		if err:=c.ShouldBindBodyWithJSON(&post);err!=nil{
-			c.JSON(http.StatusBadRequest,gin.H{"error":"Invalid input data"})
-			return
-		}
-
-		ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second);
-
-		defer cancel();
-
-		fetaurePost:=models.FeaturePost{
-			Id: primitive.NewObjectID(),
-			Title: post.Title,
-			IsLive: true,
-			Banner_Url: post.Banner_Url,
-			Descreption: post.Descreption,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-
-		}
-
-
-		_,err:=featureCol.InsertOne(ctx,fetaurePost);
-
-		if err!=nil{
-			c.JSON(http.StatusInternalServerError,gin.H{"error":"Unable to create a feature post right now!"})
-			return
-		}
-
-		c.JSON(http.StatusOK,gin.H{"message":"Feature post uploaded successfully"});
-
-
-
-
-	}
-}
-
-
-func RemoveFeaturePost(client *mongo.Client) gin.HandlerFunc {
+func CreateFeaturePost(client *mongo.Client) gin.HandlerFunc {
     featureCol := database.OpenCollection("feature_posts", client)
 
     return func(c *gin.Context) {
@@ -824,39 +772,40 @@ func RemoveFeaturePost(client *mongo.Client) gin.HandlerFunc {
             return
         }
 
-        idParam := c.Param("id")
-        objID, err := primitive.ObjectIDFromHex(idParam)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID format"})
+        var post models.FeaturePost
+        if err := c.ShouldBindJSON(&post); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
             return
         }
 
         ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
         defer cancel()
 
-        filter := bson.M{"_id": objID}
-        update := bson.M{
-            "$set": bson.M{
-                "islive":    false, 
-                "updatedat": time.Now(),
-            },
-        }
-
-        result, err := featureCol.UpdateOne(ctx, filter, update)
+       
+        _, err := featureCol.UpdateMany(
+            ctx, 
+            bson.M{"islive": true}, 
+            bson.M{"$set": bson.M{"islive": false, "updatedat": time.Now()}},
+        )
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove feature post"})
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear previous live posts"})
             return
         }
 
-        if result.MatchedCount == 0 {
-            c.JSON(http.StatusNotFound, gin.H{"error": "Feature post not found"})
+        post.Id = primitive.NewObjectID()
+        post.IsLive = true 
+        post.CreatedAt = time.Now()
+        post.UpdatedAt = time.Now()
+
+        _, err = featureCol.InsertOne(ctx, post)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to create a feature post"})
             return
         }
 
-        c.JSON(http.StatusOK, gin.H{"message": "Feature post removed (deactivated) successfully"})
+        c.JSON(http.StatusOK, gin.H{"message": "Feature post uploaded successfully and is now live"})
     }
 }
-
 
 func GetLiveFeaturePost(client *mongo.Client) gin.HandlerFunc {
     featureCol := database.OpenCollection("feature_posts", client)

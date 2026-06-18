@@ -856,3 +856,28 @@ func RemoveFeaturePost(client *mongo.Client) gin.HandlerFunc {
         c.JSON(http.StatusOK, gin.H{"message": "Feature post removed (deactivated) successfully"})
     }
 }
+
+
+func GetLiveFeaturePost(client *mongo.Client) gin.HandlerFunc {
+    featureCol := database.OpenCollection("feature_posts", client)
+
+    return func(c *gin.Context) {
+        ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+        defer cancel()
+
+        var post models.FeaturePost
+        
+        err := featureCol.FindOne(ctx, bson.M{"islive": true}).Decode(&post)
+        
+        if err != nil {
+            if err == mongo.ErrNoDocuments {
+                c.JSON(http.StatusNotFound, gin.H{"message": "No feature post is currently live"})
+                return
+            }
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching feature post"})
+            return
+        }
+
+        c.JSON(http.StatusOK, post)
+    }
+}

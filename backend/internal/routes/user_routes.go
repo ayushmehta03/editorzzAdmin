@@ -24,6 +24,10 @@ func UserRoutes(router *gin.Engine, client *mongo.Client) {
 	admin.GET("/reports/:id", controllers.GetReportByID(client))          
 	admin.PATCH("/reports/:id/resolve", controllers.ResolveReport(client)) 
 
+	admin.POST("/create-feature-post",controllers.CreateFeaturePost(client))
+	admin.POST("/fetch-current-featurep",controllers.GetLiveFeaturePost(client))
+	
+
 	admin.DELETE("/submission/:id", controllers.DeleteSubmission(client))
 	
 }

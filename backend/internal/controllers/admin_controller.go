@@ -786,8 +786,8 @@ func CreateFeaturePost(client *mongo.Client) gin.HandlerFunc {
        
         _, err := featureCol.UpdateMany(
             ctx, 
-            bson.M{"islive": true}, 
-            bson.M{"$set": bson.M{"islive": false, "updatedat": time.Now()}},
+            bson.M{"is_live": true}, 
+            bson.M{"$set": bson.M{"is_live": false, "updatedat": time.Now()}},
         )
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear previous live posts"})
@@ -813,12 +813,12 @@ func GetLiveFeaturePost(client *mongo.Client) gin.HandlerFunc {
     featureCol := database.OpenCollection("feature_posts", client)
 
     return func(c *gin.Context) {
-        ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+        ctx, cancel := context.WithTimeout(c.Request.Context(),5*time.Second)
         defer cancel()
 
         var post models.FeaturePost
         
-        err := featureCol.FindOne(ctx, bson.M{"islive": true}).Decode(&post)
+        err := featureCol.FindOne(ctx, bson.M{"is_live": true}).Decode(&post)
         
         if err != nil {
             if err == mongo.ErrNoDocuments {

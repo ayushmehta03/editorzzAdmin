@@ -242,7 +242,7 @@ export default function Dashboard() {
                 { 
     title: "Upload Feature Post", 
     sub: "Set the feature post at the top of the feed", 
-    icon: Pin, // Or whatever icon you prefer, e.g., FilePlus, LayoutGrid
+    icon: Pin, 
     color: "text-purple-400", 
     bg: "group-hover:bg-purple-500/20", 
     path: "/feature-post" 

@@ -238,21 +238,21 @@ export async function getSubmissionsWithVotes(tournamentId: string) {
   });
 }
 
-export async function uploadFeaturePost(){
-  return apiRequest(`/api/admin//create-feature-post`,{
-    method:"POST",
-     headers: {
+
+export async function uploadFeaturePost(data:any) {
+  return apiRequest(`/api/admin/create-feature-post`, {
+    method: "POST",
+    headers: {
       "Content-Type": "application/json",
     },
-
+    body: JSON.stringify(data), // Pass the form data here
   });
 }
 
-
-export async function getcCurrentFeaturePost(){
-  return apiRequest(`/api/admin/fetch-current-featurep`,{
-    method:"GET",
-    headers:{
+export async function getCurrentFeaturePost() {
+  return apiRequest(`/api/admin/fetch-current-featurep`, {
+    method: "GET",
+    headers: {
       "Content-Type": "application/json",
     },
   });

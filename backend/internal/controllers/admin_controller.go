@@ -744,7 +744,6 @@ func UpdateTournament(client *mongo.Client) gin.HandlerFunc {
 
 		updateFields["updated_at"] = time.Now()
 
-		// 7. Execute Update
 		_, err = collection.UpdateOne(
 			ctx,
 			bson.M{"_id": tournamentId},

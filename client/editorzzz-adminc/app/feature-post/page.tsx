@@ -1,284 +1,280 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "sonner";
-import { 
-  Megaphone, 
-  Image as ImageIcon, 
-  Link2, 
-  Sparkles, 
-  Eye, 
-  ArrowUpRight,
-  Loader2 
+import { useRouter } from "next/navigation";
+import { uploadFeaturePost } from "@/lib/api"; 
+import { uploadBannerImage } from "@/lib/claudinary";
+import {
+  Sparkles,
+  Megaphone,
+  Info,
+  Layers,
+  Image as ImageIcon,
+  ChevronRight,
+  Eye
 } from "lucide-react";
-import { uploadFeaturePost, getCurrentFeaturePost } from "@/lib/api"; // Adjust import path
 
-export default function FeaturePostPage() {
+export default function CreateFeaturePostPage() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
-  const [fetchingLive, setFetchingLive] = useState(true);
-  const [currentLivePost, setCurrentLivePost] = useState<any>(null);
-  
-  const [formData, setFormData] = useState({
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const [form, setForm] = useState({
     title: "",
-    description: "",
-    imageUrl: "",
-    actionLink: "",
+    descreption: "",
+    banner_url: "",
   });
 
-  // Fetch current live post on mount
-  useEffect(() => {
-    async function fetchLive() {
-      try {
-        const res = await getCurrentFeaturePost();
-        if (res && !res.message) {
-          setCurrentLivePost(res);
-        }
-      } catch (err) {
-        console.error("Failed to fetch live post", err);
-      } finally {
-        setFetchingLive(false);
-      }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setPreview(URL.createObjectURL(file));
+
+      const toastId = toast.loading("Uploading feature graphic...");
+      const url = await uploadBannerImage(file);
+
+      toast.dismiss(toastId);
+      toast.success("Graphic uploaded & optimized");
+
+      setForm((prev) => ({ ...prev, imageurl: url }));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to process image file");
+    } finally {
+      setUploading(false);
     }
-    fetchLive();
-  }, []);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.description) {
-      toast.error("Please fill in the title and description.");
-      return;
+    if (!form.title || !form.descreption) {
+      return toast.error("Please fill out both the title and context fields");
     }
 
-    setLoading(true);
-    const toastId = toast.loading("Publishing feature post...");
-
     try {
-      // Matches the structure your Go backend expects
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        imageurl: formData.imageUrl,
-        actionlink: formData.actionLink,
-      };
+      setLoading(true);
+      const toastId = toast.loading("Publishing feature post to global feed...");
 
-      await uploadFeaturePost(payload);
-      
-      toast.success("Feature post is now live!", { id: toastId });
-      setCurrentLivePost({ ...payload, createdat: new Date() });
-      
-      // Reset form
-      setFormData({ title: "", description: "", imageUrl: "", actionLink: "" });
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to broadcast feature post.", { id: toastId });
-    } finally {
+      await uploadFeaturePost({
+        title: form.title,
+        description: form.descreption,
+        imageurl: form.banner_url,
+      });
+
+      toast.dismiss(toastId);
+      toast.success("Feature Post is now Live!");
+      setTimeout(() => router.push("/dashboard"), 1500);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to broadcast feature post");
       setLoading(false);
     }
   };
 
+  const inputStyle = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-indigo-500/50 focus:bg-white/10 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all placeholder:text-gray-600 text-sm text-slate-100";
+  const labelStyle = "text-[10px] md:text-xs font-bold text-gray-500 mb-2 uppercase tracking-[0.2em] flex items-center gap-2";
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 flex flex-col justify-center items-center">
+    <div className="min-h-screen bg-[#050810] text-slate-200 selection:bg-indigo-500/30 flex flex-col justify-center items-center p-4 md:p-8">
       <Toaster position="top-right" richColors theme="dark" />
 
-      <div className="w-full max-w-6xl space-y-8">
-        {/* Header Heading */}
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-400">
-            <Megaphone className="w-6 h-6 animate-pulse" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-              Feature Post Controller
-            </h1>
-            <p className="text-sm text-slate-400">
-              Broadcast high-priority global alerts, updates, or events to the top of the feed instantly.
-            </p>
-          </div>
-        </div>
+      {/* Atmospheric Background Glows */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
+        <div className="absolute top-[20%] -right-[10%] w-[30%] h-[50%] bg-purple-600/10 blur-[120px] rounded-full" />
+      </div>
 
-        {/* Core Layout Split */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left: Input Form Panel */}
+      <div className="relative w-full max-w-7xl mx-auto z-10 space-y-12">
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="lg:col-span-7 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
+            initial={{ opacity: 0, x: -20 }} 
+            animate={{ opacity: 1, x: 0 }}
           >
-            <h2 className="text-lg font-medium text-slate-200 mb-6 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" /> Post Details
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                  Campaign Title *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., Judge Tournament Now Active!"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors text-sm"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                  Description / Body Text *
-                </label>
-                <textarea
-                  rows={4}
-                  placeholder="Describe the highlight context concisely..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors text-sm resize-none"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
-                    <ImageIcon className="w-3.h-3" /> Image URL (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://unsplash.com/..."
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
-                    <Link2 className="w-3.h-3" /> Call to Action URL
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://yourdomain.com/contest"
-                    value={formData.actionLink}
-                    onChange={(e) => setFormData({ ...formData, actionLink: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors text-sm"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium rounded-xl text-sm transition-all focus:outline-none shadow-lg shadow-indigo-600/10 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Overwriting Active Feed...
-                  </>
-                ) : (
-                  "Push Feature Post Live"
-                )}
-              </button>
-            </form>
+            <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm mb-3 uppercase tracking-tighter">
+              <Sparkles size={16} />
+              <span>Admin Terminal</span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight leading-none">
+              Live <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">Feature Post</span>
+            </h1>
+            <p className="text-gray-500 mt-4 max-w-md text-lg">
+              Broadcast high-priority global alerts or dashboard configurations directly to the top of the feed.
+            </p>
           </motion.div>
+        </header>
 
-          {/* Right: Live Feed Preview Monitor */}
-          <div className="lg:col-span-5 space-y-4 w-full">
-            <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2 px-1">
-              <Eye className="w-4 h-4 text-emerald-400" /> Real-time Feed Preview
+        {/* Core Layout Grid Layout */}
+        <form onSubmit={handleSubmit} className="grid lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left: Input Fields */}
+          <div className="lg:col-span-8 space-y-8">
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/[0.02] border border-white/10 p-6 md:p-8 rounded-3xl backdrop-blur-md shadow-xl"
+            >
+              <div className="grid gap-6">
+                <div>
+                  <label className={labelStyle}><Info size={14}/> Campaign Title</label>
+                  <input 
+                    name="title" 
+                    value={form.title} 
+                    placeholder="e.g. Expert Judge Tournaments Are Now Live!" 
+                    onChange={handleChange} 
+                    className={inputStyle} 
+                    required 
+                  />
+                </div>
+
+                <div>
+                  <label className={labelStyle}><Layers size={14}/> Context Description</label>
+                  <textarea 
+                    name="description" 
+                    value={form.descreption} 
+                    placeholder="Provide clear detail on the announcement or highlighted action..." 
+                    onChange={handleChange} 
+                    className={`${inputStyle} min-h-[160px] resize-none`} 
+                    required 
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Media Upload Container */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white/[0.02] border border-white/10 p-2 rounded-3xl overflow-hidden"
+            >
+              <div className="relative group min-h-[260px] flex items-center justify-center bg-[#0a0f1d] rounded-[22px] transition-all border border-transparent hover:border-indigo-500/30">
+                {preview ? (
+                  <div className="relative w-full h-full">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={preview} className="w-full h-64 object-cover rounded-[20px]" alt="Preview Assets" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-xs">
+                      <p className="text-sm font-bold flex items-center gap-2 bg-black/60 px-4 py-2 rounded-full border border-white/10">
+                        <ImageIcon size={16}/> Swap Cover Graphic
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center text-center p-8">
+                    <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 mb-4 group-hover:scale-110 transition-transform">
+                      <ImageIcon size={28} />
+                    </div>
+                    <h3 className="text-base font-bold text-white">Cover Media Graphic</h3>
+                    <p className="text-gray-500 text-xs mt-1">Recommended aspect ratio: 16:9 Landscape (PNG/JPG)</p>
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  disabled={uploading}
+                  onChange={handleUpload} 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" 
+                />
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right: Sidebar & Feed Preview Panel */}
+          <aside className="lg:col-span-4 space-y-6 sticky top-10">
+            
+            {/* Visual Feed Preview */}
+            <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2 px-1">
+              <Eye size={14} className="text-indigo-400" /> Dynamic Live Feed Monitor
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-5 min-h-[340px] flex flex-col justify-between relative overflow-hidden">
-              {/* Decorative subtle backdrop glows */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none rounded-full" />
+            <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 min-h-[300px] flex flex-col justify-between relative overflow-hidden backdrop-blur-md">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-2xl pointer-events-none rounded-full" />
               
               <AnimatePresence mode="wait">
-                {formData.title || formData.description ? (
-                  /* Live Preview state based on active inputs */
+                {form.title || form.descreption || preview ? (
                   <motion.div
-                    key="input-preview"
+                    key="active-preview"
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
                     className="space-y-4 flex flex-col h-full justify-between"
                   >
                     <div className="space-y-3">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-widest w-fit">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
-                        Draft Setup
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-widest w-fit">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                        Live Staging Preview
                       </div>
-                      <h3 className="text-xl font-bold text-slate-100 break-words line-clamp-2">
-                        {formData.title || "Untitled Live Spotlight"}
+                      <h3 className="text-lg font-bold text-white break-words line-clamp-2">
+                        {form.title || "Untitled Staging Spot"}
                       </h3>
-                      <p className="text-sm text-slate-400 break-words whitespace-pre-line line-clamp-4">
-                        {formData.description || "Your campaign metrics and context details will appear populated dynamically here..."}
+                      <p className="text-xs text-gray-400 break-words whitespace-pre-line line-clamp-4">
+                        {form.descreption|| "The message parameters and contextual fields will output live inside the dashboard feed section container here..."}
                       </p>
                     </div>
 
-                    {formData.imageUrl && (
-                      <div className="relative w-full h-28 rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                    {preview && (
+                      <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/5 bg-slate-950/80 mt-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={formData.imageUrl} alt="Preview asset" className="object-cover w-full h-full opacity-60" />
-                      </div>
-                    )}
-
-                    {formData.actionLink && (
-                      <div className="pt-2">
-                        <div className="inline-flex items-center text-xs text-indigo-400 font-medium gap-1 group cursor-pointer hover:text-indigo-300 transition-colors">
-                          View Activity <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ) : !fetchingLive && currentLivePost ? (
-                  /* Fetched production Live data from the database split */
-                  <motion.div
-                    key="db-preview"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-4 flex flex-col h-full justify-between"
-                  >
-                    <div className="space-y-3">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest w-fit">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Active Live
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-100 line-clamp-2">{currentLivePost.title}</h3>
-                      <p className="text-sm text-slate-400 line-clamp-4">{currentLivePost.description}</p>
-                    </div>
-
-                    {currentLivePost.imageurl && (
-                      <div className="relative w-full h-28 rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={currentLivePost.imageurl} alt="Live asset" className="object-cover w-full h-full opacity-50" />
-                      </div>
-                    )}
-
-                    {currentLivePost.actionlink && (
-                      <div className="pt-2">
-                        <a 
-                          href={currentLivePost.actionlink}
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="inline-flex items-center text-xs text-emerald-400 font-medium gap-1 group hover:text-emerald-300 transition-colors"
-                        >
-                          Visit Active Campaign <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                        </a>
+                        <img src={preview} alt="Staged display graphic" className="object-cover w-full h-full opacity-60" />
                       </div>
                     )}
                   </motion.div>
                 ) : (
-                  /* Empty state monitor */
-                  <div className="flex flex-col items-center justify-center text-center h-full my-auto space-y-2 text-slate-600">
-                    <Eye className="w-8 h-8 opacity-40" />
-                    <p className="text-xs">No active content staging setup found.</p>
+                  <div className="flex flex-col items-center justify-center text-center h-full my-auto space-y-2 text-gray-600 py-12">
+                    <Megaphone size={24} className="opacity-30" />
+                    <p className="text-xs max-w-[180px]">Fill out details to preview card layout configuration.</p>
                   </div>
                 )}
               </AnimatePresence>
             </div>
-          </div>
 
-        </div>
+            {/* Execution Actions Dashboard Panel */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 p-6 rounded-3xl"
+            >
+              <div className="space-y-4">
+                <h3 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
+                  <Megaphone size={14}/> Publication Action
+                </h3>
+                
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Publishing clears out any previously highlighted global posts. The feed will instantly cycle this object to the live index layer.
+                </p>
+
+                <div className="pt-4 border-t border-white/5">
+                  <motion.button
+                    whileHover={{ scale: 1.02, translateY: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={loading || uploading}
+                    className="group relative w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-[0_20px_40px_-15px_rgba(79,70,229,0.3)]"
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        Overwrite Live Feed
+                        <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+
+          </aside>
+        </form>
       </div>
     </div>
   );

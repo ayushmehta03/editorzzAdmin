@@ -15,7 +15,8 @@ import {
   LogOut,
   TrophyIcon,
   Sparkles,
-  Zap
+  Zap,
+  Pin
 } from "lucide-react";
 
 import {
@@ -238,13 +239,71 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {[
-                { title: "Judge Tournament", sub: "Setup expert-based contest", icon: Gavel, color: "text-indigo-400", bg: "group-hover:bg-indigo-500/20", path: "/contest-judge" },
-                { title: "Vote Tournament", sub: "Launch public voting contest", icon: Vote, color: "text-pink-400", bg: "group-hover:bg-pink-500/20", path: "/contest-vote" },
-                { title: "Contest status", sub: "History and inspection", icon: TrophyIcon, color: "text-blue-500", bg: "group-hover:bg-blue-500/20", path: "/contest-inspection" },
-                { title: "Manage Users", sub: "Verification & access", icon: Users, color: "text-blue-400", bg: "group-hover:bg-blue-400/20", path: "/manage-users" },
-                { title: "Voting Control", sub: "Audit public contests", icon: BarChart3, color: "text-emerald-400", bg: "group-hover:bg-emerald-500/20", path: "/vote-manage" },
-                { title: "Moderation", sub: "Flagged content queue", icon: Flag, color: "text-rose-400", bg: "group-hover:bg-rose-500/20", path: "/reports" },
-                { title: "Approve Results", sub: "Confirm Judge Action", icon: CheckCircle, color: "text-amber-400", bg: "group-hover:bg-amber-500/20", path: "/approve-results" },
+                { 
+    title: "Upload Feature Post", 
+    sub: "Set the feature post at the top of the feed", 
+    icon: Pin, // Or whatever icon you prefer, e.g., FilePlus, LayoutGrid
+    color: "text-purple-400", 
+    bg: "group-hover:bg-purple-500/20", 
+    path: "/feature-post" 
+  },
+  { 
+    title: "Judge Tournament", 
+    sub: "Setup expert-based contest", 
+    icon: Gavel, 
+    color: "text-indigo-400", 
+    bg: "group-hover:bg-indigo-500/20", 
+    path: "/contest-judge" 
+  },
+  { 
+    title: "Vote Tournament", 
+    sub: "Launch public voting contest", 
+    icon: Vote, 
+    color: "text-pink-400", 
+    bg: "group-hover:bg-pink-500/20", 
+    path: "/contest-vote" 
+  },
+  { 
+    title: "Contest status", 
+    sub: "History and inspection", 
+    icon: TrophyIcon, 
+    color: "text-blue-500", 
+    bg: "group-hover:bg-blue-500/20", 
+    path: "/contest-inspection" 
+  },
+  { 
+    title: "Manage Users", 
+    sub: "Verification & access", 
+    icon: Users, 
+    color: "text-blue-400", 
+    bg: "group-hover:bg-blue-400/20", 
+    path: "/manage-users" 
+  },
+  { 
+    title: "Voting Control", 
+    sub: "Audit public contests", 
+    icon: BarChart3, 
+    color: "text-emerald-400", 
+    bg: "group-hover:bg-emerald-500/20", 
+    path: "/vote-manage" 
+  },
+  { 
+    title: "Moderation", 
+    sub: "Flagged content queue", 
+    icon: Flag, 
+    color: "text-rose-400", 
+    bg: "group-hover:bg-rose-500/20", 
+    path: "/reports" 
+  },
+  { 
+    title: "Approve Results", 
+    sub: "Confirm Judge Action", 
+    icon: CheckCircle, 
+    color: "text-amber-400", 
+    bg: "group-hover:bg-amber-500/20", 
+    path: "/approve-results" 
+  }
+
               ].map((action, i) => (
                 <motion.div
                   key={i}

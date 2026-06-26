@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: editorzzz
+  labels:
+    app: editorzzz
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: editorzzz
+  template:
+    metadata:
+      labels:
+        app: editorzzz
+    spec:
+      containers:
+      - name: editorzzz-backend
+        image: ayushmehta1/editorzzz-adminb:1.0.0
+        ports:
+        - containerPort: 1001
+
+	
+      - name: editorzzz-client
+	image: ayushmehta1/editorzzz-adminc:1.0.0
+	ports:
+	- containerPort: 4000		
+

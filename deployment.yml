@@ -28,4 +28,4 @@ spec:
         image: ayushmehta1/editorzzz-adminc:1.0.0
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 3000
+        - containerPort: 4000

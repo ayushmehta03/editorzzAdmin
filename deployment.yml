@@ -17,12 +17,15 @@ spec:
       containers:
       - name: editorzzz-backend
         image: ayushmehta1/editorzzz-adminb:1.0.0
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 1001
+        envFrom:
+        - secretRef:
+            name: editorzzz-env
 
-	
       - name: editorzzz-client
-	image: ayushmehta1/editorzzz-adminc:1.0.0
-	ports:
-	- containerPort: 4000		
-
+        image: ayushmehta1/editorzzz-adminc:1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 4000

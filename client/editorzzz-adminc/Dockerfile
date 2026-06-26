@@ -21,6 +21,6 @@ RUN npm install --omit=dev
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
-EXPOSE 4000
 
-CMD ["npm", "start"]
+EXPOSE 4000
+CMD ["npx", "next", "start", "-p", "4000", "-H", "0.0.0.0"]

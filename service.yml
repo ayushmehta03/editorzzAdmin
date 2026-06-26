@@ -8,12 +8,11 @@ spec:
     app: editorzzz
   ports:
     - name: backend
-      port: 1001       # Port exposed inside the cluster
-      targetPort: 1001 # Matches the containerPort of your backend
-      nodePort: 30007  # The port you will use on your machine
+      port: 1001       
+      targetPort: 1001 
+      nodePort: 30007  
 
-    # 2. Route for the Frontend Client
     - name: client
-      port: 4000       # Port exposed inside the cluster
-      targetPort: 3000 # Matches the containerPort of your client
-      nodePort: 30008  # The port you will use on your machine (must be unique)
+      port: 4000       
+      targetPort: 4000 
+      nodePort: 30008  

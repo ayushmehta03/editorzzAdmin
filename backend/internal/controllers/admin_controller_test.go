@@ -221,27 +221,24 @@ func TestUpdateTournament_InvalidJSON(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-// ---------- GetLeaderboard ----------
 
 func TestGetLeaderboard_InvalidID(t *testing.T) {
 	c, w := newTestContext(http.MethodGet, "")
 	setParam(c, "id", "not-an-object-id")
 
-	// fails at ObjectIDFromHex before any DB call, nil client is safe
-	GetLeaderboard(nil)(c)
+	controllers.GetLeaderboard(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	body := decodeBody(t, w)
 	assert.Equal(t, "Invalid tournament ID", body["error"])
 }
 
-// ---------- AdminApproveTournament ----------
 
 func TestAdminApproveTournament_InvalidID(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "")
 	setParam(c, "id", "not-an-object-id")
 
-	AdminApproveTournament(nil)(c)
+	controllers.AdminApproveTournament(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	body := decodeBody(t, w)

@@ -28,7 +28,7 @@ pipeline {
             agent {
                 docker {
                     image 'golang:1.22-alpine'
-                    reuseNode true 
+                    reuseNode true
                 }
             }
             steps {

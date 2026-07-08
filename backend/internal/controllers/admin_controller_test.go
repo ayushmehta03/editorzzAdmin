@@ -20,7 +20,6 @@ func TestMain(m *testing.M) {
 }
 
 
-// newTestContext builds a gin.Context + ResponseRecorder wired to a JSON body.
 func newTestContext(method, body string) (*gin.Context, *httptest.ResponseRecorder) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -37,7 +36,6 @@ func newTestContext(method, body string) (*gin.Context, *httptest.ResponseRecord
 	return c, w
 }
 
-// setParam injects a URL param the way gin router would.
 func setParam(c *gin.Context, key, value string) {
 	c.Params = append(c.Params, gin.Param{Key: key, Value: value})
 }
@@ -64,7 +62,7 @@ func TestGenerateSlug(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			slug := GenerateSlug(tt.title)
+			slug := controllers.GenerateSlug(tt.title)
 
 			assert.Equal(t, strings.ToLower(slug), slug)
 
@@ -80,8 +78,8 @@ func TestGenerateSlug(t *testing.T) {
 	}
 
 	t.Run("two calls produce different slugs", func(t *testing.T) {
-		s1 := GenerateSlug("Same Title")
-		s2 := GenerateSlug("Same Title")
+		s1 := controllers.GenerateSlug("Same Title")
+		s2 := controllers.GenerateSlug("Same Title")
 		assert.NotEqual(t, s1, s2)
 	})
 }
@@ -110,7 +108,7 @@ func TestCreateTournament_InvalidJSON(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "{not-valid-json")
 	c.Set("role", "admin")
 
-	CreateTournament(nil)(c)
+	controllers.CreateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	body := decodeBody(t, w)
@@ -122,7 +120,7 @@ func TestCreateTournament_MissingRequiredFields(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, payload)
 	c.Set("role", "admin")
 
-	CreateTournament(nil)(c)
+	controllers.CreateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
@@ -141,8 +139,7 @@ func TestCreateTournament_EndTimeBeforeStartTime(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, payload)
 	c.Set("role", "admin")
 
-	// NOTE: reaches this validation before any DB call, so nil client is safe
-	CreateTournament(nil)(c)
+	controllers.CreateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	body := decodeBody(t, w)

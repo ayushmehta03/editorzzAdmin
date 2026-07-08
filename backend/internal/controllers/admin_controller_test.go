@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ayushmehta03/editorzzAdmin/internal/controllers"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -247,12 +248,11 @@ func TestAdminApproveTournament_InvalidID(t *testing.T) {
 	assert.Equal(t, "Invalid tournament ID", body["error"])
 }
 
-// ---------- CreateFeaturePost ----------
 
 func TestCreateFeaturePost_Unauthorized(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "{}")
 
-	CreateFeaturePost(nil)(c)
+	controllers.CreateFeaturePost(nil)(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
@@ -261,16 +261,13 @@ func TestCreateFeaturePost_Unauthorized_WrongRole(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "{}")
 	c.Set("role", "guest")
 
-	CreateFeaturePost(nil)(c)
+	controllers.CreateFeaturePost(nil)(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
-// ---------- sanity check for time handling used across tests ----------
 
 func TestTimeParsingAssumption(t *testing.T) {
-	// Confirms the RFC3339 layout used in payloads above parses the way
-	// EndTime.Before(StartTime) expects it to.
 	start, err := time.Parse(time.RFC3339, "2026-01-01T10:00:00Z")
 	assert.NoError(t, err)
 	end, err := time.Parse(time.RFC3339, "2026-01-01T09:00:00Z")

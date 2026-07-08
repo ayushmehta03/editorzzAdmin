@@ -22,7 +22,9 @@ export default function TournamentSubmissionsPage({ params }: Props) {
   const { id: tournamentId } = use(params);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scores, setScores] = useState<Record<string, number>>({});
+  
+  // Changed value type to allow empty string when user clears the input
+  const [scores, setScores] = useState<Record<string, number | string>>({});
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
 
@@ -36,9 +38,10 @@ export default function TournamentSubmissionsPage({ params }: Props) {
       const subList = res.submissions || [];
       setSubmissions(subList);
 
-      const pointsMap: Record<string, number> = {};
+      const pointsMap: Record<string, number | string> = {};
       subList.forEach((sub: Submission) => {
-        pointsMap[sub._id] = sub.points || 0;
+        // Use nullish coalescing to safely preserve 0 points
+        pointsMap[sub._id] = sub.points ?? 0;
       });
       setScores(pointsMap);
     } catch (err) {
@@ -50,14 +53,27 @@ export default function TournamentSubmissionsPage({ params }: Props) {
   };
 
   const handleScoreChange = (subId: string, val: string) => {
-    const numValue = parseFloat(val) || 0;
-    setScores((prev) => ({ ...prev, [subId]: numValue }));
+    // Keep raw string or empty string to allow typing and deleting
+    if (val === "") {
+      setScores((prev) => ({ ...prev, [subId]: "" }));
+      return;
+    }
+
+    const numValue = parseFloat(val);
+    setScores((prev) => ({
+      ...prev,
+      [subId]: isNaN(numValue) ? "" : numValue,
+    }));
   };
 
   const handleSavePoints = async (submissionId: string) => {
     try {
       setUpdatingId(submissionId);
-      const pointsToAssign = scores[submissionId] || 0;
+      
+      // Extract numerical score; default to 0 if input was left blank
+      const rawScore = scores[submissionId];
+      const pointsToAssign = typeof rawScore === "number" ? rawScore : parseFloat(rawScore as string) || 0;
+
       await updateSubmissionPoints(submissionId, pointsToAssign);
       toast.success("Submission points updated!");
       await loadSubmissions();
@@ -74,7 +90,6 @@ export default function TournamentSubmissionsPage({ params }: Props) {
       await approveVoteResult(tournamentId);
       toast.success("Leaderboard finalized and approved successfully!");
       
-      // Delay navigation slightly so they can see the success toast
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 1500);
@@ -89,7 +104,6 @@ export default function TournamentSubmissionsPage({ params }: Props) {
     const unjudged = submissions.filter((s) => !s.is_judged);
     
     if (unjudged.length > 0) {
-      // Utilizing sonner's action feature to replace the native browser confirm window cleanly
       toast.warning(`You have ${unjudged.length} un-judged submission(s).`, {
         description: "Proceeding will freeze their entries at 0 points.",
         action: {
@@ -127,7 +141,7 @@ export default function TournamentSubmissionsPage({ params }: Props) {
           disabled={publishing || submissions.length === 0}
           className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg shadow-purple-600/10 hover:scale-[1.02] transition disabled:opacity-40 disabled:pointer-events-none"
         >
-          {publishing ? "Approving..." : "🚀 Final Submission & Publish"}
+          {publishing ? "Approving..." : "Final Submission & Publish"}
         </button>
       </div>
 
@@ -164,6 +178,7 @@ export default function TournamentSubmissionsPage({ params }: Props) {
                     <div className="flex items-center justify-end gap-2">
                       <input
                         type="number"
+                        min="0"
                         value={scores[sub._id] ?? ""}
                         onChange={(e) => handleScoreChange(sub._id, e.target.value)}
                         placeholder="0"

@@ -149,12 +149,11 @@ func TestCreateTournament_EndTimeBeforeStartTime(t *testing.T) {
 	assert.Equal(t, "End time must be after start time", body["error"])
 }
 
-// ---------- CreateVoteContestHandler ----------
 
 func TestCreateVoteContestHandler_Unauthorized(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "{}")
 
-	CreateVoteContestHandler(nil)(c)
+	controllers.CreateVoteContestHandler(nil)(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
@@ -163,7 +162,7 @@ func TestCreateVoteContestHandler_Unauthorized_WrongRole(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "{}")
 	c.Set("role", "user")
 
-	CreateVoteContestHandler(nil)(c)
+	controllers.CreateVoteContestHandler(nil)(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
@@ -172,7 +171,7 @@ func TestCreateVoteContestHandler_InvalidJSON(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "not-json")
 	c.Set("role", "admin")
 
-	CreateVoteContestHandler(nil)(c)
+	controllers.CreateVoteContestHandler(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	body := decodeBody(t, w)
@@ -184,7 +183,7 @@ func TestCreateVoteContestHandler_MissingRequiredFields(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, payload)
 	c.Set("role", "admin")
 
-	CreateVoteContestHandler(nil)(c)
+	controllers.CreateVoteContestHandler(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
@@ -194,7 +193,7 @@ func TestUpdateTournament_Unauthorized(t *testing.T) {
 	c, w := newTestContext(http.MethodPatch, "{}")
 	setParam(c, "id", "64f1a1a1a1a1a1a1a1a1a1a1")
 
-	UpdateTournament(nil)(c)
+	controllers.UpdateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
@@ -204,7 +203,7 @@ func TestUpdateTournament_InvalidID(t *testing.T) {
 	c.Set("role", "admin")
 	setParam(c, "id", "not-a-valid-object-id")
 
-	UpdateTournament(nil)(c)
+	controllers.UpdateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	body := decodeBody(t, w)
@@ -216,7 +215,7 @@ func TestUpdateTournament_InvalidJSON(t *testing.T) {
 	c.Set("role", "admin")
 	setParam(c, "id", "64f1a1a1a1a1a1a1a1a1a1a1")
 
-	UpdateTournament(nil)(c)
+	controllers.UpdateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

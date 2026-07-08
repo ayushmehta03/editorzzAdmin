@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')   
+        FRONTEND_IMAGE = "ayushmehta1/editorzzz-adminc"
+        BACKEND_IMAGE  = "ayushmehta1/editorzzz-adminb"
+
+        IMAGE_TAG = "${env.BUILD_NUMBER}"                       
+    }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    triggers {
+        githubPush()   
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Run Backend Unit Tests') {
+            steps {
+                dir('backend') {
+                    sh 'go mod download'
+                    sh 'go test ./... -v'
+                }
+            }
+        }
+
+        stage('Build Backend Image') {
+            steps {
+                dir('backend') {
+                    sh "docker build -t ${BACKEND_IMAGE}:${IMAGE_TAG} -t ${BACKEND_IMAGE}:latest ."
+                }
+            }
+        }
+
+        stage('Build Frontend Image') {
+            steps {
+                dir('client/editorzzz-adminc') {
+                    sh "docker build -t ${FRONTEND_IMAGE}:${IMAGE_TAG} -t ${FRONTEND_IMAGE}:latest ."
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+            }
+        }
+
+        stage('Push Backend Image') {
+            steps {
+                sh "docker push ${BACKEND_IMAGE}:${IMAGE_TAG}"
+                sh "docker push ${BACKEND_IMAGE}:latest"
+            }
+        }
+
+        stage('Push Frontend Image') {
+            steps {
+                sh "docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}"
+                sh "docker push ${FRONTEND_IMAGE}:latest"
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout || true'
+        }
+        success {
+            echo "Build #${env.BUILD_NUMBER} succeeded. Images pushed: ${BACKEND_IMAGE}:${IMAGE_TAG}, ${FRONTEND_IMAGE}:${IMAGE_TAG}"
+        }
+        failure {
+            echo "Build #${env.BUILD_NUMBER} failed. Check the stage logs above."
+        }
+    }
+}

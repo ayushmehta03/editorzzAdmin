@@ -2,11 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')   
         FRONTEND_IMAGE = "ayushmehta1/editorzzz-adminc"
         BACKEND_IMAGE  = "ayushmehta1/editorzzz-adminb"
-
-        IMAGE_TAG = "${env.BUILD_NUMBER}"                       
+        IMAGE_TAG      = "${env.BUILD_NUMBER}"
     }
 
     options {
@@ -15,7 +13,7 @@ pipeline {
     }
 
     triggers {
-        githubPush()   
+        githubPush()
     }
 
     stages {
@@ -27,6 +25,12 @@ pipeline {
         }
 
         stage('Run Backend Unit Tests') {
+            agent {
+                docker {
+                    image 'golang:1.22-alpine'
+                    reuseNode true 
+                }
+            }
             steps {
                 dir('backend') {
                     sh 'go mod download'
@@ -51,23 +55,25 @@ pipeline {
             }
         }
 
-        stage('Login to Docker Hub') {
+        stage('Push Images to Docker Hub') {
             steps {
-                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-            }
-        }
-
-        stage('Push Backend Image') {
-            steps {
-                sh "docker push ${BACKEND_IMAGE}:${IMAGE_TAG}"
-                sh "docker push ${BACKEND_IMAGE}:latest"
-            }
-        }
-
-        stage('Push Frontend Image') {
-            steps {
-                sh "docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}"
-                sh "docker push ${FRONTEND_IMAGE}:latest"
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        
+                        docker push ${BACKEND_IMAGE}:${IMAGE_TAG}
+                        docker push ${BACKEND_IMAGE}:latest
+                        
+                        docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}
+                        docker push ${FRONTEND_IMAGE}:latest
+                        
+                        docker logout
+                    '''
+                }
             }
         }
     }
@@ -77,10 +83,10 @@ pipeline {
             sh 'docker logout || true'
         }
         success {
-            echo "Build #${env.BUILD_NUMBER} succeeded. Images pushed: ${BACKEND_IMAGE}:${IMAGE_TAG}, ${FRONTEND_IMAGE}:${IMAGE_TAG}"
+            echo "Build #${env.BUILD_NUMBER} succeeded."
         }
         failure {
-            echo "Build #${env.BUILD_NUMBER} failed. Check the stage logs above."
+            echo "Build #${env.BUILD_NUMBER} failed."
         }
     }
 }

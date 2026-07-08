@@ -1,5 +1,5 @@
 package controllers
- 
+
 import (
 	"bytes"
 	"encoding/json"
@@ -8,12 +8,272 @@ import (
 	"strings"
 	"testing"
 	"time"
- 
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
- 
+
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 	m.Run()
+}
+
+
+// newTestContext builds a gin.Context + ResponseRecorder wired to a JSON body.
+func newTestContext(method, body string) (*gin.Context, *httptest.ResponseRecorder) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	var req *http.Request
+	if body != "" {
+		req = httptest.NewRequest(method, "/", bytes.NewBufferString(body))
+	} else {
+		req = httptest.NewRequest(method, "/", nil)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	c.Request = req
+
+	return c, w
+}
+
+// setParam injects a URL param the way gin router would.
+func setParam(c *gin.Context, key, value string) {
+	c.Params = append(c.Params, gin.Param{Key: key, Value: value})
+}
+
+func decodeBody(t *testing.T, w *httptest.ResponseRecorder) map[string]interface{} {
+	t.Helper()
+	var out map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &out)
+	assert.NoError(t, err)
+	return out
+}
+
+
+func TestGenerateSlug(t *testing.T) {
+	tests := []struct {
+		name  string
+		title string
+	}{
+		{"simple title", "My Awesome Tournament"},
+		{"single word", "Contest"},
+		{"already lowercase", "editing battle"},
+		{"empty title", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			slug := GenerateSlug(tt.title)
+
+			assert.Equal(t, strings.ToLower(slug), slug)
+
+			assert.NotContains(t, slug, " ")
+
+			parts := strings.Split(slug, "-")
+			last := parts[len(parts)-1]
+			assert.Len(t, last, 6)
+
+			expectedPrefix := strings.ToLower(strings.ReplaceAll(tt.title, " ", "-"))
+			assert.True(t, strings.HasPrefix(slug, expectedPrefix))
+		})
+	}
+
+	t.Run("two calls produce different slugs", func(t *testing.T) {
+		s1 := GenerateSlug("Same Title")
+		s2 := GenerateSlug("Same Title")
+		assert.NotEqual(t, s1, s2)
+	})
+}
+
+
+func TestCreateTournament_Unauthorized_NoRole(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "{}")
+
+	CreateTournament(nil)(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	body := decodeBody(t, w)
+	assert.Equal(t, "Unauthorized", body["error"])
+}
+
+func TestCreateTournament_Unauthorized_WrongRole(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "{}")
+	c.Set("role", "editor")
+
+	CreateTournament(nil)(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestCreateTournament_InvalidJSON(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "{not-valid-json")
+	c.Set("role", "admin")
+
+	CreateTournament(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	body := decodeBody(t, w)
+	assert.Equal(t, "Invlaid input", body["error"]) // matches typo in source
+}
+
+func TestCreateTournament_MissingRequiredFields(t *testing.T) {
+	payload := `{"description":"desc"}`
+	c, w := newTestContext(http.MethodPost, payload)
+	c.Set("role", "admin")
+
+	CreateTournament(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestCreateTournament_EndTimeBeforeStartTime(t *testing.T) {
+	payload := `{
+		"title": "Test Tournament",
+		"description": "Test description",
+		"start_time": "2026-01-01T10:00:00Z",
+		"end_time": "2026-01-01T09:00:00Z",
+		"max_participants": 10,
+		"prize_pool": 100,
+		"assets_link": "http://example.com/assets",
+		"judge_email": "judge@example.com"
+	}`
+	c, w := newTestContext(http.MethodPost, payload)
+	c.Set("role", "admin")
+
+	// NOTE: reaches this validation before any DB call, so nil client is safe
+	CreateTournament(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	body := decodeBody(t, w)
+	assert.Equal(t, "End time must be after start time", body["error"])
+}
+
+// ---------- CreateVoteContestHandler ----------
+
+func TestCreateVoteContestHandler_Unauthorized(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "{}")
+
+	CreateVoteContestHandler(nil)(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestCreateVoteContestHandler_Unauthorized_WrongRole(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "{}")
+	c.Set("role", "user")
+
+	CreateVoteContestHandler(nil)(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestCreateVoteContestHandler_InvalidJSON(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "not-json")
+	c.Set("role", "admin")
+
+	CreateVoteContestHandler(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	body := decodeBody(t, w)
+	assert.Equal(t, "Invalid input", body["error"])
+}
+
+func TestCreateVoteContestHandler_MissingRequiredFields(t *testing.T) {
+	payload := `{"title":"Only Title"}`
+	c, w := newTestContext(http.MethodPost, payload)
+	c.Set("role", "admin")
+
+	CreateVoteContestHandler(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+
+func TestUpdateTournament_Unauthorized(t *testing.T) {
+	c, w := newTestContext(http.MethodPatch, "{}")
+	setParam(c, "id", "64f1a1a1a1a1a1a1a1a1a1a1")
+
+	UpdateTournament(nil)(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestUpdateTournament_InvalidID(t *testing.T) {
+	c, w := newTestContext(http.MethodPatch, "{}")
+	c.Set("role", "admin")
+	setParam(c, "id", "not-a-valid-object-id")
+
+	UpdateTournament(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	body := decodeBody(t, w)
+	assert.Equal(t, "Invalid tournament ID", body["error"])
+}
+
+func TestUpdateTournament_InvalidJSON(t *testing.T) {
+	c, w := newTestContext(http.MethodPatch, "{bad-json")
+	c.Set("role", "admin")
+	setParam(c, "id", "64f1a1a1a1a1a1a1a1a1a1a1")
+
+	UpdateTournament(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// ---------- GetLeaderboard ----------
+
+func TestGetLeaderboard_InvalidID(t *testing.T) {
+	c, w := newTestContext(http.MethodGet, "")
+	setParam(c, "id", "not-an-object-id")
+
+	// fails at ObjectIDFromHex before any DB call, nil client is safe
+	GetLeaderboard(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	body := decodeBody(t, w)
+	assert.Equal(t, "Invalid tournament ID", body["error"])
+}
+
+// ---------- AdminApproveTournament ----------
+
+func TestAdminApproveTournament_InvalidID(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "")
+	setParam(c, "id", "not-an-object-id")
+
+	AdminApproveTournament(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	body := decodeBody(t, w)
+	assert.Equal(t, "Invalid tournament ID", body["error"])
+}
+
+// ---------- CreateFeaturePost ----------
+
+func TestCreateFeaturePost_Unauthorized(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "{}")
+
+	CreateFeaturePost(nil)(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestCreateFeaturePost_Unauthorized_WrongRole(t *testing.T) {
+	c, w := newTestContext(http.MethodPost, "{}")
+	c.Set("role", "guest")
+
+	CreateFeaturePost(nil)(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+// ---------- sanity check for time handling used across tests ----------
+
+func TestTimeParsingAssumption(t *testing.T) {
+	// Confirms the RFC3339 layout used in payloads above parses the way
+	// EndTime.Before(StartTime) expects it to.
+	start, err := time.Parse(time.RFC3339, "2026-01-01T10:00:00Z")
+	assert.NoError(t, err)
+	end, err := time.Parse(time.RFC3339, "2026-01-01T09:00:00Z")
+	assert.NoError(t, err)
+	assert.True(t, end.Before(start))
 }

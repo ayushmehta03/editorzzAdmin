@@ -88,7 +88,7 @@ func TestGenerateSlug(t *testing.T) {
 func TestCreateTournament_Unauthorized_NoRole(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "{}")
 
-	CreateTournament(nil)(c)
+	controllers.CreateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	body := decodeBody(t, w)
@@ -99,7 +99,7 @@ func TestCreateTournament_Unauthorized_WrongRole(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "{}")
 	c.Set("role", "editor")
 
-	CreateTournament(nil)(c)
+	controllers.CreateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }

@@ -127,7 +127,7 @@ export default function TournamentSubmissionsPage({ params }: Props) {
           disabled={publishing || submissions.length === 0}
           className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg shadow-purple-600/10 hover:scale-[1.02] transition disabled:opacity-40 disabled:pointer-events-none"
         >
-          {publishing ? "Approving..." : "🚀 Final Submission & Publish"}
+          {publishing ? "Approving..." : "Final Submission & Publish"}
         </button>
       </div>
 

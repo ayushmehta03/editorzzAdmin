@@ -66,10 +66,16 @@ func Login(client *mongo.Client) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Login Successful",
-			"token":   token,
-		})
+           "admin_token": token,
+		})     
 
 	}
 }
 
-
+func GetMe(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"user_id": c.GetString("user_id"),
+		"email":   c.GetString("email"),
+		"role":    c.GetString("role"),
+	})
+}

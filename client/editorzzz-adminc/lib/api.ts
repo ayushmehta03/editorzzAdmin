@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:1001";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1001";
 
 interface RequestOptions extends RequestInit {
   token?: string;
@@ -49,12 +49,16 @@ export async function getDashboardStats() {
   });
 }
 
-export async function getAllUsers(page = 1, limit = 10) {
-  return apiRequest(`/api/admin/users?page=${page}&limit=${limit}`);
+export async function getAllUsers({ page = 1, limit = 10 } = {}) {
+  return apiRequest(`/api/admin/users?page=${page}&limit=${limit}`, {
+    method: "GET",
+  });
 }
 
-export async function searchUsers(search: string) {
-  return apiRequest(`/api/admin/users/search?search=${search}`);
+export async function searchUsers(search: string, page: number = 1, limit: number = 10) {
+  return apiRequest(`/api/admin/users/search?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}`, {
+    method: "GET",
+  });
 }
 
 export async function updateUserBan(id: string, ban: boolean) {
@@ -70,6 +74,7 @@ export async function updateHiring(id: string, is_hiring_listed: boolean) {
     body: JSON.stringify({ is_hiring_listed }),
   });
 }
+
 export async function getReports() {
   return apiRequest("/api/admin/reports", {
     method: "GET",
@@ -107,11 +112,11 @@ export async function createTournament(data: any) {
   });
 }
 
-export async function createVoteContest(data:any){
-  return apiRequest(`/api/admin/create-vote-contest`,{
-    method:"POST",
-    body:JSON.stringify(data),
-  })
+export async function createVoteContest(data: any) {
+  return apiRequest(`/api/admin/create-vote-contest`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 
@@ -145,6 +150,7 @@ export async function submitFinalScores(slug: string) {
     method: "POST",
   });
 }
+
 export async function getAdminReview(id: string) {
   return apiRequest(`/api/admin/review/${id}`, {
     method: "GET",
@@ -156,12 +162,12 @@ export async function approveTournament(id: string) {
     method: "PUT",
   });
 }
+
 export async function getLeaderboard(id: string) {
   return apiRequest(`/api/admin/leaderboard/${id}`, {
     method: "GET",
   });
 }
-
 
 
 export async function getActiveTournaments() {
@@ -171,13 +177,11 @@ export async function getActiveTournaments() {
 }
 
 
-
 export async function getUpcomingTournaments() {
   return apiRequest(`/api/admin/upcoming-tournaments`, {
     method: "GET",
   });
 }
-
 
 
 export async function getCompletedTournaments() {
@@ -187,38 +191,38 @@ export async function getCompletedTournaments() {
 }
 
 
-
-export async function updateTournament(id:string,data:any){
-  return apiRequest(`/api/admin/update-tournament/${id}`,{
-    method:"PUT",
-    body:JSON.stringify(data)
-  })
+export async function updateTournament(id: string, data: any) {
+  return apiRequest(`/api/admin/update-tournament/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function getVoteTournaments(){
-  return apiRequest(`/api/admin/vote/tournaments`,{
-    method:"GET",
-  })
+export async function getVoteTournaments() {
+  return apiRequest(`/api/admin/vote/tournaments`, {
+    method: "GET",
+  });
 }
 
 
-export async function getVoteLeaderboard(id:string){
-  return apiRequest(`/api/admin/vote/leaderboard/${id}`,{
-    method:"GET",
-  })
+export async function getVoteLeaderboard(id: string) {
+  return apiRequest(`/api/admin/vote/leaderboard/${id}`, {
+    method: "GET",
+  });
 }
 
-export async function approveVoteResult(id:string){
-  return apiRequest(`/api/admin/vote/approve/${id}`,{
-    method:"PUT",
-  })
+export async function approveVoteResult(id: string) {
+  return apiRequest(`/api/admin/vote/approve/${id}`, {
+    method: "PUT",
+  });
 }
 
-export async function getTotalCastedVotes(id:string){
-  return apiRequest(`/api/admin/vote/total-votes/${id}`,{
-    method:"GET",
-  })
+export async function getTotalCastedVotes(id: string) {
+  return apiRequest(`/api/admin/vote/total-votes/${id}`, {
+    method: "GET",
+  });
 }
+
 export async function judgeRejectSubmission(judgeSlug: string, submissionId: string) {
   return apiRequest(`/judge/submissions/reject`, {
     method: "POST",
@@ -232,41 +236,27 @@ export async function judgeRejectSubmission(judgeSlug: string, submissionId: str
 export async function getSubmissionsWithVotes(tournamentId: string) {
   return apiRequest(`/api/admin/vote/submissions/${tournamentId}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
   });
 }
 
 
-export async function uploadFeaturePost(data:any) {
+export async function uploadFeaturePost(data: any) {
   return apiRequest(`/api/admin/create-feature-post`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data), // Pass the form data here
+    body: JSON.stringify(data),
   });
 }
 
 export async function getCurrentFeaturePost() {
   return apiRequest(`/api/admin/fetch-current-featurep`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
   });
 }
-
-
 
 
 export async function updateSubmissionPoints(submissionId: string, points: number) {
   return apiRequest(`/api/admin/vote/submissions/score/${submissionId}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({
       points: points,
     }),

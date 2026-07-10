@@ -16,74 +16,6 @@ import (
 )
 
 
-func GetAllUsers(client *mongo.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		pageStr := c.DefaultQuery("page", "1")
-		limitStr := c.DefaultQuery("limit", "10")
-
-		page, _ := strconv.Atoi(pageStr)
-		limit, _ := strconv.Atoi(limitStr)
-
-		if page < 1 {
-			page = 1
-		}
-		if limit < 1 {
-			limit = 10
-		}
-
-		skip := (page - 1) * limit
-
-		editorCol := database.OpenCollection("editors", client)
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		opts := options.Find().
-			SetSkip(int64(skip)).
-			SetLimit(int64(limit)).
-			SetSort(bson.D{{"created_at", -1}})
-
-		cursor, err := editorCol.Find(ctx, bson.M{}, opts)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching users"})
-			return
-		}
-
-		var users []models.User
-		if err = cursor.All(ctx, &users); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding users"})
-			return
-		}
-
-		total, _ := editorCol.CountDocuments(ctx, bson.M{})
-
-		var response []gin.H
-		for _, u := range users {
-			response = append(response, gin.H{
-				"id":                u.ID,
-				"name":              u.FullName,
-				"username":          u.UserName,
-				"email":             u.Email,
-				"phone":u.Phone,
-				 "profile_image":    u.ProfileImage, 
-
-				"role":              u.Role,
-				"ban":               u.Ban,
-				"is_hiring_listed":  u.IsHiringListed,
-				"employment_status": u.EmploymentStatus,
-				"created_at":        u.CreatedAt,
-			})
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"page":  page,
-			"limit": limit,
-			"total": total,
-			"users": response,
-		})
-	}
-}
 
 func UpdateUserBan(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -176,54 +108,7 @@ func UpdateHiringStatus(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
-func SearchUsersByUsername(client *mongo.Client) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        search := c.Query("search")
-        if search == "" {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "Search query required"})
-            return
-        }
 
-        editorCol := database.OpenCollection("editors", client)
-        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-        defer cancel()
-
-        filter := bson.M{
-            "username": bson.M{
-                "$regex":   search,
-                "$options": "i",
-            },
-        }
-
-        cursor, err := editorCol.Find(ctx, filter, options.Find().SetLimit(20))
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
-            return
-        }
-
-        var users []models.User 
-        if err = cursor.All(ctx, &users); err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Decoding error"})
-            return
-        }
-
-        var response []gin.H
-        for _, u := range users {
-            response = append(response, gin.H{
-                "id":               u.ID.Hex(),
-                "name":             u.FullName,     
-                "username":         u.UserName,     
-                "email":            u.Email,
-                "phone":            u.Phone,
-                "ban":              u.Ban,
-                "is_hiring_listed": u.IsHiringListed,
-                "created_at":       u.CreatedAt,
-            })
-        }
-
-        c.JSON(http.StatusOK, gin.H{"users": response})
-    }
-}
 func GetReports(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -384,4 +269,151 @@ func GetReportByID(client *mongo.Client) gin.HandlerFunc {
 			"info":report.Info,
         })
     }
+}
+
+
+func GetAllUsers(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		pageStr := c.DefaultQuery("page", "1")
+		limitStr := c.DefaultQuery("limit", "10")
+
+		page, _ := strconv.Atoi(pageStr)
+		limit, _ := strconv.Atoi(limitStr)
+
+		if page < 1 {
+			page = 1
+		}
+		if limit < 1 {
+			limit = 10
+		}
+
+		skip := (page - 1) * limit
+
+		editorCol := database.OpenCollection("editors", client)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		opts := options.Find().
+			SetSkip(int64(skip)).
+			SetLimit(int64(limit)).
+			SetSort(bson.D{{"created_at", -1}})
+
+		cursor, err := editorCol.Find(ctx, bson.M{}, opts)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching users"})
+			return
+		}
+
+		var users []models.User
+		if err = cursor.All(ctx, &users); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding users"})
+			return
+		}
+
+		total, _ := editorCol.CountDocuments(ctx, bson.M{})
+
+		var response []gin.H
+		for _, u := range users {
+			response = append(response, gin.H{
+				"id":                u.ID.Hex(), 
+				"name":              u.FullName,
+				"username":          u.UserName,
+				"email":             u.Email,
+				"phone":             u.Phone,
+				"profile_image":     u.ProfileImage,
+				"role":              u.Role,
+				"ban":               u.Ban,
+				"is_hiring_listed":  u.IsHiringListed,
+				"employment_status": u.EmploymentStatus,
+				"created_at":        u.CreatedAt,
+			})
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+			"users": response,
+		})
+	}
+}
+
+func SearchUsersByUsername(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		search := c.Query("search")
+		if search == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Search query required"})
+			return
+		}
+
+		pageStr := c.DefaultQuery("page", "1")
+		limitStr := c.DefaultQuery("limit", "10")
+
+		page, _ := strconv.Atoi(pageStr)
+		limit, _ := strconv.Atoi(limitStr)
+
+		if page < 1 {
+			page = 1
+		}
+		if limit < 1 {
+			limit = 10
+		}
+
+		skip := (page - 1) * limit
+
+		editorCol := database.OpenCollection("editors", client)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		filter := bson.M{
+			"$or": []bson.M{
+				{"username": bson.M{"$regex": search, "$options": "i"}},
+				{"email": bson.M{"$regex": search, "$options": "i"}},
+			},
+		}
+
+		opts := options.Find().
+			SetSkip(int64(skip)).
+			SetLimit(int64(limit)).
+			SetSort(bson.D{{"created_at", -1}})
+
+		cursor, err := editorCol.Find(ctx, filter, opts)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+			return
+		}
+
+		var users []models.User
+		if err = cursor.All(ctx, &users); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Decoding error"})
+			return
+		}
+
+		total, _ := editorCol.CountDocuments(ctx, filter)
+
+		var response []gin.H
+		for _, u := range users {
+			response = append(response, gin.H{
+				"id":                u.ID.Hex(),
+				"name":              u.FullName,
+				"profile_image":     u.ProfileImage,
+				"username":          u.UserName,
+				"email":             u.Email,
+				"phone":             u.Phone,
+				"ban":               u.Ban,
+				"is_hiring_listed":  u.IsHiringListed,
+				"employment_status": u.EmploymentStatus,
+				"created_at":        u.CreatedAt,
+			})
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+			"users": response,
+		})
+	}
 }

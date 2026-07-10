@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ayushmehta03/editorzzAdmin/internal/utils" 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -12,7 +13,6 @@ import (
 func AuthMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// Get Authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
@@ -20,7 +20,6 @@ func AuthMiddleWare() gin.HandlerFunc {
 			return
 		}
 
-		// Expected format: "Bearer <token>"
 		splitToken := strings.Split(authHeader, " ")
 		if len(splitToken) != 2 || splitToken[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
@@ -37,8 +36,7 @@ func AuthMiddleWare() gin.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// Validate signing method
+		token, err := jwt.ParseWithClaims(tokenString, &utils.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
@@ -51,26 +49,23 @@ func AuthMiddleWare() gin.HandlerFunc {
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
+		claims, ok := token.Claims.(*utils.JWTClaims)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims allocation"})
 			c.Abort()
 			return
 		}
 
-		// Set values in context
-		c.Set("user_id", claims["user_id"])
-		c.Set("email", claims["email"])
-		c.Set("role", claims["role"])
+		c.Set("user_id", claims.UserId)
+		c.Set("email", claims.Email)
+		c.Set("role", claims.Role)
 
 		c.Next()
 	}
 }
 
-
 func AdminOnly() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		role := c.GetString("role")
 
 		if role != "admin" {

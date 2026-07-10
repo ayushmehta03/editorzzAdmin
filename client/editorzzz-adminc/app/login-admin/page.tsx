@@ -32,7 +32,7 @@ export default function AdminLogin() {
 
     try {
       const data = await adminLogin(formData.identifier, formData.password);
-      localStorage.setItem("admin_token", data.token);
+      localStorage.setItem("admin_token", data.admin_token);
       toast.success("Login successful!");
 
       setTimeout(() => {

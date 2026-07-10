@@ -20,7 +20,7 @@ func GetAllUsers(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		pageStr := c.DefaultQuery("page", "1")
-		limitStr := c.DefaultQuery("limit", "10")
+		limitStr := c.DefaultQuery("limit", "20")
 
 		page, _ := strconv.Atoi(pageStr)
 		limit, _ := strconv.Atoi(limitStr)
@@ -29,7 +29,7 @@ func GetAllUsers(client *mongo.Client) gin.HandlerFunc {
 			page = 1
 		}
 		if limit < 1 {
-			limit = 10
+			limit = 20
 		}
 
 		skip := (page - 1) * limit

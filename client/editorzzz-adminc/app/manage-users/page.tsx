@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { 
   Search, Ban, ShieldCheck, Users, Mail, Phone, 
-  Briefcase, UserX, SearchX, AtSign, Fingerprint 
+  Briefcase, UserX, SearchX, AtSign, ChevronLeft, ChevronRight
 } from "lucide-react";
 
 import { getAllUsers, searchUsers, updateUserBan, updateHiring } from "@/lib/api";
@@ -14,7 +14,7 @@ interface User {
   id: string;
   name: string;
   username: string; 
-  profile_image:string;
+  profile_image: string;
   email: string;
   phone: string;
   ban: boolean;
@@ -25,12 +25,20 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10; // Explicit 10 limit configuration
 
-  const fetchUsers = async (query = "") => {
+  const fetchUsers = async (query = "", currentPage = 1) => {
     try {
       setLoading(true);
-      const res = query.trim() ? await searchUsers(query) : await getAllUsers();
+      // Ensure your getAllUsers backend call accepts limit and page parameters
+      const res = query.trim() 
+        ? await searchUsers(query) 
+        : await getAllUsers({ page: currentPage, limit });
+      
       setUsers(res?.users || []);
+      setTotal(res?.total || 0);
     } catch (err: any) {
       toast.error("Data sync failed");
       setUsers([]);
@@ -40,127 +48,166 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    const delay = setTimeout(() => fetchUsers(search), 500);
+    const delay = setTimeout(() => {
+      setPage(1); // Reset page on query shift
+      fetchUsers(search, 1);
+    }, 500);
     return () => clearTimeout(delay);
   }, [search]);
 
-  const toggleBan = async (user: User) => {
+  useEffect(() => {
+    if (!search.trim()) {
+      fetchUsers(search, page);
+    }
+  }, [page]);
+
+  const toggleBan = async (e: React.MouseEvent, user: User) => {
+    e.stopPropagation(); // Prevents navigating to profile url when clicking actions
     try {
       await updateUserBan(user.id, !user.ban);
       toast.success(user.ban ? "Access Restored" : "Account Suspended");
-      fetchUsers(search);
+      fetchUsers(search, page);
     } catch (err: any) { toast.error(err.message); }
   };
 
-  const toggleHiring = async (user: User) => {
+  const toggleHiring = async (e: React.MouseEvent, user: User) => {
+    e.stopPropagation(); // Prevents navigating to profile url when clicking actions
     try {
       await updateHiring(user.id, !user.is_hiring_listed);
       toast.success("Hiring status updated");
-      fetchUsers(search);
+      fetchUsers(search, page);
     } catch (err: any) { toast.error(err.message); }
   };
 
+  const totalPages = Math.ceil(total / limit);
+
   return (
-    <div className="min-h-screen bg-[#f1f5f9] dark:bg-[#020617] text-slate-900 dark:text-slate-100 p-4 md:p-10 transition-all">
+    <div className="min-h-screen bg-[#f1f5f9] dark:bg-[#020617] text-slate-900 dark:text-slate-100 p-4 md:p-6 transition-all">
       
-      <div className="max-w-6xl mx-auto mb-10">
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 bg-white dark:bg-slate-900/50 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-blue-500/5">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-500 rounded-2xl shadow-lg shadow-blue-500/20">
-                <Users className="text-white" size={24} />
+      <div className="max-w-6xl mx-auto mb-6">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-blue-500/5">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-blue-500 rounded-xl shadow-lg shadow-blue-500/20">
+                <Users className="text-white" size={18} />
               </div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight">Accounts</h1>
+              <h1 className="text-xl font-black tracking-tight">Accounts</h1>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium ml-1">Database Management Terminal</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium ml-1">Database Management Terminal</p>
           </div>
 
-          <div className="relative w-full lg:w-[450px]">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <div className="relative w-full sm:w-[350px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search unique username or email..."
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border-none outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+              placeholder="Search username or email..."
+              className="w-full pl-10 pr-4 py-2 text-sm rounded-xl bg-slate-100 dark:bg-slate-950 border-none outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
             />
           </div>
         </header>
       </div>
 
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 gap-5">
+        {/* Compact gap and tight margin mapping */}
+        <div className="grid grid-cols-1 gap-2">
           {loading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-32 w-full bg-slate-200 dark:bg-slate-800 animate-pulse rounded-[2rem]" />
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-14 w-full bg-slate-200 dark:bg-slate-800 animate-pulse rounded-xl" />
             ))
           ) : users.length > 0 ? (
             <AnimatePresence>
               {users.map((user, i) => (
                 <motion.div
                   key={user.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] hover:border-blue-500/50 transition-all shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.02 }}
+                  onClick={() => window.open(`https://editorzzz.com/user/${user.id}`, "_blank")}
+                  className="group relative cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-xl hover:border-blue-500/50 hover:shadow-md transition-all flex items-center justify-between gap-4 overflow-hidden"
                 >
-                  <div className="flex items-center gap-5 w-full">
+                  <div className="flex items-center gap-3 w-full min-w-0">
                     <div className="relative shrink-0">
                       <img
                         src={user.profile_image}
                         alt={user.name}
-                        className="w-16 h-16 md:w-20 md:h-20 rounded-3xl object-cover ring-4 ring-slate-50 dark:ring-slate-950"
+                        className="w-10 h-10 rounded-xl object-cover ring-2 ring-slate-50 dark:ring-slate-950"
                       />
-                      {user.ban && <div className="absolute -top-2 -right-2 bg-red-500 p-1.5 rounded-full border-4 border-white dark:border-slate-900"><UserX size={14} className="text-white"/></div>}
+                      {user.ban && (
+                        <div className="absolute -top-1 -right-1 bg-red-500 p-0.5 rounded-full border-2 border-white dark:border-slate-900">
+                          <UserX size={10} className="text-white"/>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="space-y-1">
-                      <h3 className="text-xl font-bold tracking-tight">{user.name}</h3>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 gap-x-4">
-                        <span className="flex items-center gap-1.5 text-blue-500 font-bold text-sm">
-                          <AtSign size={14} /> {user.username || "no_username"}
+                    <div className="min-w-0 flex-1 sm:flex sm:items-center sm:gap-4">
+                      <h3 className="text-sm font-bold tracking-tight truncate sm:w-1/4">{user.name}</h3>
+                      <div className="flex flex-row items-center gap-x-3 text-xs">
+                        <span className="flex items-center gap-1 text-blue-500 font-bold truncate">
+                          <AtSign size={12} className="shrink-0" /> {user.username || "no_username"}
                         </span>
-                        <span className="flex items-center gap-1.5 text-slate-400 text-sm italic">
-                          <Mail size={14} /> {user.email}
+                        <span className="hidden sm:flex items-center gap-1 text-slate-400 truncate">
+                          <Mail size={12} className="shrink-0" /> {user.email}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between w-full md:w-auto md:gap-10 border-t md:border-t-0 pt-5 md:pt-0 border-slate-100 dark:border-slate-800">
-                    
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Listed</span>
+                  <div className="flex items-center gap-4 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] uppercase font-black tracking-widest text-slate-400 hidden sm:inline">Listed</span>
                       <button
-                        onClick={() => toggleHiring(user)}
-                        className={`w-12 h-6 rounded-full p-1 transition-colors ${user.is_hiring_listed ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-700"}`}
+                        onClick={(e) => toggleHiring(e, user)}
+                        className={`w-9 h-5 rounded-full p-0.5 transition-colors ${user.is_hiring_listed ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-700"}`}
                       >
-                        <div className={`bg-white w-4 h-4 rounded-full transition-transform ${user.is_hiring_listed ? "translate-x-6" : ""}`} />
+                        <div className={`bg-white w-4 h-4 rounded-full transition-transform ${user.is_hiring_listed ? "translate-x-4" : ""}`} />
                       </button>
                     </div>
 
                     <button
-                      onClick={() => toggleBan(user)}
-                      className={`h-12 px-6 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all active:scale-95 ${
+                      onClick={(e) => toggleBan(e, user)}
+                      className={`h-8 px-3 rounded-lg font-bold text-xs flex items-center gap-1 transition-all active:scale-95 ${
                         user.ban 
                         ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white" 
                         : "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
                       }`}
                     >
-                      {user.ban ? <ShieldCheck size={18}/> : <Ban size={18}/>}
-                      {user.ban ? "Unban" : "Ban User"}
+                      {user.ban ? <ShieldCheck size={14}/> : <Ban size={14}/>}
+                      <span className="hidden xs:inline">{user.ban ? "Unban" : "Ban"}</span>
                     </button>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
           ) : (
-            <div className="py-20 text-center bg-white dark:bg-slate-900/50 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-              <SearchX size={48} className="mx-auto text-slate-300 mb-4" />
-              <h2 className="text-xl font-bold">No results for "{search}"</h2>
-              <button onClick={() => setSearch("")} className="mt-4 text-blue-500 font-bold hover:underline">View all users</button>
+            <div className="py-12 text-center bg-white dark:bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+              <SearchX size={36} className="mx-auto text-slate-300 mb-2" />
+              <h2 className="text-md font-bold">No results for "{search}"</h2>
+              <button onClick={() => setSearch("")} className="mt-2 text-sm text-blue-500 font-bold hover:underline">View all users</button>
             </div>
           )}
         </div>
+
+        {/* Dynamic Pagination Controls when not running a pure inline query filtering */}
+        {!search.trim() && totalPages > 1 && (
+          <div className="flex items-center justify-end gap-2 mt-4 text-xs font-bold">
+            <span className="text-slate-400">Page {page} of {totalPages}</span>
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(p => Math.max(p - 1, 1))}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 disabled:opacity-40"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 disabled:opacity-40"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

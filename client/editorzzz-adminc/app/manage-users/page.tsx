@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   Search, Ban, ShieldCheck, Users, Mail, Phone,
-  UserX, SearchX, AtSign, ChevronLeft, ChevronRight,
+  UserX, SearchX, AtSign, ChevronLeft, ChevronRight, Sparkles,
 } from "lucide-react";
 
 import { getAllUsers, searchUsers, updateUserBan, updateHiring } from "@/lib/api";
@@ -88,124 +88,150 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] dark:bg-[#020617] text-slate-900 dark:text-slate-100 p-4 md:p-10 transition-all">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100 dark:from-[#020617] dark:via-[#020617] dark:to-[#050b1f] text-slate-900 dark:text-slate-100 p-4 sm:p-6 md:p-10 transition-colors">
 
-      <div className="max-w-6xl mx-auto mb-6">
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-900/50 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-blue-500/5">
-          <div className="space-y-1">
+      {/* header */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <header className="relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl p-6 sm:p-7 rounded-[1.75rem] border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-slate-900/5 dark:shadow-black/20">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-20 -right-20 w-64 h-64 rounded-full bg-gradient-to-br from-blue-400/20 via-indigo-400/10 to-transparent blur-3xl"
+          />
+          <div className="relative space-y-1.5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-blue-500 rounded-xl shadow-lg shadow-blue-500/20">
-                <Users className="text-white" size={20} />
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/30">
+                <Users className="text-white" size={22} />
               </div>
-              <h1 className="text-xl md:text-2xl font-black tracking-tight">Accounts</h1>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none">Accounts</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold mt-1.5 flex items-center gap-1.5">
+                  <Sparkles size={12} className="text-blue-500" />
+                  {total} {total === 1 ? "user" : "users"} on record
+                </p>
+              </div>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium ml-1">
-              Database Management Terminal · {total} total
-            </p>
           </div>
 
-          <div className="relative w-full lg:w-[400px]">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <div className="relative w-full lg:w-[420px]">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
             <input
               value={search}
               onChange={(e) => {
-                setPage(1); // reset to page 1 as soon as the query changes
+                setPage(1);
                 setSearch(e.target.value);
               }}
-              placeholder="Search unique username or email..."
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border-none outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-sm"
+              placeholder="Search username or email..."
+              className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-950/80 border border-transparent focus:border-blue-500/30 outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-sm"
             />
           </div>
         </header>
       </div>
 
-      <div className="max-w-6xl mx-auto">
-        {/* compact list */}
-        <div className="flex flex-col gap-2">
+      {/* grid */}
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {loading ? (
             Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="h-14 w-full bg-slate-200 dark:bg-slate-800 animate-pulse rounded-xl" />
+              <div
+                key={i}
+                className="aspect-[4/5] w-full bg-slate-200/70 dark:bg-slate-800/70 animate-pulse rounded-3xl"
+              />
             ))
           ) : users.length > 0 ? (
             <AnimatePresence>
               {users.map((user, i) => (
                 <motion.div
                   key={user.id}
-                  initial={{ opacity: 0, y: 6 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.02 }}
+                  transition={{ delay: i * 0.03 }}
                   onClick={() => goToUser(user)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === "Enter" && goToUser(user)}
-                  className="group cursor-pointer relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-xl hover:border-blue-500/50 hover:bg-blue-50/40 dark:hover:bg-blue-500/5 transition-all shadow-sm flex items-center justify-between gap-4"
+                  className="group cursor-pointer relative bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1 hover:border-blue-500/40 transition-all duration-300"
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="relative shrink-0">
-                      <img
-                        src={user.profile_image}
-                        alt={user.name}
-                        className="w-9 h-9 rounded-lg object-cover ring-2 ring-slate-50 dark:ring-slate-950"
-                      />
-                      {user.ban && (
-                        <div className="absolute -top-1 -right-1 bg-red-500 p-[3px] rounded-full border-2 border-white dark:border-slate-900">
-                          <UserX size={9} className="text-white" />
+                  {/* square top image */}
+                  <div className="relative aspect-square w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
+                    <img
+                      src={user.profile_image}
+                      alt={user.name}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+
+                    {user.ban && (
+                      <div className="absolute top-3 left-3 flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg">
+                        <UserX size={11} /> Banned
+                      </div>
+                    )}
+
+                    {user.is_hiring_listed && (
+                      <div className="absolute top-3 right-3 bg-blue-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg">
+                        Listed
+                      </div>
+                    )}
+
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <h3 className="text-white text-base font-bold tracking-tight truncate drop-shadow-sm">
+                        {user.name}
+                      </h3>
+                      <span className="flex items-center gap-1 text-blue-200 font-semibold text-xs mt-0.5">
+                        <AtSign size={11} /> {user.username || "no_username"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* details + actions */}
+                  <div className="p-4 space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        <Mail size={12} className="shrink-0" /> <span className="truncate">{user.email}</span>
+                      </div>
+                      {user.phone && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                          <Phone size={12} className="shrink-0" /> {user.phone}
                         </div>
                       )}
                     </div>
 
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-bold tracking-tight truncate">{user.name}</h3>
-                      <div className="flex items-center gap-3 text-[11px] flex-wrap">
-                        <span className="flex items-center gap-1 text-blue-500 font-semibold">
-                          <AtSign size={11} /> {user.username || "no_username"}
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] uppercase font-black tracking-widest text-slate-400">
+                          Listed
                         </span>
-                        <span className="flex items-center gap-1 text-slate-400 italic truncate">
-                          <Mail size={11} /> {user.email}
-                        </span>
-                        {user.phone && (
-                          <span className="flex items-center gap-1 text-slate-400 truncate">
-                            <Phone size={11} /> {user.phone}
-                          </span>
-                        )}
+                        <button
+                          onClick={(e) => toggleHiring(e, user)}
+                          className={`w-9 h-5 rounded-full p-0.5 transition-colors ${
+                            user.is_hiring_listed ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-700"
+                          }`}
+                        >
+                          <div
+                            className={`bg-white w-4 h-4 rounded-full transition-transform ${
+                              user.is_hiring_listed ? "translate-x-4" : ""
+                            }`}
+                          />
+                        </button>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="hidden sm:flex flex-col items-center gap-1">
-                      <span className="text-[8px] uppercase font-black tracking-widest text-slate-400">Listed</span>
                       <button
-                        onClick={(e) => toggleHiring(e, user)}
-                        className={`w-9 h-5 rounded-full p-0.5 transition-colors ${
-                          user.is_hiring_listed ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-700"
+                        onClick={(e) => toggleBan(e, user)}
+                        className={`h-8 px-3 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all active:scale-95 ${
+                          user.ban
+                            ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white"
+                            : "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
                         }`}
                       >
-                        <div
-                          className={`bg-white w-4 h-4 rounded-full transition-transform ${
-                            user.is_hiring_listed ? "translate-x-4" : ""
-                          }`}
-                        />
+                        {user.ban ? <ShieldCheck size={13} /> : <Ban size={13} />}
+                        {user.ban ? "Unban" : "Ban"}
                       </button>
                     </div>
-
-                    <button
-                      onClick={(e) => toggleBan(e, user)}
-                      className={`h-8 px-3 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 ${
-                        user.ban
-                          ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white"
-                          : "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
-                      }`}
-                    >
-                      {user.ban ? <ShieldCheck size={14} /> : <Ban size={14} />}
-                      {user.ban ? "Unban" : "Ban"}
-                    </button>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
           ) : (
-            <div className="py-20 text-center bg-white dark:bg-slate-900/50 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+            <div className="col-span-full py-20 text-center bg-white dark:bg-slate-900/50 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
               <SearchX size={48} className="mx-auto text-slate-300 mb-4" />
               <h2 className="text-xl font-bold">No results for "{search}"</h2>
               <button onClick={() => setSearch("")} className="mt-4 text-blue-500 font-bold hover:underline">
@@ -217,24 +243,24 @@ export default function UsersPage() {
 
         {/* pagination */}
         {!loading && total > LIMIT && (
-          <div className="flex items-center justify-between mt-6 px-1">
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <div className="flex items-center justify-between mt-8 px-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
               Page {page} of {totalPages}
             </p>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="h-9 w-9 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:border-blue-500/50 transition-all"
+                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:border-blue-500/50 hover:text-blue-500 transition-all shadow-sm"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={17} />
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="h-9 w-9 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:border-blue-500/50 transition-all"
+                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed hover:border-blue-500/50 hover:text-blue-500 transition-all shadow-sm"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={17} />
               </button>
             </div>
           </div>

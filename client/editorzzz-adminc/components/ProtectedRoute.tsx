@@ -19,7 +19,7 @@ export default function ProtectedRoute({
 
     const verifyUser = async () => {
       console.log("1. verifyUser triggered. API_URL is:", API_URL);
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("admin_token");
       console.log("2. Token pulled from localStorage:", token ? "Found" : "Missing");
 
       if (!token) {

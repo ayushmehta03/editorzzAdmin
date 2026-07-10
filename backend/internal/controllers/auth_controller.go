@@ -66,8 +66,8 @@ func Login(client *mongo.Client) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Login Successful",
-			"token":   token,
-		})
+           "admin_token": token,
+		})     
 
 	}
 }

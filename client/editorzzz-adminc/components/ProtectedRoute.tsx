@@ -15,39 +15,66 @@ export default function ProtectedRoute({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const verifyUser = async () => {
+      console.log("1. verifyUser triggered. API_URL is:", API_URL);
       const token = localStorage.getItem("token");
+      console.log("2. Token pulled from localStorage:", token ? "Found" : "Missing");
 
       if (!token) {
-        router.replace("/login");
+        if (isMounted) router.replace("/login-admin");
         return;
       }
 
       try {
+        console.log("3. Sending fetch request to:", `${API_URL}/api/auth/me`);
         const response = await fetch(`${API_URL}/api/auth/me`, {
+          method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
         });
 
+        console.log("4. Response status received:", response.status);
+
         if (!response.ok) {
-          localStorage.removeItem("token");
-          router.replace("/login");
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Backend Rejected Auth Check:", response.status, errorData);
+          
+          if (isMounted) {
+            localStorage.removeItem("token");
+            router.replace("/login-admin");
+          }
           return;
         }
 
-        setLoading(false);
+        console.log("5. Auth verified successfully.");
+        if (isMounted) setLoading(false);
       } catch (error) {
-        console.error(error);
-        router.replace("/login");
+        console.error("6. Catch block caught an error:", error);
+        if (isMounted) {
+          localStorage.removeItem("token");
+          router.replace("/login-admin");
+        }
       }
     };
 
     verifyUser();
-  }, [router]);
 
+    return () => {
+      isMounted = false;
+    };
+  }, [router]); 
   if (loading) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+        <p className="text-sm font-semibold tracking-wider animate-pulse">
+          Verifying secure credentials Terminal...
+        </p>
+      </div>
+    );
   }
 
   return <>{children}</>;

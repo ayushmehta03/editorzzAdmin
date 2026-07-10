@@ -12,7 +12,6 @@ import (
 func AuthMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// Get Authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
@@ -20,7 +19,6 @@ func AuthMiddleWare() gin.HandlerFunc {
 			return
 		}
 
-		// Expected format: "Bearer <token>"
 		splitToken := strings.Split(authHeader, " ")
 		if len(splitToken) != 2 || splitToken[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
@@ -38,7 +36,6 @@ func AuthMiddleWare() gin.HandlerFunc {
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// Validate signing method
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}

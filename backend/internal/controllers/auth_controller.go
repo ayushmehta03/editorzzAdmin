@@ -11,7 +11,6 @@ import (
 	"github.com/ayushmehta03/editorzzAdmin/internal/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -73,41 +72,10 @@ func Login(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-func GetMe(client *mongo.Client)gin.HandlerFunc{
-	return func(c *gin.Context){
-		userIdHex:=c.GetString("user_id");
-		if userIdHex==""{
-			c.JSON(http.StatusUnauthorized,gin.H{"error":"Unauthorized"})
-			return
-		}
-
-
-		userId,err:=primitive.ObjectIDFromHex(userIdHex)
-
-		if err!=nil{
-			c.JSON(http.StatusBadRequest,gin.H{"error":"invalid user id"})
-			return
-		}
-
-
-		adminCollection := database.OpenCollection("admin", client)
-
-
-				var admin models.Admin
-
-				ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
-
-				defer cancel()
-
-err = adminCollection.FindOne(ctx, bson.M{"_id": userId}).Decode(&admin)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-			return
-		}
-
-
-
-		c.JSON(http.StatusOK,gin.H{"message":"ok hai"})
-
-	}
+func GetMe(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"user_id": c.GetString("user_id"),
+		"email":   c.GetString("email"),
+		"role":    c.GetString("role"),
+	})
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
-  Search, Ban, ShieldCheck, Users, Mail,
+  Search, Ban, ShieldCheck, Users, Mail, Phone,
   UserX, SearchX, AtSign, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
@@ -39,7 +39,7 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const res = query.trim()
-        ? await searchUsers(query)
+        ? await searchUsers(query, pageNum, LIMIT)
         : await getAllUsers({ page: pageNum, limit: LIMIT });
 
       setUsers(res?.users || []);
@@ -53,7 +53,6 @@ export default function UsersPage() {
     }
   };
 
-  // Fixed: Combined into a single useEffect with proper debouncing to prevent infinite loops
   useEffect(() => {
     const delay = setTimeout(() => {
       fetchUsers(search, page);
@@ -110,7 +109,7 @@ export default function UsersPage() {
             <input
               value={search}
               onChange={(e) => {
-                setPage(1); // Reset page selection back to 1 instantly when query updates
+                setPage(1); // reset to page 1 as soon as the query changes
                 setSearch(e.target.value);
               }}
               placeholder="Search unique username or email..."
@@ -157,13 +156,18 @@ export default function UsersPage() {
 
                     <div className="min-w-0">
                       <h3 className="text-sm font-bold tracking-tight truncate">{user.name}</h3>
-                      <div className="flex items-center gap-3 text-[11px]">
+                      <div className="flex items-center gap-3 text-[11px] flex-wrap">
                         <span className="flex items-center gap-1 text-blue-500 font-semibold">
                           <AtSign size={11} /> {user.username || "no_username"}
                         </span>
                         <span className="flex items-center gap-1 text-slate-400 italic truncate">
                           <Mail size={11} /> {user.email}
                         </span>
+                        {user.phone && (
+                          <span className="flex items-center gap-1 text-slate-400 truncate">
+                            <Phone size={11} /> {user.phone}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

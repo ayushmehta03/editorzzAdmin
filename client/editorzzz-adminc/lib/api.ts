@@ -48,10 +48,11 @@ export async function getDashboardStats() {
     method: "GET",
   });
 }
+export const getAllUsers = async ({ page = 1, limit = 10 } = {}) => {
+  const response = await fetch(`/api/users?page=${page}&limit=${limit}`); 
+  return response.json();
+};
 
-export async function getAllUsers(page = 1, limit = 10) {
-  return apiRequest(`/api/admin/users?page=${page}&limit=${limit}`);
-}
 
 export async function searchUsers(search: string) {
   return apiRequest(`/api/admin/users/search?search=${search}`);

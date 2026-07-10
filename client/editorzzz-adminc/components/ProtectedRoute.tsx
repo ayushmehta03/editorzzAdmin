@@ -3,8 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:1001";
+ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://166.0.242.53:1001";
 
 export default function ProtectedRoute({
   children,

@@ -48,15 +48,17 @@ export async function getDashboardStats() {
     method: "GET",
   });
 }
+
 export const getAllUsers = async ({ page = 1, limit = 10 } = {}) => {
-  const response = await fetch(`/api/users?page=${page}&limit=${limit}`);
+  const response = await fetch(`/api/admin/users?page=${page}&limit=${limit}`); 
   
   if (!response.ok) {
     throw new Error("Failed to fetch users");
   }
   
-  return response.json(); 
+  return response.json();
 };
+
 export async function searchUsers(search: string, page: number = 1, limit: number = 10) {
   return apiRequest(`/api/admin/users/search?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}`);
 }

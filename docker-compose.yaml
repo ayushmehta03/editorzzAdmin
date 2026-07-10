@@ -2,11 +2,13 @@ version: '3.8'
 
 services:
   frontend:
-    image: ayushmehta1/editorzzz-adminc:1.0.0
+    image: ayushmehta1/editorzzz-adminc:1.0.1
     build:
       context: ./client/editorzzz-adminc
     ports:
       - "4000:3000"
+    env_file:
+      - ./client/.env
     networks:
       - editorzzz-secure
     depends_on:
@@ -15,7 +17,7 @@ services:
   backend:
     build:
       context: ./backend
-    image: ayushmehta1/editorzzz-adminb:1.0.0
+    image: ayushmehta1/editorzzz-adminb:1.0.1
 
     ports:
       - "1001:1001"

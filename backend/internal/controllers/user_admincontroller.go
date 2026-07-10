@@ -211,7 +211,8 @@ func SearchUsersByUsername(client *mongo.Client) gin.HandlerFunc {
         for _, u := range users {
             response = append(response, gin.H{
                 "id":               u.ID.Hex(),
-                "name":             u.FullName,     
+                "name":             u.FullName,  
+				"profile_image":u.ProfileImage,   
                 "username":         u.UserName,     
                 "email":            u.Email,
                 "phone":            u.Phone,

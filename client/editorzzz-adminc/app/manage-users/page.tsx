@@ -39,8 +39,8 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const res = query.trim()
-        ? await searchUsers(query, pageNum, LIMIT)
-        : await getAllUsers(pageNum, LIMIT);
+        ? await searchUsers(query)
+        : await getAllUsers({ page: pageNum, limit: LIMIT });
 
       setUsers(res?.users || []);
       setTotal(res?.total ?? 0);
@@ -53,20 +53,14 @@ export default function UsersPage() {
     }
   };
 
-  // reset to page 1 whenever the search query changes
+  // Fixed: Combined into a single useEffect with proper debouncing to prevent infinite loops
   useEffect(() => {
     const delay = setTimeout(() => {
-      setPage(1);
-      fetchUsers(search, 1);
-    }, 500);
-    return () => clearTimeout(delay);
-  }, [search]);
+      fetchUsers(search, page);
+    }, 400);
 
-  // refetch when page changes (but not on first mount, that's handled above)
-  useEffect(() => {
-    fetchUsers(search, page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+    return () => clearTimeout(delay);
+  }, [search, page]);
 
   const toggleBan = async (e: React.MouseEvent, user: User) => {
     e.stopPropagation();
@@ -91,7 +85,6 @@ export default function UsersPage() {
   };
 
   const goToUser = (user: User) => {
-    // full redirect to the external editor domain
     window.location.href = `https://editorzzz.com/user/${user.id}`;
   };
 
@@ -116,7 +109,10 @@ export default function UsersPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setPage(1); // Reset page selection back to 1 instantly when query updates
+                setSearch(e.target.value);
+              }}
               placeholder="Search unique username or email..."
               className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border-none outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-sm"
             />

@@ -764,7 +764,10 @@ func UpdateTournament(client *mongo.Client) gin.HandlerFunc {
 
 
 func CreateFeaturePost(client *mongo.Client) gin.HandlerFunc {
-    featureCol := database.OpenCollection("feature_posts", client)
+
+
+	 
+
 
     return func(c *gin.Context) {
         role, exists := c.Get("role")
@@ -781,6 +784,7 @@ func CreateFeaturePost(client *mongo.Client) gin.HandlerFunc {
 
         ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
         defer cancel()
+    featureCol := database.OpenCollection("feature_posts", client)
 
        
         _, err := featureCol.UpdateMany(

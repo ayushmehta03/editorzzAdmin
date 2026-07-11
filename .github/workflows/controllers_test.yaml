@@ -1,32 +1,39 @@
-name: Backend Api Builder and Tester
-on: [push]
+name: Backend API CI
 
-# simple file it will get the dependency , build the golang code and test it with unti tests written
+on:
+  push:
+
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v6
+  build:
+    runs-on: ubuntu-latest
 
-            - name: Setup Golang
+    steps:
+      - uses: actions/checkout@v4
 
-
-              uses: actions/setup-go@v5
-
-
-              with:
-                  go-version: 1.25.1
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
 
 
-            - name: install dep
-              run: go get .
+
+          
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Run tests
+        run: go test ./...
 
 
-            - name: Build Gocode
-              run: go build -v ./backend
 
-
-            - name: test golang controllers
-              run: go test
-
-    
+     

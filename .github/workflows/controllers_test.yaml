@@ -27,7 +27,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-      
 
-            
+
 
       - name: Install dependencies
         run: go mod tidy
@@ -36,4 +36,4 @@ jobs:
         run: go build -v ./...
 
       - name: Run tests
-        run: go test ./...
+        run: go test ./internal/controllers

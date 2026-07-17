@@ -23,6 +23,30 @@ import {
   Circle,
 } from "lucide-react";
 
+// Broadened detection: mp4, mov, webm, m4v, ogg — plus whatever media_type reports.
+const isVideoFile = (item: any) => {
+  const src = item.media_url ?? item.MediaURL ?? "";
+  return item.media_type?.includes("video") || /\.(mp4|mov|webm|m4v|ogg)$/i.test(src);
+};
+
+// Maps file extension -> mime type so <source> gives the browser
+// an accurate codec hint instead of guessing from a bare src.
+const getVideoMime = (url: string) => {
+  const ext = url.split(".").pop()?.toLowerCase().split("?")[0];
+  switch (ext) {
+    case "mov":
+      return "video/quicktime";
+    case "webm":
+      return "video/webm";
+    case "m4v":
+      return "video/x-m4v";
+    case "ogg":
+      return "video/ogg";
+    default:
+      return "video/mp4";
+  }
+};
+
 export default function JudgePanel({
   params,
 }: {
@@ -223,21 +247,34 @@ export default function JudgePanel({
               <X size={24} />
             </button>
             <div className="relative w-full h-full flex items-center justify-center">
-              {selectedMedia.media_type?.includes("video") ||
-              (selectedMedia.media_url || selectedMedia.MediaURL).endsWith(".mp4") ? (
-                <video
-                  src={selectedMedia.media_url ?? selectedMedia.MediaURL}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-full rounded-lg shadow-2xl"
-                />
-              ) : (
-                <img
-                  src={selectedMedia.media_url ?? selectedMedia.MediaURL}
-                  className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                  alt="Full view"
-                />
-              )}
+              {(() => {
+                const src = selectedMedia.media_url ?? selectedMedia.MediaURL;
+                return isVideoFile(selectedMedia) ? (
+                  <video
+                    key={src}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="max-w-full max-h-full rounded-lg shadow-2xl"
+                  >
+                    <source src={src} type={getVideoMime(src)} />
+                    <source src={src} type="video/mp4" />
+                    <p className="text-zinc-400 text-sm p-4">
+                      Your browser can't play this video format.{" "}
+                      <a href={src} download className="underline text-purple-400">
+                        Download it instead
+                      </a>
+                      .
+                    </p>
+                  </video>
+                ) : (
+                  <img
+                    src={src}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                    alt="Full view"
+                  />
+                );
+              })()}
             </div>
           </motion.div>
         )}
@@ -290,7 +327,7 @@ export default function JudgePanel({
           <AnimatePresence mode="popLayout">
             {submissions.map((item) => {
               const mediaSrc = item.media_url ?? item.MediaURL;
-              const isVideo = item.media_type?.includes("video") || mediaSrc.endsWith(".mp4");
+              const itemIsVideo = isVideoFile(item);
               const isItemRejecting = rejectingId === item._id;
               const isTouched = !!touched[item._id];
               const currentScore = scores[item._id] ?? 0;
@@ -303,20 +340,25 @@ export default function JudgePanel({
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
                   layout
                   className={`group flex flex-col bg-zinc-900/40 border rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden transition-all duration-500 shadow-2xl ${
-                    isTouched ? "border-white/5 hover:border-purple-500/50" : "border-amber-500/20 hover:border-amber-500/40"
+                    isTouched
+                      ? "border-white/5 hover:border-purple-500/50"
+                      : "border-amber-500/20 hover:border-amber-500/40"
                   }`}
                 >
                   {/* Media Container */}
                   <div className="relative aspect-video w-full overflow-hidden bg-black">
-                    {isVideo ? (
+                    {itemIsVideo ? (
                       <video
-                        src={mediaSrc}
+                        key={mediaSrc}
                         autoPlay
                         muted
                         loop
                         playsInline
                         className="w-full h-full object-cover"
-                      />
+                      >
+                        <source src={mediaSrc} type={getVideoMime(mediaSrc)} />
+                        <source src={mediaSrc} type="video/mp4" />
+                      </video>
                     ) : (
                       <img
                         src={mediaSrc}
@@ -408,7 +450,7 @@ export default function JudgePanel({
                           disabled={submitted}
                           value={currentScore}
                           onChange={(e) => handleScoreChange(item._id, Number(e.target.value))}
-                          className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer disabled:opacity-30 transition-all bg-zinc-800 accent-purple-500`}
+                          className="w-full h-1.5 rounded-lg appearance-none cursor-pointer disabled:opacity-30 transition-all bg-zinc-800 accent-purple-500"
                         />
 
                         {/* Quick-pick presets, incl. 0 */}

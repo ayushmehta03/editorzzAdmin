@@ -5,11 +5,23 @@ import {
   getJudgeSubmissions,
   saveJudgeScores,
   submitFinalScores,
-  judgeRejectSubmission, // Imported our fresh deletion client method
+  judgeRejectSubmission,
 } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Save, Send, CheckCircle2, AlertCircle, Trophy, Star, Maximize2, X, MessageSquare, Trash2 } from "lucide-react";
+import {
+  Save,
+  Send,
+  AlertCircle,
+  Trophy,
+  Star,
+  Maximize2,
+  X,
+  MessageSquare,
+  Trash2,
+  CheckCircle2,
+  Circle,
+} from "lucide-react";
 
 export default function JudgePanel({
   params,
@@ -20,12 +32,15 @@ export default function JudgePanel({
 
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [scores, setScores] = useState<Record<string, number>>({});
-  const [remarks, setRemarks] = useState<Record<string, string>>({}); 
+  // Tracks which entries the judge has *explicitly* set a score for.
+  // This is what makes "0 points" distinguishable from "not scored yet".
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [remarks, setRemarks] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<any | null>(null);
-  const [rejectingId, setRejectingId] = useState<string | null>(null); // Track specific button load states
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -39,17 +54,20 @@ export default function JudgePanel({
       setSubmissions(subs);
 
       const initialScores: Record<string, number> = {};
+      const initialTouched: Record<string, boolean> = {};
       const initialRemarks: Record<string, string> = {};
 
       subs.forEach((s: any) => {
-        if (s.points !== undefined) {
+        if (s.points !== undefined && s.points !== null) {
           initialScores[s._id] = s.points;
+          initialTouched[s._id] = true;
         }
         if (s.remark !== undefined) {
           initialRemarks[s._id] = s.remark;
         }
       });
       setScores(initialScores);
+      setTouched(initialTouched);
       setRemarks(initialRemarks);
 
       if (response.tournament?.is_judging_completed) {
@@ -63,7 +81,9 @@ export default function JudgePanel({
   };
 
   const handleScoreChange = (id: string, value: number) => {
-    setScores((prev) => ({ ...prev, [id]: value }));
+    const clamped = Number.isNaN(value) ? 0 : Math.max(0, Math.min(100, value));
+    setScores((prev) => ({ ...prev, [id]: clamped }));
+    setTouched((prev) => ({ ...prev, [id]: true }));
   };
 
   const handleRemarkChange = (id: string, value: string) => {
@@ -85,7 +105,6 @@ export default function JudgePanel({
     }
   };
 
-  // Immediate Disqualification and Deletion Logic
   const handleRejectSubmission = async (submissionId: string, title: string) => {
     const confirmation = window.confirm(
       `⚠️ JUDGE OVERRIDE DETECTED\n\nAre you sure you want to permanently REJECT and DELETE "${title || "this project"}"?\n\nThis entry will be instantly scrubbed from the database and cannot be restored.`
@@ -101,9 +120,13 @@ export default function JudgePanel({
       toast.dismiss(toastId);
       toast.success("Submission successfully deleted.");
 
-      // Splice state arrays immediately to remove from UI wrapper array
       setSubmissions((prev) => prev.filter((s) => s._id !== submissionId));
       setScores((prev) => {
+        const updated = { ...prev };
+        delete updated[submissionId];
+        return updated;
+      });
+      setTouched((prev) => {
         const updated = { ...prev };
         delete updated[submissionId];
         return updated;
@@ -113,7 +136,6 @@ export default function JudgePanel({
         delete updated[submissionId];
         return updated;
       });
-
     } catch (err: any) {
       toast.error(err.message || "Failed to reject submission");
     } finally {
@@ -122,11 +144,10 @@ export default function JudgePanel({
   };
 
   const handleOpenModal = () => {
-    const allScored = submissions.length > 0 && submissions.every(
-      (s) => scores[s._id] !== undefined
-    );
+    const allScored =
+      submissions.length > 0 && submissions.every((s) => touched[s._id]);
     if (!allScored) {
-      toast.error("Please assign a score to all entries first");
+      toast.error("Please assign a score to all entries first (0 counts!)");
       return;
     }
     setShowModal(true);
@@ -143,42 +164,76 @@ export default function JudgePanel({
     }
   };
 
-  const scoredCount = Object.keys(scores).length;
+  const scoredCount = submissions.filter((s) => touched[s._id]).length;
   const progress = submissions.length ? (scoredCount / submissions.length) * 100 : 0;
+  const scoredValues = submissions
+    .filter((s) => touched[s._id])
+    .map((s) => scores[s._id] ?? 0);
+  const avgScore =
+    scoredValues.length > 0
+      ? Math.round(scoredValues.reduce((a, b) => a + b, 0) / scoredValues.length)
+      : 0;
+
+  const scoreColor = (val: number) => {
+    if (val >= 80) return "text-emerald-400";
+    if (val >= 50) return "text-purple-400";
+    if (val > 0) return "text-amber-400";
+    return "text-zinc-500";
+  };
+
+  const scoreGradient = (val: number) => {
+    if (val >= 80) return "from-emerald-500 to-teal-400";
+    if (val >= 50) return "from-purple-500 to-blue-500";
+    if (val > 0) return "from-amber-500 to-orange-400";
+    return "from-zinc-700 to-zinc-600";
+  };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#050505]">
         <div className="w-12 h-12 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
-        <p className="mt-4 text-zinc-500 text-xs font-bold tracking-[0.2em] uppercase">Syncing Data</p>
+        <p className="mt-4 text-zinc-500 text-xs font-bold tracking-[0.2em] uppercase">
+          Syncing Data
+        </p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-100 pb-44">
+      {/* Ambient background glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/3 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]" />
+      </div>
+
       {/* Lightbox Modal */}
       <AnimatePresence>
         {selectedMedia && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] bg-black flex items-center justify-center p-4 md:p-10"
           >
-            <button 
+            <button
               onClick={() => setSelectedMedia(null)}
               className="absolute top-6 right-6 z-[210] p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
             >
               <X size={24} />
             </button>
             <div className="relative w-full h-full flex items-center justify-center">
-              {selectedMedia.media_type?.includes("video") || (selectedMedia.media_url || selectedMedia.MediaURL).endsWith(".mp4") ? (
-                <video 
-                  src={selectedMedia.media_url ?? selectedMedia.MediaURL} 
-                  controls autoPlay className="max-w-full max-h-full rounded-lg shadow-2xl"
+              {selectedMedia.media_type?.includes("video") ||
+              (selectedMedia.media_url || selectedMedia.MediaURL).endsWith(".mp4") ? (
+                <video
+                  src={selectedMedia.media_url ?? selectedMedia.MediaURL}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-full rounded-lg shadow-2xl"
                 />
               ) : (
-                <img 
-                  src={selectedMedia.media_url ?? selectedMedia.MediaURL} 
+                <img
+                  src={selectedMedia.media_url ?? selectedMedia.MediaURL}
                   className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
                   alt="Full view"
                 />
@@ -191,37 +246,54 @@ export default function JudgePanel({
       <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#050505]/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(147,51,234,0.3)]">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(147,51,234,0.4)]">
               <Trophy size={20} className="text-white" />
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-bold tracking-tight">Judge Dashboard</h1>
-              <p className="text-[9px] sm:text-[10px] text-zinc-500 font-mono uppercase tracking-tighter">Session: {slug.substring(0, 12)}</p>
+              <p className="text-[9px] sm:text-[10px] text-zinc-500 font-mono uppercase tracking-tighter">
+                Session: {slug.substring(0, 12)}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-4 sm:gap-8">
+            <div className="hidden sm:block text-right">
+              <p className="text-[9px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                Avg Score
+              </p>
+              <p className={`text-xs sm:text-sm font-black ${scoreColor(avgScore)}`}>
+                {scoredValues.length ? avgScore : "—"}
+              </p>
+            </div>
             <div className="text-right">
-              <p className="text-[9px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Progress</p>
-              <p className="text-xs sm:text-sm font-black">{scoredCount} / {submissions.length}</p>
+              <p className="text-[9px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                Progress
+              </p>
+              <p className="text-xs sm:text-sm font-black">
+                {scoredCount} / {submissions.length}
+              </p>
             </div>
             <div className="w-20 sm:w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }} animate={{ width: `${progress}%` }}
-                className="h-full bg-gradient-to-r from-purple-500 to-blue-500" 
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
               />
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-12">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
           <AnimatePresence mode="popLayout">
-            {submissions.map((item, i) => {
+            {submissions.map((item) => {
               const mediaSrc = item.media_url ?? item.MediaURL;
               const isVideo = item.media_type?.includes("video") || mediaSrc.endsWith(".mp4");
               const isItemRejecting = rejectingId === item._id;
+              const isTouched = !!touched[item._id];
+              const currentScore = scores[item._id] ?? 0;
 
               return (
                 <motion.div
@@ -230,14 +302,19 @@ export default function JudgePanel({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
                   layout
-                  className="group flex flex-col bg-zinc-900/40 border border-white/5 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden hover:border-purple-500/50 transition-all duration-500 shadow-2xl"
+                  className={`group flex flex-col bg-zinc-900/40 border rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden transition-all duration-500 shadow-2xl ${
+                    isTouched ? "border-white/5 hover:border-purple-500/50" : "border-amber-500/20 hover:border-amber-500/40"
+                  }`}
                 >
                   {/* Media Container */}
                   <div className="relative aspect-video w-full overflow-hidden bg-black">
                     {isVideo ? (
                       <video
                         src={mediaSrc}
-                        autoPlay muted loop playsInline
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -247,14 +324,25 @@ export default function JudgePanel({
                         alt={item.title}
                       />
                     )}
-                    
-                    {/* Fullscreen Trigger */}
-                    <button 
+
+                    <button
                       onClick={() => setSelectedMedia(item)}
                       className="absolute top-4 right-4 p-2.5 sm:p-3 bg-black/60 backdrop-blur-md rounded-2xl md:opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-xs font-bold shadow-md"
                     >
                       <Maximize2 size={14} /> <span className="hidden sm:inline">Open</span>
                     </button>
+
+                    {/* Scored status badge */}
+                    <div
+                      className={`absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl backdrop-blur-md text-[10px] font-bold uppercase tracking-wider ${
+                        isTouched
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
+                          : "bg-amber-500/20 text-amber-300 border border-amber-500/20"
+                      }`}
+                    >
+                      {isTouched ? <CheckCircle2 size={12} /> : <Circle size={12} />}
+                      {isTouched ? "Scored" : "Pending"}
+                    </div>
                   </div>
 
                   {/* Content Section */}
@@ -264,8 +352,7 @@ export default function JudgePanel({
                         <h2 className="text-lg sm:text-xl font-black text-white leading-tight line-clamp-1">
                           {item.title || "Untitled Project"}
                         </h2>
-                        
-                        {/* Reject & Delete Button */}
+
                         <button
                           type="button"
                           disabled={submitted || isItemRejecting}
@@ -280,10 +367,12 @@ export default function JudgePanel({
                           )}
                         </button>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-4 sm:mb-6">
                         <Star size={12} className="text-purple-400 fill-purple-400" />
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Candidate Entry</span>
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                          Candidate Entry
+                        </span>
                       </div>
                     </div>
 
@@ -291,24 +380,64 @@ export default function JudgePanel({
                       {/* Points Subcard */}
                       <div className="bg-white/[0.03] border border-white/5 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] space-y-3">
                         <div className="flex justify-between items-center px-1">
-                          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Points</span>
-                          <span className="text-xl sm:text-2xl font-black text-purple-500">{scores[item._id] ?? 0}</span>
+                          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                            Points
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xl sm:text-2xl font-black tabular-nums ${scoreColor(currentScore)}`}>
+                              {isTouched ? currentScore : "—"}
+                            </span>
+                            {/* Precise numeric entry — makes hitting exactly 0 trivial */}
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              disabled={submitted}
+                              value={isTouched ? currentScore : ""}
+                              placeholder="0-100"
+                              onChange={(e) => handleScoreChange(item._id, Number(e.target.value))}
+                              className="w-16 bg-zinc-950/60 text-zinc-200 text-xs text-center border border-white/10 rounded-lg py-1.5 focus:outline-none focus:border-purple-500/50 disabled:opacity-40 transition-all"
+                            />
+                          </div>
                         </div>
 
                         <input
-                          type="range" min={0} max={100}
+                          type="range"
+                          min={0}
+                          max={100}
                           disabled={submitted}
-                          value={scores[item._id] ?? 0}
+                          value={currentScore}
                           onChange={(e) => handleScoreChange(item._id, Number(e.target.value))}
-                          className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-500 disabled:opacity-30 transition-all"
+                          className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer disabled:opacity-30 transition-all bg-zinc-800 accent-purple-500`}
                         />
+
+                        {/* Quick-pick presets, incl. 0 */}
+                        <div className="flex items-center gap-1.5 px-1 pt-0.5">
+                          {[0, 25, 50, 75, 100].map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              disabled={submitted}
+                              onClick={() => handleScoreChange(item._id, preset)}
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                                isTouched && currentScore === preset
+                                  ? `bg-gradient-to-r ${scoreGradient(preset)} text-white shadow-md`
+                                  : "bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300"
+                              }`}
+                            >
+                              {preset}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Remarks Input Subcard */}
                       <div className="bg-white/[0.02] border border-white/5 p-4 rounded-[1.5rem] space-y-2">
                         <div className="flex items-center gap-2 px-1 text-zinc-500">
                           <MessageSquare size={12} />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">Feedback / Remarks</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest">
+                            Feedback / Remarks
+                          </span>
                         </div>
                         <textarea
                           rows={2}
@@ -328,12 +457,14 @@ export default function JudgePanel({
         </div>
 
         {submissions.length === 0 && !loading && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
+          <motion.div
+            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center mt-24 border-2 border-dashed border-zinc-800/60 rounded-[2.5rem] py-20 max-w-xl mx-auto"
           >
-            <p className="text-zinc-600 text-xs font-black uppercase tracking-widest">No entries left to judge</p>
+            <p className="text-zinc-600 text-xs font-black uppercase tracking-widest">
+              No entries left to judge
+            </p>
           </motion.div>
         )}
       </main>
@@ -342,7 +473,8 @@ export default function JudgePanel({
       <div className="fixed bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg px-4 z-50">
         <div className="bg-[#111111]/90 backdrop-blur-2xl border border-white/10 p-2 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl flex items-center justify-between">
           <button
-            onClick={handleSave} disabled={submitted || submissions.length === 0}
+            onClick={handleSave}
+            disabled={submitted || submissions.length === 0}
             className="flex items-center justify-center gap-2 px-5 sm:px-8 py-3.5 sm:py-4 text-zinc-400 hover:text-white transition-all font-bold text-xs sm:text-sm disabled:opacity-20 disabled:cursor-not-allowed"
           >
             <Save size={16} />
@@ -350,11 +482,12 @@ export default function JudgePanel({
           </button>
 
           <button
-            disabled={submitted || submissions.length === 0} onClick={handleOpenModal}
+            disabled={submitted || submissions.length === 0}
+            onClick={handleOpenModal}
             className={`flex items-center justify-center gap-2.5 sm:gap-3 px-6 sm:px-10 py-3.5 sm:py-4 rounded-[1.5rem] sm:rounded-[2rem] font-black text-[10px] sm:text-xs tracking-widest transition-all ${
-              submitted 
-              ? "bg-green-500/20 text-green-400 border border-green-500/20" 
-              : "bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-600/20 active:scale-95"
+              submitted
+                ? "bg-green-500/20 text-green-400 border border-green-500/20"
+                : "bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400 shadow-lg shadow-purple-600/20 active:scale-95"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {submitted ? <>LOCKED</> : <>FINALIZE <Send size={14} /></>}
@@ -366,14 +499,44 @@ export default function JudgePanel({
       <AnimatePresence>
         {showModal && (
           <div className="fixed inset-0 flex items-center justify-center z-[100] px-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)} className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-zinc-900 border border-white/10 p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] max-w-sm w-full text-center">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle className="text-red-500" size={28} /></div>
-              <h2 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight">Confirm Submission</h2>
-              <p className="text-zinc-500 mb-6 sm:mb-8 text-xs sm:text-sm leading-relaxed font-medium">Once finalized, scores and remarks are locked permanently. You will not be able to modify them further.</p>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowModal(false)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-zinc-900 border border-white/10 p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] max-w-sm w-full text-center"
+            >
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="text-red-500" size={28} />
+              </div>
+              <h2 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight">
+                Confirm Submission
+              </h2>
+              <p className="text-zinc-500 mb-2 text-xs sm:text-sm leading-relaxed font-medium">
+                Once finalized, scores and remarks are locked permanently. You will not be able to modify them further.
+              </p>
+              <p className="text-zinc-600 mb-6 sm:mb-8 text-[11px] font-semibold">
+                Average score across all entries: <span className={scoreColor(avgScore)}>{avgScore}</span>
+              </p>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <button onClick={() => setShowModal(false)} className="py-3.5 sm:py-4 rounded-xl sm:rounded-2xl border border-zinc-800 hover:bg-zinc-800 transition-colors font-bold text-zinc-400 text-xs sm:text-sm">Cancel</button>
-                <button onClick={handleFinalSubmit} className="py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white text-black hover:bg-zinc-200 transition-colors font-bold text-xs sm:text-sm">Finalize</button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="py-3.5 sm:py-4 rounded-xl sm:rounded-2xl border border-zinc-800 hover:bg-zinc-800 transition-colors font-bold text-zinc-400 text-xs sm:text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleFinalSubmit}
+                  className="py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white text-black hover:bg-zinc-200 transition-colors font-bold text-xs sm:text-sm"
+                >
+                  Finalize
+                </button>
               </div>
             </motion.div>
           </div>

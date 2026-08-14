@@ -1,12 +1,17 @@
 name: Build & Push Docker Images
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows:
+      - SonarQube SAST
+    types:
+      - completed
 
 jobs:
   docker:
+    # Only run Docker when SonarQube workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     runs-on: ubuntu-latest
 
     permissions:
@@ -15,8 +20,11 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
+        with:
+          # Checkout the exact commit that passed SonarQube
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: setup Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in Auth
@@ -24,9 +32,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-
-
-          #image for multi platform
 
       - name: Build & Push Backend Image
         uses: docker/build-push-action@v6
@@ -39,10 +44,6 @@ jobs:
             ayushmehta1/editorzzz-adminb:1.0.1
           cache-to: type=gha,mode=max,scope=backend
 
-
-
-
-        
       - name: Build & Push Frontend Image
         uses: docker/build-push-action@v6
         with:

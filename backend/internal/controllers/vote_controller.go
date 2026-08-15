@@ -117,6 +117,7 @@ func UpdateSubmissionPoints(client *mongo.Client) gin.HandlerFunc {
         })
     }
 }
+
 func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tID, err := primitive.ObjectIDFromHex(c.Param("id"))

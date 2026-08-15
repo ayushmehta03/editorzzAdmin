@@ -10,40 +10,66 @@ on:
 
 jobs:
   sonar:
-    name: SonarQube Analysis
+    name: SonarQube SAST Analysis
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout full repository history
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # SonarCloud requires Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+      # Setup Go
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
+          cache: true
+          cache-dependency-path: backend/go.sum
 
+      # Download Go dependencies
       - name: Download Go dependencies
         working-directory: ./backend
         run: go mod download
 
-      - name: Run Go tests
+      # Run tests and generate Go coverage report
+      - name: Run Go tests with coverage
         working-directory: ./backend
-        run: go test ./...
+        run: |
+          go test ./... \
+            -coverprofile=coverage.out \
+            -covermode=atomic
 
-      - name: SonarQube Scan
+      # Verify coverage report was generated
+      - name: Verify coverage report
+        working-directory: ./backend
+        run: |
+          test -f coverage.out
+          echo "Coverage report generated successfully."
+          wc -l coverage.out
+
+      # SonarCloud SAST scan
+      - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=ayushmehta03_editorzzAdmin
+            -Dsonar.go.coverage.reportPaths=backend/coverage.out
+            -Dsonar.sources=backend
+            -Dsonar.tests=backend
 
-      - name: SonarQube Quality Gate
+      # Enforce SonarCloud Quality Gate
+      - name: SonarCloud Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
         env:

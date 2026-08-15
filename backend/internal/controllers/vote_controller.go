@@ -170,15 +170,13 @@ func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
 		var writes []mongo.WriteModel
 
 		for _, submission := range submissions {
-			// Base update: Increment total user score
 			updateDoc := bson.M{
 				"$inc": bson.M{
 					"total_score": int(submission.Points),
 				},
 			}
 
-			// If points > 0 and the tournament has skills associated with it,
-			// mark those skills as true under the editor's skills_expertise map
+			
 			if submission.Points > 0 && len(t.Skills) > 0 {
 				skillsSet := bson.M{}
 				for _, skill := range t.Skills {

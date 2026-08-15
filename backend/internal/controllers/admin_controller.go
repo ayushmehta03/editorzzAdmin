@@ -321,16 +321,24 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		var writes []mongo.WriteModel
 
 		for _, submission := range submissions {
+			updateDoc := bson.M{
+				"$inc": bson.M{
+					"total_score": int(submission.Points),
+				},
+			}
+
+			
+			if submission.Points > 0 && len(tournament.Skills) > 0 {
+				skillsSet := bson.M{}
+				for _, skill := range tournament.Skills {
+					skillsSet["skills_expertise."+skill] = true
+				}
+				updateDoc["$set"] = skillsSet
+			}
 
 			model := mongo.NewUpdateOneModel().
-				SetFilter(bson.M{
-					"_id": submission.UserID,
-				}).
-				SetUpdate(bson.M{
-					"$inc": bson.M{
-						"total_score": int(submission.Points),
-					},
-				})
+				SetFilter(bson.M{"_id": submission.UserID}).
+				SetUpdate(updateDoc)
 
 			writes = append(writes, model)
 		}
@@ -360,7 +368,7 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Tournament approved and user scores updated",
+			"message": "Tournament approved and user scores/skills updated",
 		})
 	}
 }

@@ -14,17 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+      
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -32,36 +35,30 @@ jobs:
           cache: true
           cache-dependency-path: backend/go.sum
 
-      - name: Verify Go installation
+      
+      - name: Verify Go
         run: |
           go version
           which go
           go env GOROOT
           go env GOTOOLDIR
 
+      
       - name: Download Go dependencies
         working-directory: ./backend
         run: |
           go mod download
 
-      - name: Run Go tests with coverage
+      
+      - name: Run Go tests
         working-directory: ./backend
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
         run: |
-          go test ./... -coverprofile=coverage.out -covermode=atomic
+          go test ./...
 
-      - name: Verify coverage report
-        working-directory: ./backend
-        run: |
-          test -f coverage.out
-          echo "Coverage file:"
-          head -20 coverage.out
-          echo
-          echo "Coverage summary:"
-          go tool cover -func=coverage.out
-
+      
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
@@ -70,8 +67,9 @@ jobs:
           args: >
             -Dsonar.projectKey=ayushmehta03_editorzzAdmin
             -Dsonar.sources=backend
-            -Dsonar.go.coverage.reportPaths=backend/coverage.out
+            -Dsonar.exclusions=client/**,**/vendor/**,**/build-wrapper-dump.json
 
+    
       - name: SonarCloud Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5

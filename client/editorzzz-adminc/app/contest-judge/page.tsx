@@ -18,7 +18,10 @@ import {
   ShieldCheck,
   DollarSign,
   Tag,
-  FolderOpen
+  FolderOpen,
+  Wand2,
+  Plus,
+  X
 } from "lucide-react";
 
 export default function CreateTournamentPage() {
@@ -27,23 +30,53 @@ export default function CreateTournamentPage() {
   const [uploading, setUploading] = useState(false);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
+  // Separate state for the skill text input field
+  const [skillInput, setSkillInput] = useState("");
+
   const [form, setForm] = useState({
     title: "",
     description: "",
     banner_url: "",
     start_time: "",
     end_time: "",
-    result_time: "", // Added result_time state field
+    result_time: "",
     max_participants: "",
     prize_pool: "",
     assets_link: "",
     judge_email: "",
     category: "",
     label: "",
+    skills: [] as string[], // Skills array initialized
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Add Skill Handler
+  const handleAddSkill = (e?: React.FormEvent | React.KeyboardEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = skillInput.trim();
+    if (!trimmed) return;
+
+    if (form.skills.includes(trimmed)) {
+      toast.error("Skill already added");
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      skills: [...prev.skills, trimmed],
+    }));
+    setSkillInput("");
+  };
+
+  // Remove Skill Handler
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setForm((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+    }));
   };
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +111,6 @@ export default function CreateTournamentPage() {
       return toast.error("Tournament must end after the start time");
     }
 
-    // Validation Guard: Results must post after submissions close
     if (new Date(form.result_time) <= new Date(form.end_time)) {
       return toast.error("Result announcement must be scheduled after the deadline");
     }
@@ -91,7 +123,7 @@ export default function CreateTournamentPage() {
         prize_pool: Number(form.prize_pool),
         start_time: new Date(form.start_time).toISOString(),
         end_time: new Date(form.end_time).toISOString(),
-        result_time: new Date(form.result_time).toISOString(), // Parsed to ISOString for Backend Go bindings
+        result_time: new Date(form.result_time).toISOString(),
       });
 
       toast.success("Tournament Live! Redirecting to Dashboard...");
@@ -191,6 +223,56 @@ export default function CreateTournamentPage() {
                   </div>
                 </div>
 
+                {/* SKILLS INPUT SECTION */}
+                <div>
+                  <label className={labelStyles}>
+                    <Wand2 size={14} /> Target Skills / Software
+                  </label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddSkill();
+                        }
+                      }}
+                      placeholder="e.g. VFX, Piscart, Premiere Pro"
+                      className={inputStyles}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddSkill}
+                      className="px-5 py-3.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                      <Plus size={16} /> Add
+                    </button>
+                  </div>
+
+                  {/* DISPLAY ADDED SKILLS TAGS */}
+                  {form.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {form.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/10 border border-blue-500/20 text-blue-300 backdrop-blur-md"
+                        >
+                          {skill}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="hover:text-red-400 transition-colors p-0.5"
+                          >
+                            <X size={13} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <label className={labelStyles}>Rules & Briefing</label>
                   <textarea
@@ -241,7 +323,6 @@ export default function CreateTournamentPage() {
             </motion.div>
 
             <motion.div variants={itemVariants} className="bg-white/[0.02] border border-white/10 p-8 rounded-[2rem] backdrop-blur-xl">
-              {/* Changed layout grid to columns of 3 to evenly spread the time fields or wrap cleanly */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <label className={labelStyles}><Clock size={14} /> Starts</label>
@@ -251,7 +332,6 @@ export default function CreateTournamentPage() {
                   <label className={labelStyles}><Clock size={14} /> Deadline</label>
                   <input type="datetime-local" name="end_time" value={form.end_time} onChange={handleChange} className={inputStyles} required />
                 </div>
-                {/* Result Time Input Added */}
                 <div className="space-y-2">
                   <label className={labelStyles}><Trophy size={14} /> Result Reveal</label>
                   <input type="datetime-local" name="result_time" value={form.result_time} onChange={handleChange} className={inputStyles} required />

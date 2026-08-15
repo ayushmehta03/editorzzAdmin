@@ -37,6 +37,8 @@ type CreateTournamentRequest struct {
 	PrizePool       float64   `json:"prize_pool" binding:"required"`
 	AssetsLink      string    `json:"assets_link" binding:"required"`
 	JudgeEmail      string    `json:"judge_email" binding:"required,email"`
+    Skills []string `bson:"skills,omitempty" json:"skills,omitempty"`
+
 
 	ResultTime time.Time `bson:"result_time" json:"result_time"`
 
@@ -59,6 +61,8 @@ type CreateVoteContest struct {
 	MaxParticipants int       `json:"max_participants" binding:"required"`
 	PrizePool       float64   `json:"prize_pool" binding:"required"`
 	AssetsLink      string    `json:"assets_link" binding:"required"`
+	 Skills []string `bson:"skills,omitempty" json:"skills,omitempty"`
+
 
    Cateogry string `json:"catreogry"`
    Label string `json:"label"`

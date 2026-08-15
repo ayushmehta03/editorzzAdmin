@@ -40,6 +40,8 @@ type Tournament struct {
 
 	Status            string             `bson:"status" json:"status"`
 	IsLeaderboardLive bool               `bson:"is_leaderboard_live" json:"is_leaderboard_live"`
+		 Skills []string `bson:"skills,omitempty" json:"skills,omitempty"`
+
 
 	Cateogry          string             `bson:"cateogry,omitempty" json:"cateogry,omitempty"`
 	Label             string             `bson:"label,omitempty" json:"label,omitempty"`

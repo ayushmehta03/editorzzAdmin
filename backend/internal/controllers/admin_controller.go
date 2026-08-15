@@ -267,6 +267,42 @@ func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
 }
 
 
+func buildUserScoreUpdates(
+	submissions []models.Submission,
+	skills []string,
+) []mongo.WriteModel {
+
+	writes := make([]mongo.WriteModel, 0, len(submissions))
+
+	for _, submission := range submissions {
+		updateDoc := bson.M{
+			"$inc": bson.M{
+				"total_score": int(submission.Points),
+			},
+		}
+
+		if submission.Points > 0 && len(skills) > 0 {
+			skillsSet := bson.M{}
+
+			for _, skill := range skills {
+				skillsSet["skills_expertise."+skill] = true
+			}
+
+			updateDoc["$set"] = skillsSet
+		}
+
+		model := mongo.NewUpdateOneModel().
+			SetFilter(bson.M{
+				"_id": submission.UserID,
+			}).
+			SetUpdate(updateDoc)
+
+		writes = append(writes, model)
+	}
+
+	return writes
+}
+
 func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

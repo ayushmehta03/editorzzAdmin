@@ -267,7 +267,7 @@ func GetAdminReview(client *mongo.Client) gin.HandlerFunc {
 }
 
 
-func buildUserScoreUpdates(
+func BuildUserScoreUpdates(
 	submissions []models.Submission,
 	skills []string,
 ) []mongo.WriteModel {
@@ -402,7 +402,7 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		// Reuse common score/skill update logic
-		writes := buildUserScoreUpdates(
+		writes := BuildUserScoreUpdates(
 			submissions,
 			tournament.Skills,
 		)

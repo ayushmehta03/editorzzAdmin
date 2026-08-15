@@ -13,18 +13,38 @@ jobs:
     name: SonarCloud Code Analysis
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
+      # --------------------------------------------------
+      # Checkout
+      # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # --------------------------------------------------
+      # Java - required by Sonar
+      # --------------------------------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+      # --------------------------------------------------
+      # Go
+      # --------------------------------------------------
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -32,6 +52,9 @@ jobs:
           cache: true
           cache-dependency-path: backend/go.sum
 
+      # --------------------------------------------------
+      # Verify environment
+      # --------------------------------------------------
       - name: Verify Go
         run: |
           go version
@@ -39,26 +62,39 @@ jobs:
           go env GOROOT
           go env GOTOOLDIR
 
+      # --------------------------------------------------
+      # Download dependencies
+      # --------------------------------------------------
       - name: Download Go dependencies
         working-directory: ./backend
         run: |
           go mod download
 
+      # --------------------------------------------------
+      # Run tests + generate coverage
+      # --------------------------------------------------
       - name: Run Go tests with coverage
         working-directory: ./backend
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          MONGODB_URI: mongodb://localhost:27017
+          DATABASE_NAME: editorzz_test
         run: |
           go test ./... -coverprofile=coverage.out -covermode=atomic
 
-      - name: Check coverage file
+      # --------------------------------------------------
+      # Verify coverage report
+      # --------------------------------------------------
+      - name: Verify coverage report
         working-directory: ./backend
         run: |
           test -f coverage.out
-          echo "Coverage file generated successfully"
+          echo "Coverage report generated:"
+          ls -lh coverage.out
           head -5 coverage.out
 
+      # --------------------------------------------------
+      # SonarCloud SAST
+      # --------------------------------------------------
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:

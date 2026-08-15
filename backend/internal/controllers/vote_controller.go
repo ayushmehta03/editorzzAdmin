@@ -209,7 +209,7 @@ func AdminPublishVoteLeaderboard(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		// Build user score + skill updates
-		writes := buildUserScoreUpdates(
+		writes := BuildUserScoreUpdates(
 			submissions,
 			tournament.Skills,
 		)

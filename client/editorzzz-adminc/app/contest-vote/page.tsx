@@ -20,7 +20,10 @@ import {
   DollarSign,
   Layers,
   Tag,
-  FolderOpen
+  FolderOpen,
+  Wand2,
+  Plus,
+  X
 } from "lucide-react";
 
 export default function CreateVoteContestPage() {
@@ -29,6 +32,9 @@ export default function CreateVoteContestPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+
+  // Separate state for the skill text input field
+  const [skillInput, setSkillInput] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -43,10 +49,37 @@ export default function CreateVoteContestPage() {
     assets_link: "",
     category: "",
     label: "",
+    skills: [] as string[], // Skills array state
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Add Skill Handler
+  const handleAddSkill = (e?: React.FormEvent | React.KeyboardEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = skillInput.trim();
+    if (!trimmed) return;
+
+    if (form.skills.includes(trimmed)) {
+      toast.error("Skill already added");
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      skills: [...prev.skills, trimmed],
+    }));
+    setSkillInput("");
+  };
+
+  // Remove Skill Handler
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setForm((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+    }));
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,42 +105,40 @@ export default function CreateVoteContestPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!form.banner_url) return toast.error("Please upload a contest banner");
+    e.preventDefault();
+    if (!form.banner_url) return toast.error("Please upload a contest banner");
 
-  const formatToISO = (dateString: string) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    const userOffset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - userOffset).toISOString();
+    const formatToISO = (dateString: string) => {
+      if (!dateString) return null;
+      const date = new Date(dateString);
+      const userOffset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - userOffset).toISOString();
+    };
+
+    const start = form.start_time;
+    const end = form.end_time;
+
+    if (new Date(end) <= new Date(start)) return toast.error("Submission end must be after start");
+    
+    try {
+      setLoading(true);
+      await createVoteContest({
+        ...form,
+        max_participants: Number(form.max_participants),
+        prize_pool: Number(form.prize_pool),
+        start_time: formatToISO(form.start_time),
+        end_time: formatToISO(form.end_time),
+        voting_start_time: formatToISO(form.voting_start_time),
+        voting_end_time: formatToISO(form.voting_end_time),
+      });
+
+      toast.success("Contest Live!");
+      setTimeout(() => router.push("/dashboard"), 1500);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to initiate contest");
+      setLoading(false);
+    }
   };
-
-  const start = form.start_time;
-  const end = form.end_time;
-  const vStart = form.voting_start_time;
-  const vEnd = form.voting_end_time;
-
-  if (new Date(end) <= new Date(start)) return toast.error("Submission end must be after start");
-  
-  try {
-    setLoading(true);
-    await createVoteContest({
-      ...form,
-      max_participants: Number(form.max_participants),
-      prize_pool: Number(form.prize_pool),
-      start_time: formatToISO(form.start_time),
-      end_time: formatToISO(form.end_time),
-      voting_start_time: formatToISO(form.voting_start_time),
-      voting_end_time: formatToISO(form.voting_end_time),
-    });
-
-    toast.success("Contest Live!");
-    setTimeout(() => router.push("/dashboard"), 1500);
-  } catch (err: any) {
-    toast.error(err.message || "Failed to initiate contest");
-    setLoading(false);
-  }
-};
 
   const inputStyle = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-gray-600 text-sm";
   const labelStyle = "text-[10px] md:text-xs font-bold text-gray-500 mb-2 uppercase tracking-[0.2em] flex items-center gap-2";
@@ -173,6 +204,56 @@ export default function CreateVoteContestPage() {
                       className={inputStyle} 
                     />
                   </div>
+                </div>
+
+                {/* SKILLS INPUT SECTION */}
+                <div>
+                  <label className={labelStyle}>
+                    <Wand2 size={14} /> Target Skills / Software
+                  </label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddSkill();
+                        }
+                      }}
+                      placeholder="e.g. VFX, Piscart, Premiere Pro"
+                      className={inputStyle}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddSkill}
+                      className="px-5 py-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                      <Plus size={16} /> Add
+                    </button>
+                  </div>
+
+                  {/* DISPLAY ADDED SKILLS TAGS */}
+                  {form.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {form.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/10 border border-blue-500/20 text-blue-300 backdrop-blur-md"
+                        >
+                          {skill}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="hover:text-red-400 transition-colors p-0.5"
+                          >
+                            <X size={13} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -317,6 +398,7 @@ export default function CreateVoteContestPage() {
                <ul className="space-y-1 text-[11px] text-gray-500">
                  <li className="flex items-center gap-2"><div className={`w-1 h-1 rounded-full ${form.title ? 'bg-green-500' : 'bg-gray-700'}`}/> Title defined</li>
                  <li className="flex items-center gap-2"><div className={`w-1 h-1 rounded-full ${preview ? 'bg-green-500' : 'bg-gray-700'}`}/> Banner uploaded</li>
+                 <li className="flex items-center gap-2"><div className={`w-1 h-1 rounded-full ${form.skills.length > 0 ? 'bg-green-500' : 'bg-gray-700'}`}/> Skills configured ({form.skills.length})</li>
                  <li className="flex items-center gap-2"><div className={`w-1 h-1 rounded-full ${form.start_time && form.end_time ? 'bg-green-500' : 'bg-gray-700'}`}/> Timeline set</li>
                </ul>
             </div>

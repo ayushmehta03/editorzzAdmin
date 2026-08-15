@@ -302,36 +302,69 @@ func buildUserScoreUpdates(
 
 	return writes
 }
-
 func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		tID, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tournament ID"})
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid tournament ID",
+			})
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(
+			context.Background(),
+			30*time.Second,
+		)
 		defer cancel()
 
-		tCol := database.OpenCollection("tournaments", client)
-		subCol := database.OpenCollection("submissions", client)
-		userCol := database.OpenCollection("editors", client)
+		tCol := database.OpenCollection(
+			"tournaments",
+			client,
+		)
+
+		subCol := database.OpenCollection(
+			"submissions",
+			client,
+		)
+
+		userCol := database.OpenCollection(
+			"editors",
+			client,
+		)
 
 		var tournament models.Tournament
 
-		err = tCol.FindOne(ctx, bson.M{"_id": tID}).Decode(&tournament)
+		// Fetch tournament
+		err = tCol.FindOne(
+			ctx,
+			bson.M{"_id": tID},
+		).Decode(&tournament)
+
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Tournament not found"})
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{
+					"error": "Tournament not found",
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Database retrieval error",
+			})
 			return
 		}
 
+		// Judge must finish before admin approval
 		if !tournament.IsJudgingCompleted {
-			c.JSON(http.StatusConflict, gin.H{"error": "Judge not finished"})
+			c.JSON(http.StatusConflict, gin.H{
+				"error": "Judge not finished",
+			})
 			return
 		}
 
+		// Prevent duplicate approval
 		if tournament.Status == models.TournamentCompleted {
 			c.JSON(http.StatusConflict, gin.H{
 				"error": "Tournament already approved",
@@ -339,52 +372,52 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		// Fetch all submissions of this tournament
-		cursor, err := subCol.Find(ctx, bson.M{
-			"tournament_id": tID,
-		})
+		// Fetch all submissions
+		cursor, err := subCol.Find(
+			ctx,
+			bson.M{
+				"tournament_id": tID,
+			},
+		)
+
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
 			return
 		}
+
 		defer cursor.Close(ctx)
 
 		var submissions []models.Submission
 
-		if err := cursor.All(ctx, &submissions); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if err := cursor.All(
+			ctx,
+			&submissions,
+		); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
 			return
 		}
 
-		var writes []mongo.WriteModel
+		// Reuse common score/skill update logic
+		writes := buildUserScoreUpdates(
+			submissions,
+			tournament.Skills,
+		)
 
-		for _, submission := range submissions {
-			updateDoc := bson.M{
-				"$inc": bson.M{
-					"total_score": int(submission.Points),
-				},
-			}
-
-			
-			if submission.Points > 0 && len(tournament.Skills) > 0 {
-				skillsSet := bson.M{}
-				for _, skill := range tournament.Skills {
-					skillsSet["skills_expertise."+skill] = true
-				}
-				updateDoc["$set"] = skillsSet
-			}
-
-			model := mongo.NewUpdateOneModel().
-				SetFilter(bson.M{"_id": submission.UserID}).
-				SetUpdate(updateDoc)
-
-			writes = append(writes, model)
-		}
-
+		// Update users
 		if len(writes) > 0 {
-			_, err = userCol.BulkWrite(ctx, writes)
+			_, err = userCol.BulkWrite(
+				ctx,
+				writes,
+			)
+
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": err.Error(),
+				})
 				return
 			}
 		}
@@ -401,7 +434,9 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
 			return
 		}
 
@@ -410,8 +445,6 @@ func AdminApproveTournament(client *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
-
-
 
 func GetStats(client *mongo.Client) gin.HandlerFunc {
 

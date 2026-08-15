@@ -24,8 +24,13 @@ func newTestContext(method, body string) (*gin.Context, *httptest.ResponseRecord
 	c, _ := gin.CreateTestContext(w)
 
 	var req *http.Request
+
 	if body != "" {
-		req = httptest.NewRequest(method, "/", bytes.NewBufferString(body))
+		req = httptest.NewRequest(
+			method,
+			"/",
+			bytes.NewBufferString(body),
+		)
 	} else {
 		req = httptest.NewRequest(method, "/", nil)
 	}
@@ -132,14 +137,13 @@ func TestCreateTournament_InvalidJSON(t *testing.T) {
 
 	body := decodeBody(t, w)
 
-	// Current API response contains this existing typo.
 	assert.Equal(t, "Invlaid input", body["error"])
 }
 
 func TestCreateTournament_MissingRequiredFields(t *testing.T) {
 	payload := `{
-		"description": "desc"
-	}`
+        "description": "desc"
+    }`
 
 	c, w := newTestContext(
 		http.MethodPost,
@@ -155,19 +159,15 @@ func TestCreateTournament_MissingRequiredFields(t *testing.T) {
 
 func TestCreateTournament_EndTimeBeforeStartTime(t *testing.T) {
 	payload := `{
-		"title": "Test Tournament",
-		"description": "Test description",
-		"start_time": "2026-01-01T10:00:00Z",
-		"end_time": "2026-01-01T09:00:00Z",
-		"max_participants": 10,
-		"prize_pool": 100,
-		"assets_link": "http://example.com/assets",
-		"judge_email": "judge@example.com",
-		"skills": ["Go", "MongoDB"],
-		"result_time": "2026-01-02T10:00:00Z",
-		"label": "Test",
-		"cateogry": "Technology"
-	}`
+        "title": "Test Tournament",
+        "description": "Test description",
+        "start_time": "2026-01-01T10:00:00Z",
+        "end_time": "2026-01-01T09:00:00Z",
+        "max_participants": 10,
+        "prize_pool": 100,
+        "assets_link": "http://example.com/assets",
+        "judge_email": "judge@example.com"
+    }`
 
 	c, w := newTestContext(
 		http.MethodPost,
@@ -227,13 +227,17 @@ func TestCreateVoteContestHandler_InvalidJSON(t *testing.T) {
 
 	body := decodeBody(t, w)
 
-	assert.Equal(t, "Invalid input", body["error"])
+	assert.Equal(
+		t,
+		"Invalid input",
+		body["error"],
+	)
 }
 
 func TestCreateVoteContestHandler_MissingRequiredFields(t *testing.T) {
 	payload := `{
-		"title": "Only Title"
-	}`
+        "title": "Only Title"
+    }`
 
 	c, w := newTestContext(
 		http.MethodPost,
@@ -356,6 +360,31 @@ func TestAdminApproveTournament_InvalidID(t *testing.T) {
 	assert.Equal(
 		t,
 		"Invalid tournament ID",
+		body["error"],
+	)
+}
+
+func TestAdminPublishVoteLeaderboard_InvalidID(t *testing.T) {
+	c, w := newTestContext(
+		http.MethodPost,
+		"",
+	)
+
+	setParam(
+		c,
+		"id",
+		"not-an-object-id",
+	)
+
+	controllers.AdminPublishVoteLeaderboard(nil)(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	body := decodeBody(t, w)
+
+	assert.Equal(
+		t,
+		"Invalid tournament ID format",
 		body["error"],
 	)
 }

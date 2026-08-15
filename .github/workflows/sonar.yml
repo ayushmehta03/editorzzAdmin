@@ -1,4 +1,4 @@
-name: SonarQube SAST
+name: SonarCloud SAST
 
 on:
   push:
@@ -14,20 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      
+      # Java for Sonar
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      
+      # Go
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -35,7 +35,7 @@ jobs:
           cache: true
           cache-dependency-path: backend/go.sum
 
-      
+      # Verify Go installation
       - name: Verify Go
         run: |
           go version
@@ -43,13 +43,12 @@ jobs:
           go env GOROOT
           go env GOTOOLDIR
 
-      
+      # Download dependencies
       - name: Download Go dependencies
         working-directory: ./backend
-        run: |
-          go mod download
+        run: go mod download
 
-      
+      # Run tests
       - name: Run Go tests
         working-directory: ./backend
         env:
@@ -58,7 +57,7 @@ jobs:
         run: |
           go test ./...
 
-      
+      # SonarCloud SAST
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
@@ -66,10 +65,11 @@ jobs:
         with:
           args: >
             -Dsonar.projectKey=ayushmehta03_editorzzAdmin
+            -Dsonar.organization=ayushmehta03
             -Dsonar.sources=backend
             -Dsonar.exclusions=client/**,**/vendor/**,**/build-wrapper-dump.json
 
-    
+      # Quality Gate
       - name: SonarCloud Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5

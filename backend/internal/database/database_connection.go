@@ -45,11 +45,21 @@ func ConnectMongo()*mongo.Client{
 	return client
 
 }
+func OpenCollection(
+	name string,
+	client *mongo.Client,
+) *mongo.Collection {
 
-func OpenCollection(name string,client *mongo.Client)*mongo.Collection{
 	dbName := os.Getenv("DATABASE_NAME")
+
 	if dbName == "" {
-		log.Fatal("DATABASE_NAME not set")
+		log.Println("DATABASE_NAME not set")
+		return nil
+	}
+
+	if client == nil {
+		log.Println("MongoDB client is nil")
+		return nil
 	}
 
 	return client.Database(dbName).Collection(name)

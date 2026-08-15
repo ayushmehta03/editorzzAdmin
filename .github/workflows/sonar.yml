@@ -10,7 +10,7 @@ on:
 
 jobs:
   sonar:
-    name: SonarCloud SAST Analysis
+    name: SonarCloud Code Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -32,18 +32,34 @@ jobs:
           cache: true
           cache-dependency-path: backend/go.sum
 
+      - name: Verify Go
+        run: |
+          go version
+          which go
+          go env GOROOT
+          go env GOTOOLDIR
+
       - name: Download Go dependencies
         working-directory: ./backend
-        run: go mod download
+        run: |
+          go mod download
 
-      - name: Run Go tests
+      - name: Run Go tests with coverage
         working-directory: ./backend
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-        run: go test ./...
+        run: |
+          go test ./... -coverprofile=coverage.out -covermode=atomic
 
-      - name: SonarCloud SAST Scan
+      - name: Check coverage file
+        working-directory: ./backend
+        run: |
+          test -f coverage.out
+          echo "Coverage file generated successfully"
+          head -5 coverage.out
+
+      - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -52,4 +68,5 @@ jobs:
             -Dsonar.projectKey=ayushmehta03_editorzzAdmin
             -Dsonar.organization=ayushmehta03
             -Dsonar.sources=backend
+            -Dsonar.go.coverage.reportPaths=backend/coverage.out
             -Dsonar.exclusions=client/**,**/vendor/**,**/build-wrapper-dump.json

@@ -159,6 +159,7 @@ func CreateTournament(clinet *mongo.Client)gin.HandlerFunc{
 		Slug:GenerateSlug(req.Title),
 		StartTime: req.StartTime,
 		EndTime: req.EndTime,
+		Skills: req.Skills,
 		ResultTime: req.ResultTime,
 		MaxParticipants: req.MaxParticipants,
 		CurrentCount: 0,
@@ -477,6 +478,7 @@ func CreateVoteContestHandler(client *mongo.Client) gin.HandlerFunc {
 			Description:       req.Description,
 			Banner:            req.BannerURL,
 			Slug:              GenerateSlug(req.Title),
+			Skills: req.Skills,
 
 			StartTime:         req.StartTime,
 			EndTime:           req.EndTime,

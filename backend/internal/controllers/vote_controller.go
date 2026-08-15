@@ -69,7 +69,6 @@ func GetSubmissionsWithVotes(client *mongo.Client) gin.HandlerFunc {
 
 
 
-// Request structure for manual scoring
 type ManualScoreInput struct {
     Points float64 `json:"points" binding:"required,min=0"`
 }

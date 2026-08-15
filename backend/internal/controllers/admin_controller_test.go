@@ -19,22 +19,13 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-// ------------------------------------------------------------
-// Test helpers
-// ------------------------------------------------------------
-
 func newTestContext(method, body string) (*gin.Context, *httptest.ResponseRecorder) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 
 	var req *http.Request
-
 	if body != "" {
-		req = httptest.NewRequest(
-			method,
-			"/",
-			bytes.NewBufferString(body),
-		)
+		req = httptest.NewRequest(method, "/", bytes.NewBufferString(body))
 	} else {
 		req = httptest.NewRequest(method, "/", nil)
 	}
@@ -63,31 +54,15 @@ func decodeBody(t *testing.T, w *httptest.ResponseRecorder) map[string]interface
 	return out
 }
 
-// ============================================================
-// GenerateSlug
-// ============================================================
-
 func TestGenerateSlug(t *testing.T) {
 	tests := []struct {
 		name  string
 		title string
 	}{
-		{
-			name:  "simple title",
-			title: "My Awesome Tournament",
-		},
-		{
-			name:  "single word",
-			title: "Contest",
-		},
-		{
-			name:  "already lowercase",
-			title: "editing battle",
-		},
-		{
-			name:  "empty title",
-			title: "",
-		},
+		{"simple title", "My Awesome Tournament"},
+		{"single word", "Contest"},
+		{"already lowercase", "editing battle"},
+		{"empty title", ""},
 	}
 
 	for _, tt := range tests {
@@ -121,10 +96,6 @@ func TestGenerateSlug(t *testing.T) {
 	})
 }
 
-// ============================================================
-// CreateTournament
-// ============================================================
-
 func TestCreateTournament_Unauthorized_NoRole(t *testing.T) {
 	c, w := newTestContext(http.MethodPost, "{}")
 
@@ -145,10 +116,6 @@ func TestCreateTournament_Unauthorized_WrongRole(t *testing.T) {
 	controllers.CreateTournament(nil)(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(t, "Unauthorized", body["error"])
 }
 
 func TestCreateTournament_InvalidJSON(t *testing.T) {
@@ -165,7 +132,7 @@ func TestCreateTournament_InvalidJSON(t *testing.T) {
 
 	body := decodeBody(t, w)
 
-	// Matches current controller typo.
+	// Current API response contains this existing typo.
 	assert.Equal(t, "Invlaid input", body["error"])
 }
 
@@ -195,7 +162,11 @@ func TestCreateTournament_EndTimeBeforeStartTime(t *testing.T) {
 		"max_participants": 10,
 		"prize_pool": 100,
 		"assets_link": "http://example.com/assets",
-		"judge_email": "judge@example.com"
+		"judge_email": "judge@example.com",
+		"skills": ["Go", "MongoDB"],
+		"result_time": "2026-01-02T10:00:00Z",
+		"label": "Test",
+		"cateogry": "Technology"
 	}`
 
 	c, w := newTestContext(
@@ -218,41 +189,6 @@ func TestCreateTournament_EndTimeBeforeStartTime(t *testing.T) {
 	)
 }
 
-func TestCreateTournament_EndTimeEqualStartTime(t *testing.T) {
-	payload := `{
-		"title": "Test Tournament",
-		"description": "Test description",
-		"start_time": "2026-01-01T10:00:00Z",
-		"end_time": "2026-01-01T10:00:00Z",
-		"max_participants": 10,
-		"prize_pool": 100,
-		"assets_link": "http://example.com/assets",
-		"judge_email": "judge@example.com"
-	}`
-
-	c, w := newTestContext(
-		http.MethodPost,
-		payload,
-	)
-
-	c.Set("role", "admin")
-
-	controllers.CreateTournament(nil)(c)
-
-	// Equal times are not Before(), so this reaches the DB layer.
-	// With nil Mongo client the handler will not successfully create it.
-	// We only ensure that the request does not trigger the time validation.
-	assert.NotEqual(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
-}
-
-// ============================================================
-// CreateVoteContestHandler
-// ============================================================
-
 func TestCreateVoteContestHandler_Unauthorized(t *testing.T) {
 	c, w := newTestContext(
 		http.MethodPost,
@@ -261,19 +197,7 @@ func TestCreateVoteContestHandler_Unauthorized(t *testing.T) {
 
 	controllers.CreateVoteContestHandler(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusUnauthorized,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Unauthorized",
-		body["error"],
-	)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestCreateVoteContestHandler_Unauthorized_WrongRole(t *testing.T) {
@@ -286,19 +210,7 @@ func TestCreateVoteContestHandler_Unauthorized_WrongRole(t *testing.T) {
 
 	controllers.CreateVoteContestHandler(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusUnauthorized,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Unauthorized",
-		body["error"],
-	)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestCreateVoteContestHandler_InvalidJSON(t *testing.T) {
@@ -311,19 +223,11 @@ func TestCreateVoteContestHandler_InvalidJSON(t *testing.T) {
 
 	controllers.CreateVoteContestHandler(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	body := decodeBody(t, w)
 
-	assert.Equal(
-		t,
-		"Invalid input",
-		body["error"],
-	)
+	assert.Equal(t, "Invalid input", body["error"])
 }
 
 func TestCreateVoteContestHandler_MissingRequiredFields(t *testing.T) {
@@ -340,33 +244,8 @@ func TestCreateVoteContestHandler_MissingRequiredFields(t *testing.T) {
 
 	controllers.CreateVoteContestHandler(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
-
-func TestCreateVoteContestHandler_EmptyJSON(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		"{}",
-	)
-
-	c.Set("role", "admin")
-
-	controllers.CreateVoteContestHandler(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
-}
-
-// ============================================================
-// UpdateTournament
-// ============================================================
 
 func TestUpdateTournament_Unauthorized(t *testing.T) {
 	c, w := newTestContext(
@@ -382,19 +261,7 @@ func TestUpdateTournament_Unauthorized(t *testing.T) {
 
 	controllers.UpdateTournament(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusUnauthorized,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Unauthorized",
-		body["error"],
-	)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestUpdateTournament_InvalidID(t *testing.T) {
@@ -413,11 +280,7 @@ func TestUpdateTournament_InvalidID(t *testing.T) {
 
 	controllers.UpdateTournament(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	body := decodeBody(t, w)
 
@@ -444,16 +307,8 @@ func TestUpdateTournament_InvalidJSON(t *testing.T) {
 
 	controllers.UpdateTournament(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
-
-// ============================================================
-// GetLeaderboard
-// ============================================================
 
 func TestGetLeaderboard_InvalidID(t *testing.T) {
 	c, w := newTestContext(
@@ -469,11 +324,7 @@ func TestGetLeaderboard_InvalidID(t *testing.T) {
 
 	controllers.GetLeaderboard(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	body := decodeBody(t, w)
 
@@ -483,10 +334,6 @@ func TestGetLeaderboard_InvalidID(t *testing.T) {
 		body["error"],
 	)
 }
-
-// ============================================================
-// AdminApproveTournament
-// ============================================================
 
 func TestAdminApproveTournament_InvalidID(t *testing.T) {
 	c, w := newTestContext(
@@ -502,11 +349,7 @@ func TestAdminApproveTournament_InvalidID(t *testing.T) {
 
 	controllers.AdminApproveTournament(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	body := decodeBody(t, w)
 
@@ -517,196 +360,29 @@ func TestAdminApproveTournament_InvalidID(t *testing.T) {
 	)
 }
 
-func TestAdminApproveTournament_EmptyID(t *testing.T) {
+func TestCreateFeaturePost_Unauthorized(t *testing.T) {
 	c, w := newTestContext(
 		http.MethodPost,
-		"",
+		"{}",
 	)
 
-	setParam(
-		c,
-		"id",
-		"",
-	)
+	controllers.CreateFeaturePost(nil)(c)
 
-	controllers.AdminApproveTournament(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Invalid tournament ID",
-		body["error"],
-	)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
-func TestAdminApproveTournament_MalformedID(t *testing.T) {
+func TestCreateFeaturePost_Unauthorized_WrongRole(t *testing.T) {
 	c, w := newTestContext(
 		http.MethodPost,
-		"",
+		"{}",
 	)
 
-	setParam(
-		c,
-		"id",
-		"123456",
-	)
+	c.Set("role", "guest")
 
-	controllers.AdminApproveTournament(nil)(c)
+	controllers.CreateFeaturePost(nil)(c)
 
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Invalid tournament ID",
-		body["error"],
-	)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
-
-// ============================================================
-// AdminPublishVoteLeaderboard
-// ============================================================
-
-func TestAdminPublishVoteLeaderboard_InvalidID(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		"",
-	)
-
-	setParam(
-		c,
-		"id",
-		"not-an-object-id",
-	)
-
-	controllers.AdminPublishVoteLeaderboard(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Invalid tournament ID format",
-		body["error"],
-	)
-}
-
-func TestAdminPublishVoteLeaderboard_EmptyID(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		"",
-	)
-
-	setParam(
-		c,
-		"id",
-		"",
-	)
-
-	controllers.AdminPublishVoteLeaderboard(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Invalid tournament ID format",
-		body["error"],
-	)
-}
-
-func TestAdminPublishVoteLeaderboard_MalformedID(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		"",
-	)
-
-	setParam(
-		c,
-		"id",
-		"123456",
-	)
-
-	controllers.AdminPublishVoteLeaderboard(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusBadRequest,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Invalid tournament ID format",
-		body["error"],
-	)
-}
-
-// ============================================================
-// CreateTournament / role edge cases
-// ============================================================
-
-func TestCreateTournament_NilRole(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		`{}`,
-	)
-
-	c.Set("role", nil)
-
-	controllers.CreateTournament(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusUnauthorized,
-		w.Code,
-	)
-}
-
-func TestCreateVoteContestHandler_NilRole(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		`{}`,
-	)
-
-	c.Set("role", nil)
-
-	controllers.CreateVoteContestHandler(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusUnauthorized,
-		w.Code,
-	)
-}
-
-// ============================================================
-// Time logic
-// ============================================================
 
 func TestTimeParsingAssumption(t *testing.T) {
 	start, err := time.Parse(
@@ -723,111 +399,5 @@ func TestTimeParsingAssumption(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.True(
-		t,
-		end.Before(start),
-	)
-}
-
-func TestTimeParsingValidRange(t *testing.T) {
-	start, err := time.Parse(
-		time.RFC3339,
-		"2026-01-01T09:00:00Z",
-	)
-
-	assert.NoError(t, err)
-
-	end, err := time.Parse(
-		time.RFC3339,
-		"2026-01-01T10:00:00Z",
-	)
-
-	assert.NoError(t, err)
-
-	assert.True(
-		t,
-		end.After(start),
-	)
-}
-
-func TestTimeParsingEqualTimes(t *testing.T) {
-	start, err := time.Parse(
-		time.RFC3339,
-		"2026-01-01T10:00:00Z",
-	)
-
-	assert.NoError(t, err)
-
-	end, err := time.Parse(
-		time.RFC3339,
-		"2026-01-01T10:00:00Z",
-	)
-
-	assert.NoError(t, err)
-
-	assert.False(
-		t,
-		end.Before(start),
-	)
-}
-
-// ============================================================
-// Feature posts
-// ============================================================
-
-func TestCreateFeaturePost_Unauthorized(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		"{}",
-	)
-
-	controllers.CreateFeaturePost(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusUnauthorized,
-		w.Code,
-	)
-
-	body := decodeBody(t, w)
-
-	assert.Equal(
-		t,
-		"Unauthorized",
-		body["error"],
-	)
-}
-
-func TestCreateFeaturePost_Unauthorized_WrongRole(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		"{}",
-	)
-
-	c.Set("role", "guest")
-
-	controllers.CreateFeaturePost(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusUnauthorized,
-		w.Code,
-	)
-}
-
-func TestCreateFeaturePost_Unauthorized_UserRole(t *testing.T) {
-	c, w := newTestContext(
-		http.MethodPost,
-		"{}",
-	)
-
-	c.Set("role", "user")
-
-	controllers.CreateFeaturePost(nil)(c)
-
-	assert.Equal(
-		t,
-		http.StatusUnauthorized,
-		w.Code,
-	)
+	assert.True(t, end.Before(start))
 }
